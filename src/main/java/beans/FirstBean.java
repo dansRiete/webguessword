@@ -59,12 +59,12 @@ public class FirstBean implements Serializable{
         ResultSet rs = st.executeQuery("SELECT * FROM aleks");
         rs.next();
 
-        Context initContext = new InitialContext();
+        /*Context initContext = new InitialContext();
         Context envContext  = (Context)initContext.lookup("java:/comp/env");
         DataSource ds = (DataSource)envContext.lookup("java:jboss/datasources/MySQLDS");
-        Connection conn1 = ds.getConnection();
+        Connection conn1 = ds.getConnection();*/
 
-        return rs.getString("engname")+" - " + System.getenv("$OPENSHIFT_MYSQL_DB_HOST") + " - " + conn1;
+        return rs.getString("engname")+" - " + rs.getString("rusname");
 
         /*return "jdbc:mysql://"
                 + System.getenv().get("$OPENSHIFT_MYSQL_DB_HOST")
