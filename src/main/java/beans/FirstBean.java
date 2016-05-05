@@ -27,7 +27,7 @@ public class FirstBean implements Serializable{
             + System.getenv().get("OPENSHIFT_MYSQL_DB_PORT")
             + "/guessword?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
     static String host2 = "jdbc:mysql://${env.OPENSHIFT_MYSQL_DB_HOST}:${env.OPENSHIFT_MYSQL_DB_PORT}/guessword?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
-    static String host3 = "jdbc:mysql://127.3.141.2:3306/guessword?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
+    static String host3 = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
     Random random = new Random();
 
     public FirstBean(){}
@@ -54,7 +54,7 @@ public class FirstBean implements Serializable{
 
     public String returnFromBase() throws Exception{
         Class.forName("com.mysql.cj.jdbc.Driver");
-        Connection conn = DriverManager.getConnection(host3, "adminWCgYEUQ", "P1xTHMxAHsmn");
+        Connection conn = DriverManager.getConnection(host3, "adminLtuHq9R", "d-AUIKakd1Br");
         Statement st = conn.createStatement();
         ResultSet rs = st.executeQuery("SELECT * FROM aleks");
         rs.next();
