@@ -21,12 +21,6 @@ import javax.sql.DataSource;
 public class FirstBean implements Serializable{
     private String name = "Default name1";
     private String text = "Default text";
-    static String host1 = "jdbc:mysql://"
-            + System.getenv().get("OPENSHIFT_MYSQL_DB_HOST")
-            + ":"
-            + System.getenv().get("OPENSHIFT_MYSQL_DB_PORT")
-            + "/guessword?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
-    static String host2 = "jdbc:mysql://${env.OPENSHIFT_MYSQL_DB_HOST}:${env.OPENSHIFT_MYSQL_DB_PORT}/guessword?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
     static String host3 = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
     Random random = new Random();
 
@@ -53,24 +47,12 @@ public class FirstBean implements Serializable{
     }
 
     public String returnFromBase() throws Exception{
-        Class.forName("com.mysql.cj.jdbc.Driver");
+//        Class.forName("com.mysql.cj.jdbc.Driver");
         Connection conn = DriverManager.getConnection(host3, "adminLtuHq9R", "d-AUIKakd1Br");
         Statement st = conn.createStatement();
         ResultSet rs = st.executeQuery("SELECT * FROM aleks");
         rs.next();
-
-        /*Context initContext = new InitialContext();
-        Context envContext  = (Context)initContext.lookup("java:/comp/env");
-        DataSource ds = (DataSource)envContext.lookup("java:jboss/datasources/MySQLDS");
-        Connection conn1 = ds.getConnection();*/
-
         return rs.getString("engname")+" - " + rs.getString("rusname");
-
-        /*return "jdbc:mysql://"
-                + System.getenv().get("$OPENSHIFT_MYSQL_DB_HOST")
-                + ":"
-                + System.getenv().get("$OPENSHIFT_MYSQL_DB_PORT")
-                + "/guessword?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";*/
 
     }
 
