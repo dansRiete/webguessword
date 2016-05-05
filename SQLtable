@@ -1,0 +1,15 @@
+CREATE TABLE guessword.aleks
+(
+    id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    for_word VARCHAR(250) NOT NULL,
+    nat_word VARCHAR(250) NOT NULL,
+    transcr VARCHAR(100),
+    prob_factor DOUBLE,
+    create_date TIMESTAMP,
+    label VARCHAR(50),
+    last_accs_date TIMESTAMP,
+    exactmatch BOOLEAN,
+    index_start DOUBLE,
+    index_end DOUBLE
+);
+ALTER TABLE guessword.aleks ADD CONSTRAINT unique_id UNIQUE (id);

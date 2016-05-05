@@ -5,7 +5,7 @@
     <groupId>guessword</groupId>
     <artifactId>guessword</artifactId>
     <packaging>war</packaging>
-    <version>1.0</version>
+    <version>1</version>
     <name>guessword</name>
   
     <properties>
@@ -51,6 +51,20 @@
             </plugin>
         </plugins>
       </build>
+    </profile>
+    <profile>
+        <id>local</id>
+        <build>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-war-plugin</artifactId>
+                    <configuration>
+                        <outputDirectory>C:\Program Files\wildfly-10\standalone\deployments\</outputDirectory>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </build>
     </profile>
   </profiles>
 </project>
