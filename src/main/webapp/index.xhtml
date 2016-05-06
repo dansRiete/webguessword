@@ -13,7 +13,7 @@
        <title>Guess Number Facelets Application</title>
    </h:head>
    <h:body>
-       <h1>Hello9</h1>
+       <h1>Hello</h1>
        <!--<h2>
            <h:form>
                <h:inputText id="inputtxt" value="#{firstBean.name}"></h:inputText>
@@ -22,18 +22,22 @@
        </h2>-->
 
        <h1>New OpenShift Project</h1>
+
        <h:form>
-            <h:outputLabel id="out" value="#{firstBean.text}"></h:outputLabel><br></br>
-           <h:commandButton id="previous" value="Previous"></h:commandButton>
+           <h:outputLabel id="out1" value="#{firstBean.outputText}"> </h:outputLabel><br> </br>
+           <h:outputLabel id="out2" value="#{firstBean.outputText}"> </h:outputLabel><br> </br>
+           <h:commandButton id="previous" value="Previous"> </h:commandButton>
+
            <h:commandButton id="submit" value="Next" action="#{firstBean.refresh()}">
-               <f:ajax render="out"></f:ajax>
-           </h:commandButton><br></br><br></br>
-           <h:commandButton id="know" value="I know it"></h:commandButton>
+               <f:ajax render="out1, out2"> </f:ajax>
+           </h:commandButton><br> </br><br> </br>
+
+           <h:commandButton id="know" value="I know it"> </h:commandButton>
            <h:commandButton id="donotknow" value="I do not know it">
-               <f:ajax action="#{firstBean.refresh()}" event="focus" render="out"></f:ajax>
+               <f:ajax action="#{firstBean.refresh()}" event="focus" render="out"> </f:ajax>
            </h:commandButton>
 
        </h:form>
-       <h1>#{firstBean.returnFromBase()}</h1>
+
    </h:body>
 </html>
