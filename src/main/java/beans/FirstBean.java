@@ -6,7 +6,6 @@ import java.util.Random;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
-import javax.faces.context.FacesContext;
 
 /**
  * Created by Aleks on 23.04.2016.
@@ -17,10 +16,13 @@ import javax.faces.context.FacesContext;
 public class FirstBean implements Serializable{
     @ManagedProperty(value="#{loginBean}")
     private LoginBean logBean;
+    private boolean flag = false;
 
 
-    private String name = "Default name";
-    private String outputText = "def text";
+    private String outcomeForWord = "";
+    private String outcomeNatWord = "";
+    private String outcomeTransc = "";
+    private String resultOutcomeText = "";
     static String host1 = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false";
     static String host2 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false";
     static Statement st;
@@ -50,20 +52,36 @@ public class FirstBean implements Serializable{
         System.out.println("-------- Bean was created");
     }
 
-    public String getName(){
-        return name;
+    public String getOutcomeForWord(){
+        return outcomeForWord;
     }
 
-    public void setName(String name){
-        this.name = name;
+    public void setOutcomeForWord(String name){
+        this.outcomeForWord = name;
     }
 
-    public String getOutputText(){
-        return outputText;
+    public String getOutcomeNatWord(){
+        return outcomeNatWord;
     }
 
-    public void setOutputText(String dispText){
-        this.outputText = dispText;
+    public void setOutcomeNatWord(String name){
+        this.outcomeNatWord = name;
+    }
+
+    public String getOutcomeTransc(){
+        return outcomeTransc;
+    }
+
+    public void setOutcomeTransc(String name){
+        this.outcomeTransc = name;
+    }
+
+    public String getResultOutcomeText(){
+        return resultOutcomeText;
+    }
+
+    public void setResultOutcomeText(String dispText){
+        this.resultOutcomeText = dispText;
     }
 
     public void refresh() throws SQLException{
@@ -78,7 +96,7 @@ public class FirstBean implements Serializable{
 //            System.out.println(random);
             ResultSet rs1 = st.executeQuery("SELECT * FROM aleks " + "WHERE index_start<=" + random + " AND index_end>=" + random);
             rs1.next();
-            outputText = rs1.getString("for_word")+" - " + rs1.getString("nat_word");
+            resultOutcomeText = rs1.getString("for_word")+" - " + rs1.getString("nat_word");
         }catch (SQLException e){
             Connection conn = DriverManager.getConnection(host2, "adminLtuHq9R", "d-AUIKakd1Br");
             st = conn.createStatement();
@@ -87,9 +105,16 @@ public class FirstBean implements Serializable{
 //            System.out.println(random);
             ResultSet rs1 = st.executeQuery("SELECT * FROM aleks " + "WHERE index_start<=" + random + " AND index_end>=" + random);
             rs1.next();
-            outputText = rs1.getString("for_word")+" - " + rs1.getString("nat_word");
+
+            outcomeForWord = rs1.getString("for_word");
+            outcomeNatWord = rs1.getString("nat_word");
+            outcomeTransc = rs1.getString("transcr");
+            if(flag)
+                resultOutcomeText = outcomeNatWord+" - "+ outcomeForWord + " - " + outcomeTransc + "</br>"+resultOutcomeText;
+            flag = true;
+
         }
-        System.out.println("-------- output text is: " + outputText);
+//        System.out.println("-------- output text is: " + outcomeText);
     }
 
 
