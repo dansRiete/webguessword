@@ -17,7 +17,7 @@
 
        <h:form>
 
-           <h:outputLabel style="color: #2a2a2a;font-size: 150%" id="out1" value="#{firstBean.outcomeNatWord}"> </h:outputLabel>
+           <h:outputLabel style="color: #2a2a2a;font-size: 150%" id="out1" value="Hello"> </h:outputLabel>
            <br> </br>
 
            <h:inputText width="150"> </h:inputText>
@@ -25,18 +25,18 @@
 
            <h:commandButton id="previous" value="Previous"> </h:commandButton>
 
-           <h:commandButton id="submit" value="Next" action="#{firstBean.refresh()}">
+           <h:commandButton id="submit" value="Next" action="Next action">
                <f:ajax render="@all"> </f:ajax>
            </h:commandButton><br> </br><br> </br> <br> </br>
 
 
            <h:panelGroup id="myblock" layout="block" escape="false" style="height:800px;width:500px; overflow:scroll; ">
-               <h:outputText escape="false" value="#{firstBean.resultOutcomeText}"> </h:outputText>
+               <h:outputText escape="false" value="Outcome text"> </h:outputText>
            </h:panelGroup>
 
            <br> </br>
 
-           <h:commandButton id="exit" value="Exit" action="index?faces-redirect=true"> </h:commandButton>
+           <h:commandButton id="exit" value="Exit" action="#{firstBean.exit()}"> </h:commandButton>
            <h:commandButton id="donotknow" value="I do not know it"> </h:commandButton>
 
        </h:form>

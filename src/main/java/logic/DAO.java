@@ -9,19 +9,22 @@ import java.util.Random;
 public class DAO {
     Random random = new Random();
     static String host1 = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false";
-    static String host2 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false";
+    static String host2 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false";
     Connection conn;
     Statement st;
     {
         try{
             conn = DriverManager.getConnection(host1, "adminLtuHq9R", "d-AUIKakd1Br");
             st = conn.createStatement();
+            System.out.println("--- Remote DB was connected");
         }catch (SQLException e){
             try{
                 conn = DriverManager.getConnection(host2, "adminLtuHq9R", "d-AUIKakd1Br");
                 st = conn.createStatement();
+                System.out.println("--- Local DB was connected");
             }catch (SQLException e1){
                 e1.printStackTrace();
+                System.out.println("--- There was an error during connecting DB");
             }
 
         }
