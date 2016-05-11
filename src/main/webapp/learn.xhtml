@@ -4,7 +4,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
-      xmlns:f="http://xmlns.jcp.org/jsf/core">
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:a="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:p="http://primefaces.org/ui">
+
+
+
+
 
 
    <h:head>
@@ -13,31 +19,51 @@
    </h:head>
 
    <h:body>
+
+       <script type="text/javascript">
+           function setFocus(){
+               document.getElementById("answer").focus();
+           }
+       </script>
+
        <h1 style="color:seagreen">New OpenShift Project.</h1>
 
+       <h:outputLabel style="color: #2a2a2a;font-size: 150%" id="out1" value="#{firstBean.question}"> </h:outputLabel>
+
+       <br> </br>
+
+       <h:form  a:autofocus="true">
+
+           <h:inputText width="150" id="answer" value="#{firstBean.answer}" a:autofocus="true" > </h:inputText>
+           <h:commandButton id="answerAction" value="Answer" action="#{firstBean.checkAnswer()}" >
+               <f:ajax render="@all" execute="answer" a:autofocus="answer" onevent="setFocus()"> </f:ajax>
+           </h:commandButton>
+
+       </h:form>
        <h:form>
 
-           <h:outputLabel style="color: #2a2a2a;font-size: 150%" id="out1" value="Hello"> </h:outputLabel>
-           <br> </br>
 
-           <h:inputText width="150"> </h:inputText>
-           <br> </br>
+
+       <br> </br>
+
+
+
 
            <h:commandButton id="previous" value="Previous"> </h:commandButton>
 
-           <h:commandButton id="submit" value="Next" action="Next action">
+           <h:commandButton id="submit" value="Next" action="#{firstBean.nextQuestion()}">
                <f:ajax render="@all"> </f:ajax>
            </h:commandButton><br> </br><br> </br> <br> </br>
 
 
-           <h:panelGroup id="myblock" layout="block" escape="false" style="height:800px;width:500px; overflow:scroll; ">
-               <h:outputText escape="false" value="Outcome text"> </h:outputText>
+           <h:panelGroup id="myblock" layout="block" escape="false" style="height:500px;width:500px; overflow:scroll; ">
+               <h:outputText escape="false" value="#{firstBean.result}"> </h:outputText>
            </h:panelGroup>
 
            <br> </br>
 
            <h:commandButton id="exit" value="Exit" action="#{firstBean.exit()}"> </h:commandButton>
-           <h:commandButton id="donotknow" value="I do not know it"> </h:commandButton>
+           <h:commandButton id="donotknow" value="I do not know it" action="setFocus()"> </h:commandButton>
 
        </h:form>
 

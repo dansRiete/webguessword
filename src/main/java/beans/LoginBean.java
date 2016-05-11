@@ -36,7 +36,7 @@ public class LoginBean implements Serializable {
 
 
     public void checkUser() throws IOException, ServletException{
-        if((this.user.equals("aleks")||(this.user.equals("oksana")) && (this.password.equals("vlenaf13")||this.password.equals("oks2804")))){
+        if((this.user.equals("aleks")||(this.user.equals("oksana"))) && (this.password.equals("vlenaf13")||this.password.equals("oks2804"))){
             FacesContext context = FacesContext.getCurrentInstance();
             HttpServletRequest request = (HttpServletRequest)context.getExternalContext().getRequest();
             HttpServletResponse response = (HttpServletResponse)context.getExternalContext().getResponse();

@@ -36,12 +36,13 @@ public class DAO {
         ResultSet rs;
         Phrase phrase = null;
         try {
-            rs = st.executeQuery("SELECT * FROM aleks " + "WHERE index_start<=" + random + " AND index_end>=" + random);
+            rs = st.executeQuery("SELECT * FROM aleks " + "WHERE index_start<=" + id + " AND index_end>=" + id);
             rs.next();
             phrase = new Phrase(rs.getInt("id"), rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"), rs.getDouble("prob_factor"),
                     rs.getTimestamp("create_date"), rs.getString("label"), rs.getTimestamp("last_accs_date"),
                     rs.getDouble("index_start"), rs.getDouble("index_end"), rs.getBoolean("exactmatch"));
         } catch (SQLException e) {
+            System.out.println("Exception during nextPhrase()");
             e.printStackTrace();
         }
         return phrase;
