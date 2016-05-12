@@ -22,13 +22,13 @@
        <br> </br>
 
        <h:form>
-           <p:focus />
+
            <h:inputText width="150" id="answer" value="#{firstBean.answer}" lang="en" autocomplete="off"> </h:inputText>
            <h:commandButton id="answerAction" value="Answer" action="#{firstBean.checkAnswer()}" >
                <f:ajax render="@all" execute="answer"> </f:ajax>
            </h:commandButton>
            <script type="text/javascript">
-               document.getElementsByName('j_idt7:answer')[0].focus();
+               document.getElementsByName('j_idt8:answer')[0].focus();
            </script>
         </h:form>
 
