@@ -16,15 +16,11 @@
    <h:head>
        <title>Guess Number Facelets Application</title>
 
+
+
    </h:head>
 
    <h:body>
-
-       <script type="text/javascript">
-           function setFocus(){
-               document.getElementById("answer").focus();
-           }
-       </script>
 
        <h1 style="color:seagreen">New OpenShift Project.</h1>
 
@@ -32,23 +28,23 @@
 
        <br> </br>
 
-       <h:form  a:autofocus="true">
-
-           <h:inputText width="150" id="answer" value="#{firstBean.answer}" a:autofocus="true" > </h:inputText>
-           <h:commandButton id="answerAction" value="Answer" action="#{firstBean.checkAnswer()}" >
-               <f:ajax render="@all" execute="answer" a:autofocus="answer" onevent="setFocus()"> </f:ajax>
-           </h:commandButton>
-
-       </h:form>
        <h:form>
 
+           <p:focus />
+           <h:inputText width="150" id="answer" value="#{firstBean.answer}"> </h:inputText>
+           <h:commandButton id="answerAction" value="Answer" action="#{firstBean.checkAnswer()}" >
+               <f:ajax render="@all" execute="answer"> </f:ajax>
+           </h:commandButton>
+           <script type="text/javascript">
+               document.getElementsByName('j_idt7:answer')[0].focus();
+           </script>
 
 
+       </h:form>
+
+
+       <h:form>
        <br> </br>
-
-
-
-
            <h:commandButton id="previous" value="Previous"> </h:commandButton>
 
            <h:commandButton id="submit" value="Next" action="#{firstBean.nextQuestion()}">
