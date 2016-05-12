@@ -8,28 +8,20 @@
       xmlns:a="http://xmlns.jcp.org/jsf/passthrough"
       xmlns:p="http://primefaces.org/ui">
 
-
-
-
-
-
    <h:head>
        <title>Guess Number Facelets Application</title>
-
-
-
    </h:head>
 
    <h:body>
 
        <h1 style="color:seagreen">New OpenShift Project.</h1>
 
-       <h:outputLabel style="color: #2a2a2a;font-size: 150%" id="out1" value="#{firstBean.question}"> </h:outputLabel>
+       <h:outputLabel style="color: #2a2a2a;font-size: 150%" id="out1"
+                      value="#{firstBean.question}"> </h:outputLabel>
 
        <br> </br>
 
        <h:form>
-
            <p:focus />
            <h:inputText width="150" id="answer" value="#{firstBean.answer}"> </h:inputText>
            <h:commandButton id="answerAction" value="Answer" action="#{firstBean.checkAnswer()}" >
@@ -38,21 +30,17 @@
            <script type="text/javascript">
                document.getElementsByName('j_idt7:answer')[0].focus();
            </script>
-
-
-       </h:form>
+        </h:form>
 
 
        <h:form>
-       <br> </br>
            <h:commandButton id="previous" value="Previous"> </h:commandButton>
-
-           <h:commandButton id="submit" value="Next" action="#{firstBean.nextQuestion()}">
+           <h:commandButton id="next" value="Next" action="#{firstBean.nextQuestion()}">
                <f:ajax render="@all"> </f:ajax>
-           </h:commandButton><br> </br><br> </br> <br> </br>
+           </h:commandButton><br> </br>
 
 
-           <h:panelGroup id="myblock" layout="block" escape="false" style="height:500px;width:500px; overflow:scroll; ">
+           <h:panelGroup id="myblock" layout="block" escape="false" style="height:500px;width:800px; overflow:scroll; ">
                <h:outputText escape="false" value="#{firstBean.result}"> </h:outputText>
            </h:panelGroup>
 
