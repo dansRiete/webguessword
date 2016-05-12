@@ -23,7 +23,7 @@
 
        <h:form>
            <p:focus />
-           <h:inputText width="150" id="answer" value="#{firstBean.answer}"> </h:inputText>
+           <h:inputText width="150" id="answer" value="#{firstBean.answer}" lang="en" autocomplete="off"> </h:inputText>
            <h:commandButton id="answerAction" value="Answer" action="#{firstBean.checkAnswer()}" >
                <f:ajax render="@all" execute="answer"> </f:ajax>
            </h:commandButton>
