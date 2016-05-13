@@ -1,5 +1,7 @@
 package logic;
 
+import Exceptions.DataBaseConnectionException;
+
 import java.sql.*;
 import java.util.Random;
 
@@ -25,6 +27,7 @@ public class DAO {
             }catch (SQLException e1){
                 e1.printStackTrace();
                 System.out.println("--- There was an error during connecting DB");
+                throw new DataBaseConnectionException();
             }
 
         }

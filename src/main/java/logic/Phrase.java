@@ -1,11 +1,16 @@
 package logic;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 /**
  * Created by Aleks on 11.05.2016.
  */
 public class Phrase {
+    public long uniqueId = System.currentTimeMillis();
+    public LocalTime lt = LocalTime.now();
+    public Boolean isAnswered;
     public int id;
     public String forWord;
     public String natWord;

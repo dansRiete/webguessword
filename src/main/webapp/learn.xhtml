@@ -24,20 +24,28 @@
        <h:form>
 
            <h:inputText width="150" id="answer" value="#{firstBean.answer}" lang="en" autocomplete="off"> </h:inputText>
-           <h:commandButton id="answerAction" value="Answer" action="#{firstBean.checkAnswer()}" >
+           <h:commandButton id="answerAction" value="Answer" action="#{firstBean.checkTheAnswer()}" >
                <f:ajax render="@all" execute="answer"> </f:ajax>
            </h:commandButton>
            <script type="text/javascript">
-               document.getElementsByName('j_idt8:answer')[0].focus();
+               document.getElementsByName('j_idt7:answer')[0].focus();
            </script>
         </h:form>
 
 
        <h:form>
-           <h:commandButton id="previous" value="Previous"> </h:commandButton>
+           <h:commandButton id="previous" value="Previous" action="#{firstBean.previousQuestion}">
+               <f:ajax render="@all"> </f:ajax>
+           </h:commandButton>
            <h:commandButton id="next" value="Next" action="#{firstBean.nextQuestion()}">
                <f:ajax render="@all"> </f:ajax>
-           </h:commandButton><br> </br>
+           </h:commandButton>
+           <h:commandButton id="know" value="Знаю" action="#{firstBean.rightAnswer}">
+               <f:ajax render="@all"> </f:ajax>
+           </h:commandButton>
+           <h:commandButton id="donotknow" value="Не знаю" action="#{firstBean.wrongAnswer}">
+               <f:ajax render="@all"> </f:ajax>
+           </h:commandButton>
 
 
            <h:panelGroup id="myblock" layout="block" escape="false" style="height:500px;width:800px; overflow:scroll; ">
@@ -47,7 +55,7 @@
            <br> </br>
 
            <h:commandButton id="exit" value="Exit" action="#{firstBean.exit()}"> </h:commandButton>
-           <h:commandButton id="donotknow" value="I do not know it" action="setFocus()"> </h:commandButton>
+
 
        </h:form>
 
