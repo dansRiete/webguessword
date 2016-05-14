@@ -19,6 +19,7 @@ import javax.faces.bean.SessionScoped;
 @SessionScoped
 public class FirstBean implements Serializable{
 
+
     private DAO dao = new DAO();
     private Phrase currPhrase;
     private String question ="";
