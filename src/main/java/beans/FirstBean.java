@@ -41,11 +41,11 @@ public class FirstBean implements Serializable{
         int currPos = listOfPhrases.size() - 1 - shift;
         for(int i = listOfPhrases.size()-1; i>=0; i--){
             if(listOfPhrases.get(i).isAnswered==null)
-                str.append((i==index?"<u>":"") + listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss")) + " " + NONANSWERED_MESSAGE + " " +listOfPhrases.get(i).natWord + (i==index?"</u>":"") + "</br>");
+                str.append((i==index?"<strong>":"") + "[<font size=\"-1\">" + listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "</font> " + NONANSWERED_MESSAGE + "] " +listOfPhrases.get(i).natWord + (i==index?"</strong>":"") + "</br>");
             else if(listOfPhrases.get(i).isAnswered)
-                str.append((i==index?"<u>":"") + listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss")) + " " + RIGHT_MESSAGE + " " + listOfPhrases.get(i).natWord + " - " + listOfPhrases.get(i).forWord + (i==index?"</u>":"") + "</br>");
+                str.append((i==index?"<strong>":"") + "[<font size=\"-1\">" + listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "</font> " + RIGHT_MESSAGE + "] " + listOfPhrases.get(i).natWord + " - " + listOfPhrases.get(i).forWord + (i==index?"</strong>":"") + "</br>");
             else if(!listOfPhrases.get(i).isAnswered)
-                str.append((i==index?"<u>":"") + listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss")) + " " + WRONG_MESSAGE + " " + listOfPhrases.get(i).natWord + " - " + listOfPhrases.get(i).forWord + (i==index?"</u>":"") + "</br>");
+                str.append((i==index?"<strong>":"") + "[<font size=\"-1\">" + listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "</font> " + WRONG_MESSAGE + "] " + listOfPhrases.get(i).natWord + " - " + listOfPhrases.get(i).forWord + (i==index?"</strong>":"") + "</br>");
         }
         result = str.toString();
     }

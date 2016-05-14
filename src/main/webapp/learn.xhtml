@@ -13,14 +13,10 @@
    </h:head>
 
    <h:body>
-
-       <h:outputLabel style="color: #2a2a2a;font-size: 150%" id="out1"
-                      value="#{firstBean.question}"> </h:outputLabel>
-
+       <div style="width: 80%">
+       <h:outputLabel style="color: #2a2a2a;font-size: 150%" id="out1" value="#{firstBean.question}"> </h:outputLabel>
        <br> </br>
-
        <h:form>
-
            <h:inputText width="150" id="answer" value="#{firstBean.answer}" lang="en" autocomplete="off"> </h:inputText>
            <h:commandButton id="answerAction" value="Answer" action="#{firstBean.checkTheAnswer()}" >
                <f:ajax render="@all" execute="answer"> </f:ajax>
@@ -29,34 +25,34 @@
                document.getElementsByName('j_idt7:answer')[0].focus();
            </script>
         </h:form>
-
-
        <h:form>
            <h:commandButton id="previous" value="Previous" action="#{firstBean.previousQuestion}">
                <f:ajax render="@all"> </f:ajax>
            </h:commandButton>
+
            <h:commandButton id="next" value="Next" action="#{firstBean.nextQuestion()}">
                <f:ajax render="@all"> </f:ajax>
            </h:commandButton>
+
            <h:commandButton id="know" value="Знаю" action="#{firstBean.rightAnswer}">
                <f:ajax render="@all"> </f:ajax>
            </h:commandButton>
+
            <h:commandButton id="donotknow" value="Не знаю" action="#{firstBean.wrongAnswer}">
                <f:ajax render="@all"> </f:ajax>
            </h:commandButton>
 
-
-           <h:panelGroup id="myblock" layout="block" escape="false" style="height:500px;width:800px; overflow:scroll; ">
+           <h:panelGroup id="myblock" layout="block" escape="false" style="height:500px;width:100%; overflow:scroll; ">
                <h:outputText escape="false" value="#{firstBean.result}"> </h:outputText>
            </h:panelGroup>
 
-           <br> </br>
-
            <h:commandButton id="exit" value="Exit" action="#{firstBean.exit()}"> </h:commandButton>
-
-
        </h:form>
+       </div>
+       <div>
+           <h:dataTable>
 
-
+           </h:dataTable>
+       </div>
    </h:body>
 </html>
