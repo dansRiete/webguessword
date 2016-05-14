@@ -3,13 +3,15 @@ package logic;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 /**
  * Created by Aleks on 11.05.2016.
  */
 public class Phrase {
     public long uniqueId = System.currentTimeMillis();
-    public LocalTime lt = LocalTime.now();
+    public ZonedDateTime lt = ZonedDateTime.now(ZoneId.of("EET"));
     public Boolean isAnswered;
     public int id;
     public String forWord;
