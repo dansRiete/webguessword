@@ -50,8 +50,17 @@
        </h:form>
        </div>
        <div>
-           <h:dataTable>
+           <h:dataTable value="Hello" styleClass="order-table"
+                        headerClass="order-table-header"
+                        rowClasses="order-table-odd-row,order-table-even-row">
+                <h:column>
+                    <f:facet name="Hi">Order No</f:facet>
 
+                </h:column>
+                <h:column>
+                    <f:facet name="Bye">Product Name</f:facet>
+
+                </h:column>
            </h:dataTable>
        </div>
    </h:body>
