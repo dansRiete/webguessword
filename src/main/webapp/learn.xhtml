@@ -21,6 +21,9 @@
         div{
             height: 100%;
         }
+        /*input[type="submit"] {
+            margin: 5px;
+        }*/
     </style>
 </h:head>
 
@@ -29,30 +32,31 @@
     <h:outputLabel style="color: #2a2a2a;font-size: 200%; font-weight: bold" id="out1" value="#{firstBean.question}"> </h:outputLabel>
     <br> </br>
     <h:form>
-        <h:inputText width="150" id="answer" value="#{firstBean.answer}" lang="en"
+        <h:inputText size="50" id="answer" value="#{firstBean.answer}" lang="en"
                      autocomplete="off"> </h:inputText>
-        <h:commandButton id="answerAction" value="Answer" action="#{firstBean.checkTheAnswer()}">
-            <f:ajax render="@all" execute="answer"> </f:ajax>
-        </h:commandButton>
         <script type="text/javascript">
             document.getElementsByName('j_idt7:answer')[0].focus();
         </script>
     </h:form>
 
-    <h:commandButton id="previous" value="Previous" action="#{firstBean.previousQuestion}">
+    <h:commandButton style="margin-right: 3px; margin-top: 3px" id="previous" value="Previous" action="#{firstBean.previousQuestion}">
         <f:ajax render="@all"> </f:ajax>
     </h:commandButton>
 
-    <h:commandButton id="next" value="Next" action="#{firstBean.nextQuestion()}">
+    <h:commandButton style="margin-right: 3px; margin-top: 3px" id="next" value="Next" action="#{firstBean.nextQuestion()}">
         <f:ajax render="@all"> </f:ajax>
     </h:commandButton>
 
-    <h:commandButton id="know" value="Знаю" action="#{firstBean.rightAnswer}">
+    <h:commandButton style="margin-right: 3px; margin-top: 3px" id="know" value="Знаю" action="#{firstBean.rightAnswer}">
         <f:ajax render="@all"> </f:ajax>
     </h:commandButton>
 
-    <h:commandButton id="donotknow" value="Не знаю" action="#{firstBean.wrongAnswer}">
+    <h:commandButton style="margin-right: 3px; margin-top: 3px" id="donotknow" value="Не знаю" action="#{firstBean.wrongAnswer}">
         <f:ajax render="@all"> </f:ajax>
+    </h:commandButton>
+
+    <h:commandButton style="margin-right: 3px; margin-top: 3px" id="answerAction" value="Answer" action="#{firstBean.checkTheAnswer()}">
+        <f:ajax render="@all" execute="answer"> </f:ajax>
     </h:commandButton>
 <!--</div>-->
 
