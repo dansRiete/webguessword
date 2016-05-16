@@ -1,67 +1,101 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html
+        xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
       xmlns:f="http://xmlns.jcp.org/jsf/core"
       xmlns:a="http://xmlns.jcp.org/jsf/passthrough"
-      xmlns:p="http://primefaces.org/ui">
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:jsf="http://xmlns.jcp.org/jsf"
+        >
 
-   <h:head>
-       <title>GuessWord</title>
-   </h:head>
+<h:head>
+    <title>GuessWord</title>
+    <style type="text/css">
+        html, body {
+            height: 100%;
+        }
+        div{
+            height: 100%;
+        }
+    </style>
+</h:head>
 
-   <h:body>
-       <div style="width: 80%">
-       <h:outputLabel style="color: #2a2a2a;font-size: 150%" id="out1" value="#{firstBean.question}"> </h:outputLabel>
-       <br> </br>
-       <h:form>
-           <h:inputText width="150" id="answer" value="#{firstBean.answer}" lang="en" autocomplete="off"> </h:inputText>
-           <h:commandButton id="answerAction" value="Answer" action="#{firstBean.checkTheAnswer()}" >
-               <f:ajax render="@all" execute="answer"> </f:ajax>
-           </h:commandButton>
-           <script type="text/javascript">
-               document.getElementsByName('j_idt7:answer')[0].focus();
-           </script>
+<body>
+<!--<div>-->
+    <h:outputLabel style="color: #2a2a2a;font-size: 200%; font-weight: bold" id="out1" value="#{firstBean.question}"> </h:outputLabel>
+    <br> </br>
+    <h:form>
+        <h:inputText width="150" id="answer" value="#{firstBean.answer}" lang="en"
+                     autocomplete="off"> </h:inputText>
+        <h:commandButton id="answerAction" value="Answer" action="#{firstBean.checkTheAnswer()}">
+            <f:ajax render="@all" execute="answer"> </f:ajax>
+        </h:commandButton>
+        <script type="text/javascript">
+            document.getElementsByName('j_idt7:answer')[0].focus();
+        </script>
+    </h:form>
+
+    <h:commandButton id="previous" value="Previous" action="#{firstBean.previousQuestion}">
+        <f:ajax render="@all"> </f:ajax>
+    </h:commandButton>
+
+    <h:commandButton id="next" value="Next" action="#{firstBean.nextQuestion()}">
+        <f:ajax render="@all"> </f:ajax>
+    </h:commandButton>
+
+    <h:commandButton id="know" value="Знаю" action="#{firstBean.rightAnswer}">
+        <f:ajax render="@all"> </f:ajax>
+    </h:commandButton>
+
+    <h:commandButton id="donotknow" value="Не знаю" action="#{firstBean.wrongAnswer}">
+        <f:ajax render="@all"> </f:ajax>
+    </h:commandButton>
+<!--</div>-->
+
+<div>
+    <div style="display:inline-block; width: 60%">
+        <h:form style="height: 100%">
+            <h:panelGroup id="myblock" layout="block"  escape="false" style="height:70%; width:100%; overflow:scroll">
+                <h:outputText escape="false" style="font-size: 130%" value="#{firstBean.result}"> </h:outputText>
+            </h:panelGroup>
+
+            <h:commandButton id="exit" value="Exit" action="#{firstBean.exit()}"> </h:commandButton>
         </h:form>
-       <h:form>
-           <h:commandButton id="previous" value="Previous" action="#{firstBean.previousQuestion}">
-               <f:ajax render="@all"> </f:ajax>
-           </h:commandButton>
+    </div>
+    <div style="width: 35%; display:inline-table; vertical-align: top; horiz-align: center">
+        <h:dataTable value="#{order.orderList}" var="o"
+                     styleClass="order-table"
+                     headerClass="order-table-header"
+                     rowClasses="order-table-odd-row,order-table-even-row">
 
-           <h:commandButton id="next" value="Next" action="#{firstBean.nextQuestion()}">
-               <f:ajax render="@all"> </f:ajax>
-           </h:commandButton>
+            <h:column>
+                <!-- column header -->
+                <f:facet name="header">Order No</f:facet>
+                <!-- row record -->
+                #{o.orderNo}
+            </h:column>
 
-           <h:commandButton id="know" value="Знаю" action="#{firstBean.rightAnswer}">
-               <f:ajax render="@all"> </f:ajax>
-           </h:commandButton>
+            <h:column>
+                <f:facet name="header">Product Name</f:facet>
+                #{o.productName}
+            </h:column>
 
-           <h:commandButton id="donotknow" value="Не знаю" action="#{firstBean.wrongAnswer}">
-               <f:ajax render="@all"> </f:ajax>
-           </h:commandButton>
+            <h:column>
+                <f:facet name="header">Price</f:facet>
+                #{o.price}
+            </h:column>
 
-           <h:panelGroup id="myblock" layout="block" escape="false" style="height:500px;width:100%; overflow:scroll; ">
-               <h:outputText escape="false" value="#{firstBean.result}"> </h:outputText>
-           </h:panelGroup>
+            <h:column>
+                <f:facet name="header">Quantity</f:facet>
+                #{o.qty}
+            </h:column>
 
-           <h:commandButton id="exit" value="Exit" action="#{firstBean.exit()}"> </h:commandButton>
-       </h:form>
-       </div>
-       <div>
-           <h:dataTable value="Hello" styleClass="order-table"
-                        headerClass="order-table-header"
-                        rowClasses="order-table-odd-row,order-table-even-row">
-                <h:column>
-                    <f:facet name="Hi">Order No</f:facet>
-
-                </h:column>
-                <h:column>
-                    <f:facet name="Bye">Product Name</f:facet>
-
-                </h:column>
-           </h:dataTable>
-       </div>
-   </h:body>
+        </h:dataTable>
+    </div>
+</div>
+</body>
 </html>
