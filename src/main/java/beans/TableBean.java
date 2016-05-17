@@ -12,7 +12,7 @@ public class TableBean implements Serializable{
 
     private static final long serialVersionUID = 1L;
 
-    private static final Order[] orderList = new Order[] {
+    public static final Order[] orderList = new Order[] {
 
             new Order("A0001", "Intel CPU",
                     new BigDecimal("700.00"), 1),

@@ -5,7 +5,6 @@ import logic.Phrase;
 
 import java.io.Serializable;
 import java.sql.*;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import javax.faces.bean.ManagedBean;
@@ -17,7 +16,7 @@ import javax.faces.bean.SessionScoped;
 
 @ManagedBean
 @SessionScoped
-public class FirstBean implements Serializable{
+public class InterfaceBean implements Serializable{
 
 
     private DAO dao = new DAO();
@@ -25,14 +24,14 @@ public class FirstBean implements Serializable{
     private String question ="";
     private String answer = "";
     private String result = "";
-    private final String WRONG_MESSAGE = " <strong><font color=\"#BBBBB9\">right</font>/<font color=\"#ff0000\">wrong</font></strong> ";
-    private final String RIGHT_MESSAGE = " <strong><font color=\"green\">right</font>/<font color=\"#BBBBB9\">wrong</font></strong> ";
-    private final String NONANSWERED_MESSAGE = " <strong><font color=\"#BBBBB9\">right</font>/<font color=\"#BBBBB9\">wrong</font></strong> ";
+    private final String WRONG_MESSAGE = " <strong><font color=\"#BBBBB9\">right</font>/<font color=\"#ff0000\">wrong</font></strong>";
+    private final String RIGHT_MESSAGE = " <strong><font color=\"green\">right</font>/<font color=\"#BBBBB9\">wrong</font></strong>";
+    private final String NONANSWERED_MESSAGE = " <strong><font color=\"#BBBBB9\">right</font>/<font color=\"#BBBBB9\">wrong</font></strong>";
     private ArrayList<Phrase> listOfPhrases = new ArrayList<>();
     private int shift = 0;
     private int index;
 
-    public FirstBean() throws SQLException{
+    public InterfaceBean() throws SQLException{
         System.out.println("--- Bean was created");
         nextQuestion();
     }
@@ -51,39 +50,83 @@ public class FirstBean implements Serializable{
         result = str.toString();
     }
 
-    private void newPhraze(){
+    private void newPhrase(){
         listOfPhrases.add(dao.nextPhrase());
     }
 
     public void rightAnswer(){
-        listOfPhrases.get(listOfPhrases.size() - 1 - shift).isAnswered = true;
-        if(shift==0)
-            nextQuestion();
-        resultProcessing();
+        try {
+            listOfPhrases.get(listOfPhrases.size() - 1 - shift).isAnswered = true;
+            if (shift == 0)
+                nextQuestion();
+            resultProcessing();
+        }catch (NullPointerException e){
+            System.out.println(listOfPhrases + " size=" + (listOfPhrases==null?"listOfPhrases=null":listOfPhrases.size()));
+            e.printStackTrace();
+        }
     }
 
     public void wrongAnswer(){
-        listOfPhrases.get(listOfPhrases.size() - 1 - shift).isAnswered = false;
-        if(shift==0)
-            nextQuestion();
-        resultProcessing();
+        try{
+            listOfPhrases.get(listOfPhrases.size() - 1 - shift).isAnswered = false;
+            if(shift==0)
+                nextQuestion();
+            resultProcessing();
+        }catch (NullPointerException e){
+            System.out.println(listOfPhrases + " size=" + (listOfPhrases==null?"listOfPhrases=null":listOfPhrases.size()));
+            e.printStackTrace();
+        }
+    }
+
+    public void previousRight(){
+        try{
+            if(shift==0){
+                listOfPhrases.get(listOfPhrases.size() - 2).isAnswered = true;
+                resultProcessing();
+            }
+        }catch (NullPointerException e){
+            System.out.println(listOfPhrases + " size=" + (listOfPhrases==null?"listOfPhrases=null":listOfPhrases.size()));
+            e.printStackTrace();
+        }
+    }
+
+    public void previousWrong(){
+        try{
+            if(shift==0){
+                listOfPhrases.get(listOfPhrases.size() - 2).isAnswered = false;
+                resultProcessing();
+            }
+        }catch (NullPointerException e){
+            System.out.println(listOfPhrases + " size=" + (listOfPhrases==null?"listOfPhrases=null":listOfPhrases.size()));
+            e.printStackTrace();
+        }
     }
 
     public void checkTheAnswer(){
         if(answer!=null){
-            boolean bool = logic.IntelliFind.match(listOfPhrases.get(listOfPhrases.size() - 1 - shift).forWord, answer, false);
-            nextQuestion();
-            if(bool)
+            TableBean.orderList[0].qty = TableBean.orderList[0].qty + 1;
+            if(!(answer.equals("")||answer.equals("+")||answer.equals("-")||answer.equals("++")||answer.equals("--"))){
+                boolean bool = logic.IntelliFind.match(listOfPhrases.get(listOfPhrases.size() - 1 - shift).forWord, answer, false);
+                if(bool)
+                    rightAnswer();
+                else
+                    wrongAnswer();
+            }else if (answer.equals("+")){
                 rightAnswer();
-            else
+            }else if (answer.equals("-")){
                 wrongAnswer();
-        }else
-            System.out.println("checkTheAnswer() did not work answer is null");
+            }else if (answer.equals("++")){
+                previousRight();
+            }else if (answer.equals("--")){
+                previousWrong();
+            }
+            answer="";
+        }
     }
 
     public void nextQuestion(){
         if(shift==0) {
-            newPhraze();
+            newPhrase();
             index = listOfPhrases.size() - 1;
             question = listOfPhrases.get(index).natWord;
         }else {

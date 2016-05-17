@@ -28,47 +28,50 @@
 </h:head>
 
 <body>
-<!--<div>-->
-    <h:outputLabel style="color: #2a2a2a;font-size: 200%; font-weight: bold" id="out1" value="#{firstBean.question}"> </h:outputLabel>
+    <h:outputLabel style="color: #2a2a2a;font-size: 200%; font-weight: bold" id="out1" value="#{interfaceBean.question}"> </h:outputLabel>
     <br> </br>
     <h:form>
-        <h:inputText size="50" id="answer" value="#{firstBean.answer}" lang="en" autocomplete="off">
-
-        </h:inputText>
+        <div>
+        <h:inputText size="50" id="answer" value="#{interfaceBean.answer}" lang="en" autocomplete="off"> </h:inputText>
+            <h:commandButton style="margin-left: 3px" type="submit" id="answerAction" value="Answer" action="#{interfaceBean.checkTheAnswer()}">
+                <f:ajax execute="answer" render="@all"> </f:ajax>
+            </h:commandButton>
         <script type="text/javascript">
-            document.getElementsByName('j_idt7:answer')[0].focus();
+            document.getElementsByName('j_idt6:answer')[0].focus();
         </script>
+        </div>
+        <div>
+        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="previous" value="Previous" action="#{interfaceBean.previousQuestion}">
+            <f:ajax render="@all"> </f:ajax>
+        </h:commandButton>
+        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="next" value="Next" action="#{interfaceBean.nextQuestion()}">
+            <f:ajax render="@all"> </f:ajax>
+        </h:commandButton>
+        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="know" value="Знаю" action="#{interfaceBean.rightAnswer}">
+            <f:ajax render="@all"> </f:ajax>
+        </h:commandButton>
+        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="donotknow" value="Не знаю" action="#{interfaceBean.wrongAnswer}">
+            <f:ajax render="@all"> </f:ajax>
+        </h:commandButton>
+            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevWrong" value="Prev.Wrong" action="#{interfaceBean.previousWrong}">
+                <f:ajax render="@all"> </f:ajax>
+            </h:commandButton>
+            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevRight" value="Prev.Right" action="#{interfaceBean.previousRight}">
+                <f:ajax render="@all"> </f:ajax>
+            </h:commandButton>
+
+        </div>
     </h:form>
 
-    <h:commandButton style="margin-right: 3px; margin-top: 3px" id="previous" value="Previous" action="#{firstBean.previousQuestion}">
-        <f:ajax render="@all"> </f:ajax>
-    </h:commandButton>
-
-    <h:commandButton style="margin-right: 3px; margin-top: 3px" id="next" value="Next" action="#{firstBean.nextQuestion()}">
-        <f:ajax render="@all"> </f:ajax>
-    </h:commandButton>
-
-    <h:commandButton style="margin-right: 3px; margin-top: 3px" id="know" value="Знаю" action="#{firstBean.rightAnswer}">
-        <f:ajax render="@all"> </f:ajax>
-    </h:commandButton>
-
-    <h:commandButton style="margin-right: 3px; margin-top: 3px" id="donotknow" value="Не знаю" action="#{firstBean.wrongAnswer}">
-        <f:ajax render="@all"> </f:ajax>
-    </h:commandButton>
-
-    <h:commandButton style="margin-right: 3px; margin-top: 3px" id="answerAction" value="Answer" action="#{firstBean.checkTheAnswer()}">
-        <f:ajax render="@all" execute="answer"> </f:ajax>
-    </h:commandButton>
-<!--</div>-->
 
 <div>
     <div style="display:inline-block; width: 60%">
         <h:form style="height: 100%">
             <h:panelGroup id="myblock" layout="block"  escape="false" style="height:70%; width:100%; overflow:scroll">
-                <h:outputText escape="false" style="font-size: 130%" value="#{firstBean.result}"> </h:outputText>
+                <h:outputText escape="false" style="font-size: 130%" value="#{interfaceBean.result}"> </h:outputText>
             </h:panelGroup>
 
-            <h:commandButton id="exit" value="Exit" action="#{firstBean.exit()}"> </h:commandButton>
+            <h:commandButton id="exit" value="Exit" action="#{interfaceBean.exit()}"> </h:commandButton>
         </h:form>
     </div>
     <div style="width: 35%; display:inline-table; vertical-align: top; horiz-align: center">
