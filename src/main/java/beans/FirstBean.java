@@ -39,51 +39,49 @@ public class FirstBean implements Serializable{
 
     private void resultProcessing(){
         StringBuilder str = new StringBuilder();
-        int currPos = listOfPhrases.size() - 1 - shift;
+//        int currPos = listOfPhrases.size() - 1 - shift; //is never used
         for(int i = listOfPhrases.size()-1; i>=0; i--){
             if(listOfPhrases.get(i).isAnswered==null)
-                str.append((i==index?"<strong>":"") + "[" + listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss")) + NONANSWERED_MESSAGE + "] " +listOfPhrases.get(i).natWord + (i==index?"</strong>":"") + "</br>");
+                str.append(i==index?"<strong>":"").append("[").append(listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss"))).append(NONANSWERED_MESSAGE).append("] ").append(listOfPhrases.get(i).natWord).append((i==index?"</strong>":"")).append("</br>");
             else if(listOfPhrases.get(i).isAnswered)
-                str.append((i==index?"<strong>":"") + "[" + listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss")) + RIGHT_MESSAGE + "] " + listOfPhrases.get(i).natWord + " - " + listOfPhrases.get(i).forWord + (i==index?"</strong>":"") + "</br>");
+                str.append(i==index?"<strong>":"").append("[").append(listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss"))).append(RIGHT_MESSAGE).append("] ").append(listOfPhrases.get(i).natWord).append(" - ").append(listOfPhrases.get(i).forWord).append((i==index?"</strong>":"")).append("</br>");
             else if(!listOfPhrases.get(i).isAnswered)
-                str.append((i==index?"<strong>":"") + "[" + listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss")) + WRONG_MESSAGE + "] " + listOfPhrases.get(i).natWord + " - " + listOfPhrases.get(i).forWord + (i==index?"</strong>":"") + "</br>");
+                str.append(i==index?"<strong>":"").append("[").append(listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss"))).append(WRONG_MESSAGE).append("] ").append(listOfPhrases.get(i).natWord).append(" - ").append(listOfPhrases.get(i).forWord).append((i==index?"</strong>":"")).append("</br>");
         }
         result = str.toString();
     }
 
     private void newPhraze(){
         listOfPhrases.add(dao.nextPhrase());
-
     }
 
     public void rightAnswer(){
         listOfPhrases.get(listOfPhrases.size() - 1 - shift).isAnswered = true;
-        nextQuestion();
-//        resultProcessing();
+        if(shift==0)
+            nextQuestion();
+        resultProcessing();
     }
 
     public void wrongAnswer(){
         listOfPhrases.get(listOfPhrases.size() - 1 - shift).isAnswered = false;
-        nextQuestion();
-//        resultProcessing();
+        if(shift==0)
+            nextQuestion();
+        resultProcessing();
     }
 
-    public boolean checkTheAnswer(){
-        boolean bool = logic.IntelliFind.match(currPhrase.forWord, answer, false);
-        LocalTime lt = LocalTime.now();
-        System.out.println(currPhrase.forWord + " - " + answer + " - " + bool);
-        /*if(bool)
-            result = "<strong>" + lt.format(DateTimeFormatter.ofPattern("HH:mm")) + "</strong>" + RIGHT_MESSAGE + currPhrase.natWord + " - " + currPhrase.forWord + "</br>" + result;
-        else
-            result = "<strong>" + lt.format(DateTimeFormatter.ofPattern("HH:mm")) + "</strong>" + WRONG_MESSAGE + currPhrase.natWord + " - " + currPhrase.forWord + "</br>" + result;*/
-        answer = "";
-        nextQuestion();
-        return bool;
+    public void checkTheAnswer(){
+        if(answer!=null){
+            boolean bool = logic.IntelliFind.match(listOfPhrases.get(listOfPhrases.size() - 1 - shift).forWord, answer, false);
+            nextQuestion();
+            if(bool)
+                rightAnswer();
+            else
+                wrongAnswer();
+        }else
+            System.out.println("checkTheAnswer() did not work answer is null");
     }
 
     public void nextQuestion(){
-
-
         if(shift==0) {
             newPhraze();
             index = listOfPhrases.size() - 1;
@@ -92,8 +90,8 @@ public class FirstBean implements Serializable{
             index = listOfPhrases.size() - 1 - --shift;
             question = listOfPhrases.get(index).natWord;
         }
-        System.out.println("--- nextQuestion() List size="+(listOfPhrases.size()+" Current shift="+shift+" Requested index="+index));
         resultProcessing();
+//        System.out.println("--- nextQuestion() List size="+(listOfPhrases.size()+" Current shift="+shift+" Requested index="+index));
     }
 
     public void previousQuestion(){
@@ -104,7 +102,7 @@ public class FirstBean implements Serializable{
             index = 0;
         question = listOfPhrases.get(index).natWord;
         resultProcessing();
-        System.out.println("--- previousQuestion() List size="+(listOfPhrases.size()+" Current shift="+shift+" Requested index="+index));
+//        System.out.println("--- previousQuestion() List size="+(listOfPhrases.size()+" Current shift="+shift+" Requested index="+index));
     }
 
     public void exit(){
