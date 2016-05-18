@@ -75,31 +75,21 @@
         </h:form>
     </div>
     <div style="width: 35%; display:inline-table; vertical-align: top; horiz-align: center">
-        <h:dataTable value="#{order.orderList}" var="o"
+        <h:dataTable value="#{statBean.orderList}" var="o"
                      styleClass="order-table"
                      headerClass="order-table-header"
                      rowClasses="order-table-odd-row,order-table-even-row">
 
             <h:column>
                 <!-- column header -->
-                <f:facet name="header">Order No</f:facet>
+                <f:facet name="header">Property</f:facet>
                 <!-- row record -->
-                #{o.orderNo}
+                #{o.propertyName}
             </h:column>
 
             <h:column>
-                <f:facet name="header">Product Name</f:facet>
-                #{o.productName}
-            </h:column>
-
-            <h:column>
-                <f:facet name="header">Price</f:facet>
-                #{o.price}
-            </h:column>
-
-            <h:column>
-                <f:facet name="header">Quantity</f:facet>
-                #{o.qty}
+                <f:facet name="header">Value</f:facet>
+                #{o.propertyValue}
             </h:column>
 
         </h:dataTable>

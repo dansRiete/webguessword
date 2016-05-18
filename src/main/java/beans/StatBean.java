@@ -2,34 +2,31 @@ package beans;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 
-@ManagedBean(name="order")
+@ManagedBean
 @SessionScoped
-public class TableBean implements Serializable{
+public class StatBean implements Serializable{
 
     private static final long serialVersionUID = 1L;
 
-    public static final Order[] orderList = new Order[] {
 
-            new Order("A0001", "Intel CPU",
-                    new BigDecimal("700.00"), 1),
-            new Order("A0002", "Harddisk 10TB",
-                    new BigDecimal("500.00"), 2),
-            new Order("A0003", "Dell Laptop",
-                    new BigDecimal("11600.00"), 8),
-            new Order("A0004", "Samsung LCD",
-                    new BigDecimal("5200.00"), 3),
-            new Order("A0005", "A4Tech Mouse",
-                    new BigDecimal("100.00"), 10)
-    };
+    public static ArrayList orderList = new ArrayList<>();
+    /**
+     * Displays the number of responses per day
+     */
+    public static Float dayCounter = 0f;
+    static {
+        orderList.add(new Properties("Answers per day", ++dayCounter));
+    }
 
-    public Order[] getOrderList() {
 
+    public List getOrderList() {
         return orderList;
-
     }
 
     public static class Order{
@@ -69,6 +66,30 @@ public class TableBean implements Serializable{
         }
         public void setQty(int qty) {
             this.qty = qty;
+        }
+    }
+
+    public static class Properties{
+
+        String propertyName;
+        Float propertyValue;
+
+        public Properties(String propertyName, Float propertyValue) {
+            this.propertyName = propertyName;
+            this.propertyValue = propertyValue;
+        }
+
+        public String getPropertyName() {
+            return propertyName;
+        }
+        public void setPropertyName(String orderNo) {
+            this.propertyName = propertyName;
+        }
+        public Float getPropertyValue() {
+            return propertyValue;
+        }
+        public void setPropertyValue(String productName) {
+            this.propertyValue = propertyValue;
         }
     }
 }

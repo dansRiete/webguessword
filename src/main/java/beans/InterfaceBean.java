@@ -104,7 +104,7 @@ public class InterfaceBean implements Serializable{
 
     public void checkTheAnswer(){
         if(answer!=null){
-            TableBean.orderList[0].qty = TableBean.orderList[0].qty + 1;
+            StatBean.dayCounter = StatBean.dayCounter + 1;
             if(!(answer.equals("")||answer.equals("+")||answer.equals("-")||answer.equals("++")||answer.equals("--"))){
                 boolean bool = logic.IntelliFind.match(listOfPhrases.get(listOfPhrases.size() - 1 - shift).forWord, answer, false);
                 if(bool)
