@@ -8,6 +8,7 @@ import java.sql.*;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 
 /**
@@ -18,6 +19,11 @@ import javax.faces.bean.SessionScoped;
 @SessionScoped
 public class InterfaceBean implements Serializable{
 
+    @ManagedProperty(value="#{stat}")
+    private StatBean statBean;
+    public void setStatBean(StatBean statBean) {
+        this.statBean = statBean;
+    }
 
     private DAO dao = new DAO();
     private Phrase currPhrase;
@@ -54,7 +60,7 @@ public class InterfaceBean implements Serializable{
         Phrase phrase = dao.nextPhrase();
         if(phrase!=null){
             listOfPhrases.add(phrase);
-            StatBean.dayCounterIncrement();
+            statBean.dayCounterIncrement();
         }
     }
 
@@ -178,6 +184,8 @@ public class InterfaceBean implements Serializable{
     public void setResult(String res) {
         this.result = res;
     }
+
+
 }
 
 

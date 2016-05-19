@@ -8,12 +8,12 @@ import java.util.List;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 
-@ManagedBean
+@ManagedBean(name="stat")
 @SessionScoped
 public class StatBean implements Serializable{
 
-    private static int dayCounter = 0;
-    public static void dayCounterIncrement(){
+    private int dayCounter = 0;
+    public void dayCounterIncrement(){
         dayCounter++;
     }
 
