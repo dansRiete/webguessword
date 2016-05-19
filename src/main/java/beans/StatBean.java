@@ -12,6 +12,7 @@ import javax.faces.bean.SessionScoped;
 @SessionScoped
 public class StatBean implements Serializable{
 
+    public StatBean(){}
     private int dayCounter = 0;
     public void dayCounterIncrement(){
         dayCounter++;

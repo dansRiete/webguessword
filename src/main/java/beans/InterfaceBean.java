@@ -60,7 +60,7 @@ public class InterfaceBean implements Serializable{
         Phrase phrase = dao.nextPhrase();
         if(phrase!=null){
             listOfPhrases.add(phrase);
-            statBean.dayCounterIncrement();
+//            statBean.dayCounterIncrement();
         }
     }
 
