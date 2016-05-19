@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.sql.*;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
@@ -17,7 +18,7 @@ import javax.faces.bean.SessionScoped;
 
 @ManagedBean
 @SessionScoped
-public class InterfaceBean implements Serializable{
+public class InterfaceBean/* implements Serializable*/{
 
     @ManagedProperty(value="#{stat}")
     private StatBean statBean;
@@ -25,7 +26,14 @@ public class InterfaceBean implements Serializable{
         this.statBean = statBean;
     }
 
-    private DAO dao = new DAO();
+    @ManagedProperty(value="#{login}")
+    private LoginBean loginBean;
+    public void setLoginBean(LoginBean loginBean) {
+        this.loginBean = loginBean;
+    }
+
+
+    private DAO dao;
     private Phrase currPhrase;
     private String question ="";
     private String answer = "";
@@ -39,8 +47,19 @@ public class InterfaceBean implements Serializable{
 
     public InterfaceBean() throws SQLException{
         System.out.println("--- Bean was created");
-        nextQuestion();
+        init();
     }
+
+    @PostConstruct
+    private void init(){
+        System.out.println("--- loginbean is " + loginBean);
+        if(loginBean!=null)
+            dao = loginBean.returnDAO();
+        if(dao!=null)
+            nextQuestion();
+    }
+
+
 
     private void resultProcessing(){
         StringBuilder str = new StringBuilder();
@@ -60,8 +79,6 @@ public class InterfaceBean implements Serializable{
         Phrase phrase = dao.nextPhrase();
         if(phrase!=null){
             listOfPhrases.add(phrase);
-            if(statBean!=null)
-                statBean.dayCounterIncrement();
         }
     }
 

@@ -39,4 +39,7 @@ public class Phrase {
         this.indexEnd = indexEnd;
         this.exactMatch = exactMatch;
     }
+    public String toString(){
+        return forWord + " - " + natWord;
+    }
 }

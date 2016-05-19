@@ -17,11 +17,11 @@
         <h:panelGroup>
             <h:panelGrid columns="2">
                 <h:outputText value="Логин"/>
-                <h:inputText value="#{loginBean.user}"/>
+                <h:inputText value="#{login.user}"/>
                 <h:outputText value="Пароль"/>
-                <h:inputSecret value="#{loginBean.password}"/>
+                <h:inputSecret value="#{login.password}"/>
             </h:panelGrid>
-            <h:commandButton id="submit" value="submit" action="#{loginBean.checkUser()}"/>
+            <h:commandButton id="submit" value="submit" action="#{login.checkUser()}"/>
         </h:panelGroup>
         <h4 style="color:orangered">Неверная комбинация логин-пароль.</h4>
     </h:form>

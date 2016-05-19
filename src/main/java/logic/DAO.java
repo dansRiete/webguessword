@@ -1,7 +1,9 @@
 package logic;
 
 import Exceptions.DataBaseConnectionException;
+import beans.LoginBean;
 
+import javax.faces.bean.ManagedProperty;
 import java.sql.*;
 import java.util.Random;
 
@@ -13,16 +15,27 @@ public class DAO {
     static String host1 = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false";
     static String host2 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false";
     Connection conn;
-    Statement st;
-    {
+    private int totalNumberOfWords;
+    private int totalNumberOfLearnedWords;
+    private LoginBean loginBean;
+    String table;
+    String user;
+    String password;
+
+    public DAO(LoginBean loginBean){
+        this();
+        user = loginBean.getUser();
+        password = loginBean.getPassword();
+        table = user;
+
+    }
+    public DAO(){
         try{
             conn = DriverManager.getConnection(host1, "adminLtuHq9R", "d-AUIKakd1Br");
-            st = conn.createStatement();
             System.out.println("--- Remote DB was connected");
         }catch (SQLException e){
             try{
                 conn = DriverManager.getConnection(host2, "adminLtuHq9R", "d-AUIKakd1Br");
-                st = conn.createStatement();
                 System.out.println("--- Local DB was connected");
             }catch (SQLException e1){
                 e1.printStackTrace();
@@ -32,14 +45,39 @@ public class DAO {
 
         }
     }
-    public DAO(){}
+
+    private void getStatistic(){
+        Statement st = null;
+        ResultSet rs = null;
+        try {
+            st = conn.createStatement();
+
+            rs = st.executeQuery("SELECT COUNT(*) FROM " +table + " WHERE PROB<=3");
+            rs.next();
+            totalNumberOfLearnedWords = rs.getInt(1);
+
+            rs = st.executeQuery("SELECT COUNT(*) FROM " +table);
+            rs.next();
+            totalNumberOfWords = rs.getInt(1);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
 
     public Phrase nextPhrase(){
         int id = random.nextInt(999991183);
         ResultSet rs;
         Phrase phrase = null;
+        Statement st = null;
+
         try {
-            rs = st.executeQuery("SELECT * FROM aleks " + "WHERE index_start<=" + id + " AND index_end>=" + id);
+            st = conn.createStatement();
+            String sql = "SELECT * FROM " + table + " WHERE index_start<=" + id + " AND index_end>=" + id;
+            rs = st.executeQuery(sql);
             rs.next();
             phrase = new Phrase(rs.getInt("id"), rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"), rs.getDouble("prob_factor"),
                     rs.getTimestamp("create_date"), rs.getString("label"), rs.getTimestamp("last_accs_date"),
@@ -50,24 +88,24 @@ public class DAO {
         }
         return phrase;
     }
-
     public void insertPhrase(Phrase phrase){
         try {
-            PreparedStatement ps = conn.prepareStatement("INSERT INTO aleks (id, for_word, nat_word, transcr, prob_factor, create_date, label, last_accs_date, index_start, index_end, exactmatch) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            PreparedStatement ps = conn.prepareStatement("INSERT INTO " + table + " (id, for_word, nat_word, transcr, prob_factor, create_date, label, last_accs_date, index_start, index_end, exactmatch) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 //            ps.setInt();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
-
     public void backupDB(){
         Timestamp ts = new Timestamp(System.currentTimeMillis());
         int count = 0;
         long start = System.currentTimeMillis();
+        Statement st = null;
         try {
-            ResultSet rs = st.executeQuery("SELECT * FROM aleks");
-            PreparedStatement ps = conn.prepareStatement("INSERT INTO resaleks " +
-                    "(date, id, for_word, nat_word, transcr, prob_factor, create_date, label, last_accs_date, " +
+            st = conn.createStatement();
+            ResultSet rs = st.executeQuery("SELECT * FROM " + table);
+            PreparedStatement ps = conn.prepareStatement("INSERT INTO res" + table +
+                    " (date, id, for_word, nat_word, transcr, prob_factor, create_date, label, last_accs_date, " +
                     "index_start, index_end, exactmatch) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
 
             while (rs.next()){
@@ -91,6 +129,12 @@ public class DAO {
         }
         long end = System.currentTimeMillis()-start;
         System.out.println("Copied " + count + " elements, total time=" + end + " ms");
+    }
+    public int getTotalNumberOfWords(){
+        return totalNumberOfWords;
+    }
+    public int getTotalNumberOfLearnedWords(){
+        return totalNumberOfLearnedWords;
     }
 
 }
