@@ -51,7 +51,11 @@ public class InterfaceBean implements Serializable{
     }
 
     private void newPhrase(){
-        listOfPhrases.add(dao.nextPhrase());
+        Phrase phrase = dao.nextPhrase();
+        if(phrase!=null){
+            listOfPhrases.add(phrase);
+            StatBean.dayCounterIncrement();
+        }
     }
 
     public void rightAnswer(){
@@ -104,7 +108,6 @@ public class InterfaceBean implements Serializable{
 
     public void checkTheAnswer(){
         if(answer!=null){
-            StatBean.dayCounter = StatBean.dayCounter + 1;
             if(!(answer.equals("")||answer.equals("+")||answer.equals("-")||answer.equals("++")||answer.equals("--"))){
                 boolean bool = logic.IntelliFind.match(listOfPhrases.get(listOfPhrases.size() - 1 - shift).forWord, answer, false);
                 if(bool)

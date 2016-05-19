@@ -75,24 +75,18 @@
         </h:form>
     </div>
     <div style="width: 35%; display:inline-table; vertical-align: top; horiz-align: center">
-        <h:dataTable value="#{statBean.orderList}" var="o"
-                     styleClass="order-table"
-                     headerClass="order-table-header"
-                     rowClasses="order-table-odd-row,order-table-even-row">
-
-            <h:column>
-                <!-- column header -->
-                <f:facet name="header">Property</f:facet>
-                <!-- row record -->
-                #{o.propertyName}
-            </h:column>
-
-            <h:column>
-                <f:facet name="header">Value</f:facet>
-                #{o.propertyValue}
-            </h:column>
-
-        </h:dataTable>
+        <table class="employeeTable">
+            <thead><tr>
+                <th class="employeeTableHeader" scope="col">Property</th>
+                <th class="employeeTableHeader" scope="col">Value</th>
+            </tr></thead>
+            <tbody>
+            <tr class="employeeTableOddRow">
+                <td>Answers per day</td>
+                <td>#{statBean.dayCounter}</td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 </div>
 </body>
