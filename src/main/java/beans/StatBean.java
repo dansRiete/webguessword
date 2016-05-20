@@ -1,13 +1,10 @@
 package beans;
 
-import logic.DAO;
+import logic.Phrase;
 
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-
+import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 
 @ManagedBean(name="stat")
@@ -17,25 +14,42 @@ public class StatBean/* implements Serializable*/{
 
     public StatBean(){}
 
-    private int dayCounter = 0;
+    private int numOfPhrForSession = 0;
+    private int numOfAnswForSession = 0;
+    private int numOfRightAnswForSession = 0;
     private int totalNumberOfWords;
     private int totalNumberOfLearnedWords;
-    public void dayCounterIncrement(){
-        dayCounter++;
-    }
+    private String percentOfRightAnswers;
 
-    public int getDayCounter() {
-        return dayCounter;
-    }
+    /*@ManagedProperty(value="#{interfaceBean}")
+    private InterfaceBean interfaceBean;*/
 
-    public void setDayCounter(int dayCounter) {
-        this.dayCounter = dayCounter;
+    /*@PostConstruct
+    public void calculateResults(){
+        int numOfNonAnswForSession = 0;
+        int numOfRightAnswForSession = 0;
+        numOfPhrForSession = interfaceBean.returnListOfPhrases().size();
+        for(Phrase phrs : interfaceBean.returnListOfPhrases()){
+            if(phrs.isAnswered==null)
+                numOfNonAnswForSession++;
+            else if(phrs.isAnswered)
+                numOfRightAnswForSession++;
+        }
+        numOfAnswForSession = numOfPhrForSession-numOfNonAnswForSession;
+        this.numOfRightAnswForSession = numOfRightAnswForSession;
+
+    }*/
+
+    public int getNumOfPhrForSession() {
+        return numOfPhrForSession;
+    }
+    public void setNumOfPhrForSession(int numOfPhrForSession) {
+        this.numOfPhrForSession = numOfPhrForSession;
     }
 
     public int getTotalNumberOfWords() {
         return totalNumberOfWords;
     }
-
     public void setTotalNumberOfWords(int totalNumberOfWords) {
         this.totalNumberOfWords = totalNumberOfWords;
     }
@@ -43,8 +57,32 @@ public class StatBean/* implements Serializable*/{
     public int getTotalNumberOfLearnedWords() {
         return totalNumberOfLearnedWords;
     }
-
     public void setTotalNumberOfLearnedWords(int totalNumberOfLearnedWords) {
         this.totalNumberOfLearnedWords = totalNumberOfLearnedWords;
     }
+
+    public String getPercentOfRightAnswers() {
+        return percentOfRightAnswers;
+    }
+    public void setPercentOfRightAnswers(String percentOfRightAnswers) {
+        this.percentOfRightAnswers = percentOfRightAnswers;
+    }
+
+    public int getNumOfAnswForSession() {
+        return numOfAnswForSession;
+    }
+    public void setNumOfAnswForSession(int numOfAnswForSession) {
+        this.numOfAnswForSession = numOfAnswForSession;
+    }
+
+    public int getNumOfRightAnswForSession() {
+        return numOfRightAnswForSession;
+    }
+    public void setNumOfRightAnswForSession(int numOfRightAnswForSession) {
+        this.numOfRightAnswForSession = numOfRightAnswForSession;
+    }
+
+    /*public void setInterfaceBean(InterfaceBean interfaceBean) {
+        this.interfaceBean = interfaceBean;
+    }*/
 }

@@ -4,6 +4,8 @@ import logic.DAO;
 import logic.Phrase;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.*;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -18,7 +20,7 @@ import javax.faces.bean.SessionScoped;
 
 @ManagedBean
 @SessionScoped
-public class InterfaceBean/* implements Serializable*/{
+public class InterfaceBean implements Serializable{
 
     @ManagedProperty(value="#{stat}")
     private StatBean statBean;
@@ -30,6 +32,31 @@ public class InterfaceBean/* implements Serializable*/{
     private LoginBean loginBean;
     public void setLoginBean(LoginBean loginBean) {
         this.loginBean = loginBean;
+    }
+
+    //>>Session statistics
+    private int numOfPhrForSession = 0;
+    private int numOfAnswForSession = 0;
+    private int numOfRightAnswForSession = 0;
+    private int numOfWrongAnswForSession = 0;
+    private int totalNumberOfWords;
+    private int totalNumberOfLearnedWords;
+    private String percentOfRightAnswers;
+    //<<
+
+    //>>Phrase data
+    private String pDpercentOfAppearance;
+    private double pDprob;
+    private Timestamp pdLastAccs;
+    private Timestamp pdCreateDate;
+    private String label;
+    //<<
+
+    private void reloadPhraseData(){
+        pDprob = listOfPhrases.get(index).prob;
+        pdLastAccs = listOfPhrases.get(index).lastAccs;
+        pdCreateDate = listOfPhrases.get(index).createDate;
+        label = listOfPhrases.get(index).label;
     }
 
 
@@ -59,9 +86,32 @@ public class InterfaceBean/* implements Serializable*/{
             nextQuestion();
     }
 
+    public ArrayList<Phrase> returnListOfPhrases(){
+        return listOfPhrases;
+    }
+
+    private void calculateSessionStatistics(){
+        int numOfNonAnswForSession = 0;
+        int numOfRightAnswForSession = 0;
+        numOfPhrForSession = listOfPhrases.size();
+        for(Phrase phrs : listOfPhrases){
+            if(phrs.isAnswered==null)
+                numOfNonAnswForSession++;
+            else if(phrs.isAnswered)
+                numOfRightAnswForSession++;
+        }
+        numOfAnswForSession = numOfPhrForSession-numOfNonAnswForSession;
+        this.numOfRightAnswForSession = numOfRightAnswForSession;
+        this.numOfWrongAnswForSession = numOfAnswForSession-numOfRightAnswForSession;
+        //Формирует строку с процентным соотношением правильных ответов к общему кол-ву ответов
+        percentOfRightAnswers = ((new BigDecimal(numOfRightAnswForSession)).divide(new BigDecimal(numOfAnswForSession==0?1:numOfAnswForSession),2, RoundingMode.HALF_UP).multiply(new BigDecimal(100))).setScale(0, RoundingMode.HALF_UP)+"%";
+
+    }
 
 
     private void resultProcessing(){
+        calculateSessionStatistics();
+        reloadPhraseData();
         StringBuilder str = new StringBuilder();
 //        int currPos = listOfPhrases.size() - 1 - shift; //is never used
         for(int i = listOfPhrases.size()-1; i>=0; i--){
@@ -179,10 +229,11 @@ public class InterfaceBean/* implements Serializable*/{
         dao.backupDB();
     }
 
+    //>>Setters an getters
+    //*************************************************************************************
     public String getQuestion() {
         return question;
     }
-
     public void setQuestion(String question) {
         this.question = question;
     }
@@ -190,7 +241,6 @@ public class InterfaceBean/* implements Serializable*/{
     public String getAnswer() {
         return answer;
     }
-
     public void setAnswer(String answer) {
         this.answer = answer;
     }
@@ -198,12 +248,98 @@ public class InterfaceBean/* implements Serializable*/{
     public String getResult() {
         return result;
     }
-
     public void setResult(String res) {
         this.result = res;
     }
 
+    public int getNumOfPhrForSession() {
+        return numOfPhrForSession;
+    }
+    public void setNumOfPhrForSession(int numOfPhrForSession) {
+        this.numOfPhrForSession = numOfPhrForSession;
+    }
 
+    public int getTotalNumberOfWords() {
+        return totalNumberOfWords;
+    }
+    public void setTotalNumberOfWords(int totalNumberOfWords) {
+        this.totalNumberOfWords = totalNumberOfWords;
+    }
+
+    public int getTotalNumberOfLearnedWords() {
+        return totalNumberOfLearnedWords;
+    }
+    public void setTotalNumberOfLearnedWords(int totalNumberOfLearnedWords) {
+        this.totalNumberOfLearnedWords = totalNumberOfLearnedWords;
+    }
+
+    public String getPercentOfRightAnswers() {
+        return percentOfRightAnswers;
+    }
+    public void setPercentOfRightAnswers(String percentOfRightAnswers) {
+        this.percentOfRightAnswers = percentOfRightAnswers;
+    }
+
+    public int getNumOfAnswForSession() {
+        return numOfAnswForSession;
+    }
+    public void setNumOfAnswForSession(int numOfAnswForSession) {
+        this.numOfAnswForSession = numOfAnswForSession;
+    }
+
+    public int getNumOfRightAnswForSession() {
+        return numOfRightAnswForSession;
+    }
+    public void setNumOfRightAnswForSession(int numOfRightAnswForSession) {
+        this.numOfRightAnswForSession = numOfRightAnswForSession;
+    }
+
+    public int getNumOfWrongAnswForSession() {
+        return numOfWrongAnswForSession;
+    }
+    public void setNumOfWrongAnswForSession(int numOfWrongAnswForSession) {
+        this.numOfWrongAnswForSession = numOfWrongAnswForSession;
+    }
+
+    public String getpDpercentOfAppearance() {
+        return pDpercentOfAppearance;
+    }
+
+    public void setpDpercentOfAppearance(String pDpercentOfAppearance) {
+        this.pDpercentOfAppearance = pDpercentOfAppearance;
+    }
+
+    public double getpDprob() {
+        return pDprob;
+    }
+
+    public void setpDprob(float pDprob) {
+        this.pDprob = pDprob;
+    }
+
+    public Timestamp getPdLastAccs() {
+        return pdLastAccs;
+    }
+
+    public void setPdLastAccs(Timestamp pdLastAccs) {
+        this.pdLastAccs = pdLastAccs;
+    }
+
+    public Timestamp getPdCreateDate() {
+        return pdCreateDate;
+    }
+
+    public void setPdCreateDate(Timestamp pdCreateDate) {
+        this.pdCreateDate = pdCreateDate;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
+    }
 }
 
 

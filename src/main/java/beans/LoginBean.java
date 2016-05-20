@@ -1,6 +1,8 @@
 package beans;
 
 import logic.DAO;
+import logic.User;
+import org.apache.log4j.Logger;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
@@ -10,16 +12,38 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Serializable;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
 
 @ManagedBean(name="login")
 @SessionScoped
-public class LoginBean/* implements Serializable */{
+public class LoginBean implements Serializable {
     private String user;
     private String password;
     private String text;
-    private DAO dao;
+    User currentUser;
+    private DAO dao = new DAO();
+    final static Logger logger = Logger.getLogger(LoginBean.class);
+    Connection conn;
+    private ArrayList<User> usersList = new ArrayList<>();
     public LoginBean(){
+        conn = dao.getConnection();
 
+        //>>Создаём список юзеров ArrayList<User> usersList
+        try {
+            Statement st = conn.createStatement();
+            ResultSet rs = st.executeQuery("SELECT * FROM users");
+            while (rs.next()){
+                usersList.add(new User(rs.getInt("id"), rs.getString("login"), rs.getString("name"),
+                        rs.getString("password"), rs.getString("email")));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        //<<
     }
     public String getUser() {
         return user;
@@ -42,21 +66,44 @@ public class LoginBean/* implements Serializable */{
 
     public void checkUser(){
         //!!! EXC !!!
+        boolean userExist = false;
 
-            if ((this.user.equals("aleks") || (this.user.equals("oksana"))) && (this.password.equals("vlenaf13") || this.password.equals("oks2804"))) {
-                FacesContext context = FacesContext.getCurrentInstance();
+        //Проверяем или введенный пользователь присутствует в базе данных
+        for(User user : usersList){
+            System.out.println("Inside for(User user : usersList)");
+            if(this.user.equalsIgnoreCase(user.login)){
+                userExist = true;
+                currentUser = user;
+                break;
+            }
+        }
+            //Если пользователь существует и пароль совпадает то dispatch("learn.xhtml")
+            //в противном случае sendRedirect("error.xhtml")
+            if ((userExist)&&(password.equalsIgnoreCase(currentUser.password))) {
+                try {
+                    FacesContext.getCurrentInstance().getExternalContext().dispatch("learn.xhtml");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                /*FacesContext context = FacesContext.getCurrentInstance();
                 HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
                 HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getResponse();
                 try {
                     request.getRequestDispatcher("learn.xhtml").forward(request, response);
                 } catch (ServletException e) {
                     System.out.println("--- Servlet exception during request.getRequestDispatcher(\"learn.xhtml\").forward(request, response);");
+                    logger.error("Log4G error!", e);
                     e.printStackTrace();
                 } catch (IOException e) {
                     System.out.println("--- IOException during request.getRequestDispatcher(\"learn.xhtml\").forward(request, response);");
                     e.printStackTrace();
-                }
+                }*/
             } else {
+                /*try { //>>STACK OVERFLOW! WHY?
+                    FacesContext.getCurrentInstance().getExternalContext().dispatch("error.xhtml");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }*/   //<<
                 FacesContext context = FacesContext.getCurrentInstance();
                 HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getResponse();
                 try {
@@ -66,19 +113,17 @@ public class LoginBean/* implements Serializable */{
                     e.printStackTrace();
                 }
             }
-
     }
 
     public String getText() {
         return text;
     }
 
-
     public void setText(String text) {
         this.text = text;
     }
     public DAO returnDAO(){
-        dao = new DAO(this);
+        dao.setLoginBean(this);
         System.out.println("DAO is " + dao);
         return this.dao;
     }

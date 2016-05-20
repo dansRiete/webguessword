@@ -24,6 +24,10 @@ public class Phrase {
     public double indexStart;
     public double indexEnd;
     public boolean exactMatch;
+    /**
+     * Saved state of phrase object before changing isAnswered to false or true
+     */
+    private Phrase currentPhrase;
 
     public Phrase(int id, String forWord, String natWord, String transcr, double prob, Timestamp createDate,
                   String label, Timestamp lastAccs, double indexStart, double indexEnd, boolean exactMatch){
@@ -39,6 +43,12 @@ public class Phrase {
         this.indexEnd = indexEnd;
         this.exactMatch = exactMatch;
     }
+
+    public void rightAnswer(){
+
+
+    }
+
     public String toString(){
         return forWord + " - " + natWord;
     }

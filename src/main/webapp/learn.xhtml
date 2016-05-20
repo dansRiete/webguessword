@@ -77,21 +77,49 @@
     <div style="width: 35%; display:inline-table; vertical-align: top; horiz-align: center">
         <table class="employeeTable">
             <thead><tr>
-                <th class="employeeTableHeader" scope="col">Property</th>
+                <th class="employeeTableHeader" scope="col">Properties within current session</th>
                 <th class="employeeTableHeader" scope="col">Value</th>
             </tr></thead>
             <tbody>
             <tr class="employeeTableOddRow">
-                <td>Answers per day</td>
-                <td>#{stat.dayCounter}</td>
+                <td>Number of answers</td>
+                <td>#{interfaceBean.numOfAnswForSession}</td>
             </tr>
             <tr class="employeeTableOddRow">
-                <td>Total amount of words</td>
-                <td>#{stat.totalNumberOfWords}</td>
+                <td>Number of right answers</td>
+                <td>#{interfaceBean.numOfRightAnswForSession}</td>
             </tr>
             <tr class="employeeTableOddRow">
-                <td>Amount of learned words</td>
-                <td>#{stat.totalNumberOfLearnedWords}</td>
+                <td>Number of wrong answers</td>
+                <td>#{interfaceBean.numOfWrongAnswForSession}</td>
+            </tr>
+            <tr class="employeeTableOddRow">
+                <td>Percent of right answers</td>
+                <td>#{interfaceBean.percentOfRightAnswers}</td>
+            </tr>
+            </tbody>
+        </table>
+        <table class="employeeTable">
+            <thead><tr>
+                <th class="employeeTableHeader" scope="col">Properties of current phrase</th>
+                <th class="employeeTableHeader" scope="col">Value</th>
+            </tr></thead>
+            <tbody>
+            <tr class="employeeTableOddRow">
+                <td>Prob</td>
+                <td>#{interfaceBean.pDprob}</td>
+            </tr>
+            <tr class="employeeTableOddRow">
+                <td>Last access date</td>
+                <td>#{interfaceBean.pdLastAccs}</td>
+            </tr>
+            <tr class="employeeTableOddRow">
+                <td>Create date</td>
+                <td>#{interfaceBean.pdCreateDate}</td>
+            </tr>
+            <tr class="employeeTableOddRow">
+                <td>Label</td>
+                <td>#{interfaceBean.label}</td>
             </tr>
             </tbody>
         </table>

@@ -22,12 +22,14 @@ public class DAO {
     String user;
     String password;
 
-    public DAO(LoginBean loginBean){
-        this();
+    public void setLoginBean(LoginBean loginBean){
         user = loginBean.getUser();
         password = loginBean.getPassword();
         table = user;
 
+    }
+    public Connection getConnection(){
+        return conn;
     }
     public DAO(){
         try{
