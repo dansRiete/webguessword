@@ -8,7 +8,7 @@ public class RetDiff {
     private static final long oneHour = oneMinute * 60;
     private static final long oneDay = oneHour * 24;
     private static final long oneMonth = oneMinute * 43830;
-    public static final long oneYear = oneMonth * 12;
+    private static final long oneYear = oneMonth * 12;
 
     public String retDiffInTime(long diff){
 

@@ -5,6 +5,7 @@ import beans.LoginBean;
 
 import javax.faces.bean.ManagedProperty;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Random;
 
 /**
@@ -18,14 +19,17 @@ public class DAO {
     private int totalNumberOfWords;
     private int totalNumberOfLearnedWords;
     private LoginBean loginBean;
-    String table;
+    public String table;
     String user;
     String password;
+    public ArrayList<String> labels = new ArrayList<>();
 
     public void setLoginBean(LoginBean loginBean){
         user = loginBean.getUser();
         password = loginBean.getPassword();
         table = user;
+        System.out.println("user is " + user);
+        reloadLabelsList();
 
     }
     public Connection getConnection(){
@@ -48,20 +52,35 @@ public class DAO {
         }
     }
 
+    public void reloadLabelsList(){
+        labels.clear();
+        labels.add("All");
+        Statement st = null;
+        ResultSet rs = null;
+        String temp = null;
+        try {
+            st = conn.createStatement();
+
+            rs = st.executeQuery("SELECT DISTINCT (LABEL) FROM " + user + " ORDER BY LABEL");
+            while (rs.next()){
+                temp = rs.getString("LABEL");
+                labels.add(temp== null ? "null":temp);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
     private void getStatistic(){
         Statement st = null;
         ResultSet rs = null;
         try {
             st = conn.createStatement();
-
-            rs = st.executeQuery("SELECT COUNT(*) FROM " +table + " WHERE PROB<=3");
+            rs = st.executeQuery("SELECT COUNT(*) FROM " +table + "  WHERE PROB<=3");
             rs.next();
             totalNumberOfLearnedWords = rs.getInt(1);
-
             rs = st.executeQuery("SELECT COUNT(*) FROM " +table);
             rs.next();
             totalNumberOfWords = rs.getInt(1);
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -79,6 +98,7 @@ public class DAO {
         try {
             st = conn.createStatement();
             String sql = "SELECT * FROM " + table + " WHERE index_start<=" + id + " AND index_end>=" + id;
+            System.out.println(sql);
             rs = st.executeQuery(sql);
             rs.next();
             phrase = new Phrase(rs.getInt("id"), rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"), rs.getDouble("prob_factor"),

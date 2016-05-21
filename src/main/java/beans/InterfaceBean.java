@@ -2,6 +2,7 @@ package beans;
 
 import logic.DAO;
 import logic.Phrase;
+import logic.RetDiff;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -9,6 +10,7 @@ import java.math.RoundingMode;
 import java.sql.*;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
@@ -33,6 +35,7 @@ public class InterfaceBean implements Serializable{
     public void setLoginBean(LoginBean loginBean) {
         this.loginBean = loginBean;
     }
+    private RetDiff retDiff = new RetDiff();
 
     //>>Session statistics
     private int numOfPhrForSession = 0;
@@ -53,13 +56,18 @@ public class InterfaceBean implements Serializable{
     private Timestamp pdLastAccs;
     private Timestamp pdCreateDate;
     private String label;
+    private String strLastAccs;
+    private String strCreateDate;
     //<<
+
 
     private void reloadPhraseData(){
         pDprob = listOfPhrases.get(index).prob;
         pdLastAccs = listOfPhrases.get(index).lastAccs;
         pdCreateDate = listOfPhrases.get(index).createDate;
         label = listOfPhrases.get(index).label;
+        strLastAccs = retDiff.retDiffInTime(System.currentTimeMillis() - pdLastAccs.getTime());
+        strCreateDate = retDiff.retDiffInTime(System.currentTimeMillis() - pdCreateDate.getTime());
     }
 
 
@@ -72,12 +80,18 @@ public class InterfaceBean implements Serializable{
     private final String RIGHT_MESSAGE = " <strong><font color=\"green\">right</font>/<font color=\"#BBBBB9\">wrong</font></strong>";
     private final String NONANSWERED_MESSAGE = " <strong><font color=\"#BBBBB9\">right</font>/<font color=\"#BBBBB9\">wrong</font></strong>";
     private ArrayList<Phrase> listOfPhrases = new ArrayList<>();
+    private ArrayList<String> listOfChooses;
+    private String choosedLabel;
+    private String resultChoosedLabel;
+    private HashSet<String> hshset = new HashSet<>();
     private int shift = 0;
     private int index;
+
 
     public InterfaceBean() throws SQLException{
         System.out.println("--- Bean was created");
         init();
+
     }
 
     @PostConstruct
@@ -85,9 +99,60 @@ public class InterfaceBean implements Serializable{
         System.out.println("--- loginbean is " + loginBean);
         if(loginBean!=null)
             dao = loginBean.returnDAO();
-        if(dao!=null)
+        if(dao!=null){
+            listOfChooses = dao.labels;
             nextQuestion();
+        }
     }
+
+    public void setTable() {
+//        System.out.println("--- inside setTable()");
+
+        if (choosedLabel != null &&  (!choosedLabel.equalsIgnoreCase(""))){
+            if(!choosedLabel.equalsIgnoreCase("all")){
+//                System.out.println("--- hshset.add("+choosedLabel+")");
+                hshset.add(choosedLabel);
+            }else{
+//                System.out.println("hshset.clear();");
+                hshset.clear();
+            }
+        }
+
+        resultChoosedLabel = "";
+        boolean temp = true;
+        for(String str : hshset){
+            if(temp){
+                resultChoosedLabel += "'"+str+"'";
+                temp = false;
+            }else {
+                resultChoosedLabel += ",'"+str+"'";
+            }
+        }
+
+
+//        System.out.println("--- hashset is " + hshset+ " size is " + hshset.size());
+        if(!resultChoosedLabel.equalsIgnoreCase(""))
+            dao.table = "(SELECT * FROM " + loginBean.getUser() + " WHERE LABEL IN(" + resultChoosedLabel + ")) As custom";
+        else{
+            resultChoosedLabel = dao.table = loginBean.getUser();
+        }
+
+        /*if (choosedLabel != null && (!choosedLabel.equalsIgnoreCase("all") && (!choosedLabel.equalsIgnoreCase("")))) {
+            if (resultChoosedLabel == null||resultChoosedLabel.equalsIgnoreCase("")) {
+                resultChoosedLabel = (resultChoosedLabel == null ? "" : resultChoosedLabel) + "'" + choosedLabel + "'";
+                choosedLabel = "";
+            } else {
+                resultChoosedLabel = resultChoosedLabel + ",'" + choosedLabel + "'";
+                choosedLabel = "";
+            }
+            dao.table = "(SELECT * FROM " + loginBean.getUser() + " WHERE LABEL IN(" + resultChoosedLabel + ")) As custom";
+        } else {
+            choosedLabel = "";
+            resultChoosedLabel = "";
+            dao.table = loginBean.getUser();
+        }*/
+    }
+
 
     public ArrayList<Phrase> returnListOfPhrases(){
         return listOfPhrases;
@@ -320,7 +385,6 @@ public class InterfaceBean implements Serializable{
     public String getpDpercentOfAppearance() {
         return pDpercentOfAppearance;
     }
-
     public void setpDpercentOfAppearance(String pDpercentOfAppearance) {
         this.pDpercentOfAppearance = pDpercentOfAppearance;
     }
@@ -328,7 +392,6 @@ public class InterfaceBean implements Serializable{
     public double getpDprob() {
         return pDprob;
     }
-
     public void setpDprob(float pDprob) {
         this.pDprob = pDprob;
     }
@@ -336,7 +399,6 @@ public class InterfaceBean implements Serializable{
     public Timestamp getPdLastAccs() {
         return pdLastAccs;
     }
-
     public void setPdLastAccs(Timestamp pdLastAccs) {
         this.pdLastAccs = pdLastAccs;
     }
@@ -344,7 +406,6 @@ public class InterfaceBean implements Serializable{
     public Timestamp getPdCreateDate() {
         return pdCreateDate;
     }
-
     public void setPdCreateDate(Timestamp pdCreateDate) {
         this.pdCreateDate = pdCreateDate;
     }
@@ -352,7 +413,6 @@ public class InterfaceBean implements Serializable{
     public String getLabel() {
         return label;
     }
-
     public void setLabel(String label) {
         this.label = label;
     }
@@ -360,9 +420,50 @@ public class InterfaceBean implements Serializable{
     public BigDecimal getAvgTimeOfAccsToDb() {
         return avgTimeOfAccsToDb;
     }
-
     public void setAvgTimeOfAccsToDb(BigDecimal avgTimeOfAccsToDb) {
         this.avgTimeOfAccsToDb = avgTimeOfAccsToDb;
+    }
+
+    public String getStrLastAccs() {
+        return strLastAccs;
+    }
+    public void setStrLastAccs(String strLastAccs) {
+        this.strLastAccs = strLastAccs;
+    }
+
+    public String getStrCreateDate() {
+        return strCreateDate;
+    }
+    public void setStrCreateDate(String strCreateDate) {
+        this.strCreateDate = strCreateDate;
+    }
+
+    public ArrayList<Phrase> getListOfPhrases(){
+        return listOfPhrases;
+    }
+
+    public String getChoosedLabel() {
+        return choosedLabel;
+    }
+
+    public void setChoosedLabel(String choosedLabel) {
+        this.choosedLabel = choosedLabel;
+    }
+
+    public ArrayList<String> getListOfChooses() {
+        return listOfChooses;
+    }
+
+    public void setListOfChooses(ArrayList<String> listOfChooses) {
+        this.listOfChooses = listOfChooses;
+    }
+
+    public String getResultChoosedLabel() {
+        return resultChoosedLabel;
+    }
+
+    public void setResultChoosedLabel(String resultChoosedLabel) {
+        this.resultChoosedLabel = resultChoosedLabel;
     }
 }
 

@@ -71,20 +71,25 @@ public class LoginBean implements Serializable {
         //Проверяем или введенный пользователь присутствует в базе данных
         for(User user : usersList){
             System.out.println("Inside for(User user : usersList)");
+            dao.setLoginBean(this);
             if(this.user.equalsIgnoreCase(user.login)){
                 userExist = true;
                 currentUser = user;
                 break;
             }
         }
+
             //Если пользователь существует и пароль совпадает то dispatch("learn.xhtml")
             //в противном случае sendRedirect("error.xhtml")
             if ((userExist)&&(password.equalsIgnoreCase(currentUser.password))) {
+                System.out.println("--- from login user is" + user);
+                dao.setLoginBean(this);
                 try {
                     FacesContext.getCurrentInstance().getExternalContext().dispatch("learn.xhtml");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
                 /*FacesContext context = FacesContext.getCurrentInstance();
                 HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
                 HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getResponse();
@@ -123,8 +128,6 @@ public class LoginBean implements Serializable {
         this.text = text;
     }
     public DAO returnDAO(){
-        dao.setLoginBean(this);
-        System.out.println("DAO is " + dao);
         return this.dao;
     }
 }

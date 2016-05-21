@@ -46,7 +46,10 @@ public class Phrase {
 
     public void rightAnswer(){
 
+    }
 
+    public String getForWord(){
+        return forWord;
     }
 
     public String toString(){

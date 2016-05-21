@@ -36,7 +36,12 @@
             <h:commandButton style="margin-left: 3px" type="submit" id="answerAction" value="Answer" action="#{interfaceBean.checkTheAnswer()}">
                 <f:ajax execute="answer" render="@all"> </f:ajax>
             </h:commandButton>
-        <script type="text/javascript">
+            <h:selectOneMenu id="table" value="#{interfaceBean.choosedLabel}">
+                <f:ajax event="change" execute="table; #{interfaceBean.setTable()}" render="@all" />
+                <f:selectItems value="#{interfaceBean.listOfChooses}" var="group" itemValue="#{group}" itemLabel="#{group}"/>
+            </h:selectOneMenu>
+
+            <script type="text/javascript">
             document.getElementsByName('j_idt6:answer')[0].focus();
         </script>
         </div>
@@ -115,18 +120,26 @@
             </tr>
             <tr class="employeeTableOddRow">
                 <td>Last access date</td>
-                <td>#{interfaceBean.pdLastAccs}</td>
+                <td>#{interfaceBean.pdLastAccs}(#{interfaceBean.strLastAccs})</td>
             </tr>
             <tr class="employeeTableOddRow">
                 <td>Create date</td>
-                <td>#{interfaceBean.pdCreateDate}</td>
+                <td>#{interfaceBean.pdCreateDate}(#{interfaceBean.strCreateDate})</td>
             </tr>
             <tr class="employeeTableOddRow">
                 <td>Label</td>
                 <td>#{interfaceBean.label}</td>
             </tr>
+            <tr class="employeeTableOddRow">
+                <td>Choosed phrase</td>
+                <td>#{interfaceBean.resultChoosedLabel}</td>
+            </tr>
             </tbody>
         </table>
+
+
+
+
     </div>
 </div>
 </body>
