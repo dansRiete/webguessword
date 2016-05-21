@@ -42,6 +42,9 @@ public class InterfaceBean implements Serializable{
     private int totalNumberOfWords;
     private int totalNumberOfLearnedWords;
     private String percentOfRightAnswers;
+    private int[] timeOfAccsToDbArr = new int[5];
+    private int timeOfAccsToDbArrCounter;
+    private BigDecimal avgTimeOfAccsToDb;
     //<<
 
     //>>Phrase data
@@ -105,6 +108,15 @@ public class InterfaceBean implements Serializable{
         this.numOfWrongAnswForSession = numOfAnswForSession-numOfRightAnswForSession;
         //Формирует строку с процентным соотношением правильных ответов к общему кол-ву ответов
         percentOfRightAnswers = ((new BigDecimal(numOfRightAnswForSession)).divide(new BigDecimal(numOfAnswForSession==0?1:numOfAnswForSession),2, RoundingMode.HALF_UP).multiply(new BigDecimal(100))).setScale(0, RoundingMode.HALF_UP)+"%";
+        //>>Рассчитываем среднее время доступа к базе данных
+        double summ = 0;
+        double counter = 0;
+        for(int a : timeOfAccsToDbArr)
+            if (a!=0){
+                summ+=a;
+                counter++;
+            }
+        avgTimeOfAccsToDb = new BigDecimal(summ/(counter==0?1:counter)).setScale(0, RoundingMode.HALF_UP);
 
     }
 
@@ -126,10 +138,14 @@ public class InterfaceBean implements Serializable{
     }
 
     private void newPhrase(){
+        long starTime = System.currentTimeMillis();
         Phrase phrase = dao.nextPhrase();
         if(phrase!=null){
             listOfPhrases.add(phrase);
         }
+        if(timeOfAccsToDbArrCounter==5)
+            timeOfAccsToDbArrCounter=0;
+        timeOfAccsToDbArr[timeOfAccsToDbArrCounter++] = (int)(System.currentTimeMillis()-starTime);
     }
 
     public void rightAnswer(){
@@ -339,6 +355,14 @@ public class InterfaceBean implements Serializable{
 
     public void setLabel(String label) {
         this.label = label;
+    }
+
+    public BigDecimal getAvgTimeOfAccsToDb() {
+        return avgTimeOfAccsToDb;
+    }
+
+    public void setAvgTimeOfAccsToDb(BigDecimal avgTimeOfAccsToDb) {
+        this.avgTimeOfAccsToDb = avgTimeOfAccsToDb;
     }
 }
 
