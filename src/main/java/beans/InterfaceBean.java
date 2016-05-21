@@ -116,7 +116,7 @@ public class InterfaceBean implements Serializable{
                 summ+=a;
                 counter++;
             }
-        avgTimeOfAccsToDb = new BigDecimal(summ/(counter==0?1:counter)).setScale(0, RoundingMode.HALF_UP);
+        avgTimeOfAccsToDb = new BigDecimal(summ/(counter==0?1:counter)/1000000).setScale(2, RoundingMode.HALF_UP);
 
     }
 
@@ -138,14 +138,14 @@ public class InterfaceBean implements Serializable{
     }
 
     private void newPhrase(){
-        long starTime = System.currentTimeMillis();
+        long starTime = System.nanoTime();
         Phrase phrase = dao.nextPhrase();
         if(phrase!=null){
             listOfPhrases.add(phrase);
         }
         if(timeOfAccsToDbArrCounter==5)
             timeOfAccsToDbArrCounter=0;
-        timeOfAccsToDbArr[timeOfAccsToDbArrCounter++] = (int)(System.currentTimeMillis()-starTime);
+        timeOfAccsToDbArr[timeOfAccsToDbArrCounter++] = (int)(System.nanoTime()-starTime);
     }
 
     public void rightAnswer(){
