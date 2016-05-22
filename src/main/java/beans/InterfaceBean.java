@@ -60,6 +60,13 @@ public class InterfaceBean implements Serializable{
     private String strCreateDate;
     //<<
 
+    //>>Current phrase data
+    private String currPhrNatWord;
+    private String currPhrForWord;
+    private String currPhrTransc;
+    private String currPhrLabel;
+    //<<
+
 
     private void reloadPhraseData(){
         pDprob = listOfPhrases.get(index).prob;
@@ -136,21 +143,6 @@ public class InterfaceBean implements Serializable{
         else{
             resultChoosedLabel = dao.table = loginBean.getUser();
         }
-
-        /*if (choosedLabel != null && (!choosedLabel.equalsIgnoreCase("all") && (!choosedLabel.equalsIgnoreCase("")))) {
-            if (resultChoosedLabel == null||resultChoosedLabel.equalsIgnoreCase("")) {
-                resultChoosedLabel = (resultChoosedLabel == null ? "" : resultChoosedLabel) + "'" + choosedLabel + "'";
-                choosedLabel = "";
-            } else {
-                resultChoosedLabel = resultChoosedLabel + ",'" + choosedLabel + "'";
-                choosedLabel = "";
-            }
-            dao.table = "(SELECT * FROM " + loginBean.getUser() + " WHERE LABEL IN(" + resultChoosedLabel + ")) As custom";
-        } else {
-            choosedLabel = "";
-            resultChoosedLabel = "";
-            dao.table = loginBean.getUser();
-        }*/
     }
 
 
@@ -186,7 +178,7 @@ public class InterfaceBean implements Serializable{
     }
 
 
-    private void resultProcessing(){
+    public void resultProcessing(){
         calculateSessionStatistics();
         reloadPhraseData();
         StringBuilder str = new StringBuilder();
@@ -200,6 +192,10 @@ public class InterfaceBean implements Serializable{
                 str.append(i==index?"<strong>":"").append("[").append(listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss"))).append(WRONG_MESSAGE).append("] ").append(listOfPhrases.get(i).natWord).append(" - ").append(listOfPhrases.get(i).forWord).append((i==index?"</strong>":"")).append("</br>");
         }
         result = str.toString();
+        currPhrForWord = listOfPhrases.get(index).forWord;
+        currPhrNatWord = listOfPhrases.get(index).natWord;
+        currPhrTransc = listOfPhrases.get(index).transcr;
+        currPhrLabel = listOfPhrases.get(index).label;
     }
 
     private void newPhrase(){
@@ -207,6 +203,7 @@ public class InterfaceBean implements Serializable{
         Phrase phrase = dao.nextPhrase();
         if(phrase!=null){
             listOfPhrases.add(phrase);
+            currPhrase = phrase;
         }
         if(timeOfAccsToDbArrCounter==5)
             timeOfAccsToDbArrCounter=0;
@@ -215,7 +212,9 @@ public class InterfaceBean implements Serializable{
 
     public void rightAnswer(){
         try {
-            listOfPhrases.get(listOfPhrases.size() - 1 - shift).isAnswered = true;
+            index = listOfPhrases.size() - 1 - shift;
+            currPhrase = listOfPhrases.get(index);
+            currPhrase.isAnswered = true;
             if (shift == 0)
                 nextQuestion();
             resultProcessing();
@@ -227,7 +226,9 @@ public class InterfaceBean implements Serializable{
 
     public void wrongAnswer(){
         try{
-            listOfPhrases.get(listOfPhrases.size() - 1 - shift).isAnswered = false;
+            index = listOfPhrases.size() - 1 - shift;
+            currPhrase = listOfPhrases.get(index);
+            currPhrase.isAnswered = false;
             if(shift==0)
                 nextQuestion();
             resultProcessing();
@@ -240,7 +241,9 @@ public class InterfaceBean implements Serializable{
     public void previousRight(){
         try{
             if(shift==0){
-                listOfPhrases.get(listOfPhrases.size() - 2).isAnswered = true;
+                index = listOfPhrases.size() - 2;
+                currPhrase = listOfPhrases.get(index);
+                currPhrase.isAnswered = true;
                 resultProcessing();
             }
         }catch (NullPointerException e){
@@ -252,7 +255,9 @@ public class InterfaceBean implements Serializable{
     public void previousWrong(){
         try{
             if(shift==0){
-                listOfPhrases.get(listOfPhrases.size() - 2).isAnswered = false;
+                index = listOfPhrases.size() - 2;
+                currPhrase = listOfPhrases.get(index);
+                currPhrase.isAnswered = false;
                 resultProcessing();
             }
         }catch (NullPointerException e){
@@ -286,10 +291,12 @@ public class InterfaceBean implements Serializable{
         if(shift==0) {
             newPhrase();
             index = listOfPhrases.size() - 1;
-            question = listOfPhrases.get(index).natWord;
+            currPhrase = listOfPhrases.get(index);
+            question = currPhrase.natWord;
         }else {
             index = listOfPhrases.size() - 1 - --shift;
-            question = listOfPhrases.get(index).natWord;
+            currPhrase = listOfPhrases.get(index);
+            question = currPhrase.natWord;
         }
         resultProcessing();
 //        System.out.println("--- nextQuestion() List size="+(listOfPhrases.size()+" Current shift="+shift+" Requested index="+index));
@@ -301,7 +308,8 @@ public class InterfaceBean implements Serializable{
         index = listOfPhrases.size() - 1 - shift;
         if(index<0)
             index = 0;
-        question = listOfPhrases.get(index).natWord;
+        currPhrase = listOfPhrases.get(index);
+        question = currPhrase.natWord;
         resultProcessing();
 //        System.out.println("--- previousQuestion() List size="+(listOfPhrases.size()+" Current shift="+shift+" Requested index="+index));
     }
@@ -464,6 +472,44 @@ public class InterfaceBean implements Serializable{
 
     public void setResultChoosedLabel(String resultChoosedLabel) {
         this.resultChoosedLabel = resultChoosedLabel;
+    }
+
+    public String getCurrPhrNatWord() {
+        return currPhrNatWord;
+    }
+
+    public void setCurrPhrNatWord(String currPhrNatWord) {
+        this.currPhrNatWord = currPhrNatWord;
+        currPhrase.natWord = this.currPhrNatWord;
+    }
+
+    public String getCurrPhrForWord() {
+        System.out.println("--- inside getCurrPhrForWord() currPhrForWord is " + currPhrForWord);
+        return currPhrForWord;
+    }
+
+    public void setCurrPhrForWord(String currPhrForWord) {
+        this.currPhrForWord = currPhrForWord;
+        System.out.println("--- inside setCurrPhrForWord(String currPhrForWord) currPhrForWord's changed " + this.currPhrForWord);
+        currPhrase.forWord = this.currPhrForWord;
+    }
+
+    public String getCurrPhrTransc() {
+        return currPhrTransc;
+    }
+
+    public void setCurrPhrTransc(String currPhrTransc) {
+        this.currPhrTransc = currPhrTransc;
+        currPhrase.transcr = this.currPhrTransc;
+    }
+
+    public String getCurrPhrLabel() {
+        return currPhrLabel;
+    }
+
+    public void setCurrPhrLabel(String currPhrLabel) {
+        this.currPhrLabel = currPhrLabel;
+        currPhrase.label = this.currPhrLabel;
     }
 }
 
