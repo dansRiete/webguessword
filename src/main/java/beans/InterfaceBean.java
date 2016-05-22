@@ -8,9 +8,12 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Locale;
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
@@ -53,8 +56,8 @@ public class InterfaceBean implements Serializable{
     //>>Phrase data
     private String pDpercentOfAppearance;
     private double pDprob;
-    private Timestamp pdLastAccs;
-    private Timestamp pdCreateDate;
+    private String pdLastAccs;
+    private String pdCreateDate;
     private String label;
     private String strLastAccs;
     private String strCreateDate;
@@ -69,12 +72,14 @@ public class InterfaceBean implements Serializable{
 
 
     private void reloadPhraseData(){
-        pDprob = listOfPhrases.get(index).prob;
-        pdLastAccs = listOfPhrases.get(index).lastAccs;
-        pdCreateDate = listOfPhrases.get(index).createDate;
+        pDprob = new BigDecimal(listOfPhrases.get(index).prob).setScale(1, RoundingMode.HALF_UP).doubleValue();
+        pdLastAccs = LocalDateTime.ofInstant(currPhrase.lastAccs.toInstant(),
+                ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH)).toString();
+        pdCreateDate = LocalDateTime.ofInstant(currPhrase.createDate.toInstant(),
+                ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH)).toString();
         label = listOfPhrases.get(index).label;
-        strLastAccs = retDiff.retDiffInTime(System.currentTimeMillis() - pdLastAccs.getTime());
-        strCreateDate = retDiff.retDiffInTime(System.currentTimeMillis() - pdCreateDate.getTime());
+        strLastAccs = retDiff.retDiffInTime(System.currentTimeMillis() - currPhrase.lastAccs.getTime());
+        strCreateDate = retDiff.retDiffInTime(System.currentTimeMillis() - currPhrase.createDate.getTime());
     }
 
 
@@ -404,17 +409,17 @@ public class InterfaceBean implements Serializable{
         this.pDprob = pDprob;
     }
 
-    public Timestamp getPdLastAccs() {
+    public String getPdLastAccs() {
         return pdLastAccs;
     }
-    public void setPdLastAccs(Timestamp pdLastAccs) {
+    public void setPdLastAccs(String pdLastAccs) {
         this.pdLastAccs = pdLastAccs;
     }
 
-    public Timestamp getPdCreateDate() {
+    public String getPdCreateDate() {
         return pdCreateDate;
     }
-    public void setPdCreateDate(Timestamp pdCreateDate) {
+    public void setPdCreateDate(String pdCreateDate) {
         this.pdCreateDate = pdCreateDate;
     }
 

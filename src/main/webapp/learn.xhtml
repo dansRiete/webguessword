@@ -22,10 +22,12 @@
         div {
             height: 100%;
         }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
 
-        /*input[type="submit"] {
-            margin: 5px;
-        }*/
+        tr:nth-child(even) {background-color: #f2f2f2}
     </style>
 </h:head>
 
@@ -59,11 +61,11 @@
                          action="#{interfaceBean.nextQuestion()}">
             <f:ajax render="@all"> </f:ajax>
         </h:commandButton>
-        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="know" value="Знаю"
+        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="know" value="I know it"
                          action="#{interfaceBean.rightAnswer}">
             <f:ajax render="@all"> </f:ajax>
         </h:commandButton>
-        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="donotknow" value="Не знаю"
+        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="donotknow" value="I don't know it"
                          action="#{interfaceBean.wrongAnswer}">
             <f:ajax render="@all"> </f:ajax>
         </h:commandButton>
@@ -121,61 +123,61 @@
         </h:form>
     </div>
     <div style="width: 35%; display:inline-table; vertical-align: top; horiz-align: center">
-        <table class="employeeTable">
+        <table >
             <thead>
             <tr>
-                <th class="employeeTableHeader" scope="col">Properties within current session</th>
-                <th class="employeeTableHeader" scope="col">Value</th>
+                <th scope="col">Properties within current session</th>
+                <th scope="col">Value</th>
             </tr>
             </thead>
             <tbody>
-            <tr class="employeeTableOddRow">
+            <tr>
                 <td>Number of answers</td>
                 <td>#{interfaceBean.numOfAnswForSession}</td>
             </tr>
-            <tr class="employeeTableOddRow">
+            <tr>
                 <td>Number of right answers</td>
                 <td>#{interfaceBean.numOfRightAnswForSession}</td>
             </tr>
-            <tr class="employeeTableOddRow">
+            <tr>
                 <td>Number of wrong answers</td>
                 <td>#{interfaceBean.numOfWrongAnswForSession}</td>
             </tr>
-            <tr class="employeeTableOddRow">
+            <tr>
                 <td>Percent of right answers</td>
                 <td>#{interfaceBean.percentOfRightAnswers}</td>
             </tr>
-            <tr class="employeeTableOddRow">
+            <tr>
                 <td>Time to access to the DB</td>
                 <td>#{interfaceBean.avgTimeOfAccsToDb}ms.</td>
             </tr>
             </tbody>
-        </table>
-        <table class="employeeTable">
+
+
             <thead>
             <tr>
-                <th class="employeeTableHeader" scope="col">Properties of current phrase</th>
-                <th class="employeeTableHeader" scope="col">Value</th>
+                <th scope="col">Properties of current phrase</th>
+                <th scope="col">Value</th>
             </tr>
             </thead>
             <tbody>
-            <tr class="employeeTableOddRow">
-                <td>Prob</td>
+            <tr>
+                <td>The probability of occurrence</td>
                 <td>#{interfaceBean.pDprob}</td>
             </tr>
-            <tr class="employeeTableOddRow">
+            <tr>
                 <td>Last access date</td>
-                <td>#{interfaceBean.pdLastAccs}(#{interfaceBean.strLastAccs})</td>
+                <td>#{interfaceBean.pdLastAccs}<br></br>#{interfaceBean.strLastAccs}</td>
             </tr>
-            <tr class="employeeTableOddRow">
+            <tr>
                 <td>Create date</td>
-                <td>#{interfaceBean.pdCreateDate}(#{interfaceBean.strCreateDate})</td>
+                <td>#{interfaceBean.pdCreateDate}<br></br>#{interfaceBean.strCreateDate}</td>
             </tr>
-            <tr class="employeeTableOddRow">
+            <tr>
                 <td>Label</td>
                 <td>#{interfaceBean.label}</td>
             </tr>
-            <tr class="employeeTableOddRow">
+            <tr>
                 <td>Choosed phrase</td>
                 <td>#{interfaceBean.resultChoosedLabel}</td>
             </tr>
