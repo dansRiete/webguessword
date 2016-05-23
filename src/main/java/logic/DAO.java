@@ -179,6 +179,7 @@ public class DAO {
     }
 
     public void reloadIndices() throws SQLException{
+        long start = System.currentTimeMillis();
         double temp = 0;
         double nonLearnedWords = 0;
         double indOfLW;     //Индекс выпадения изученных
@@ -266,6 +267,7 @@ public class DAO {
             e.printStackTrace();
         }
 //        System.out.println("Изменено индексов для "+countOfModIndices+" позиций");
+        System.out.println("Time of performing reloadIndices method is " + (System.currentTimeMillis()-start) + "ms");
     }
 
     public Phrase nextPhrase(){
