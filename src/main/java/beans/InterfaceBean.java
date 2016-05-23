@@ -205,6 +205,12 @@ public class InterfaceBean implements Serializable{
 
     private void newPhrase(){
         long starTime = System.nanoTime();
+        try {
+            dao.reloadIndices();
+        } catch (SQLException e) {
+            System.out.println("--- Exception during newPhrase() dao.reloadIndices()");
+            e.printStackTrace();
+        }
         Phrase phrase = dao.nextPhrase();
         if(phrase!=null){
             listOfPhrases.add(phrase);

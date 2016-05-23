@@ -75,6 +75,8 @@ public class Phrase {
 
     }
 
+
+
     boolean isLearnt(){
         return prob<=3;
     }

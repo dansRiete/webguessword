@@ -23,6 +23,8 @@ public class DAO {
     String user;
     String password;
     public ArrayList<String> labels = new ArrayList<>();
+    public double learnedWords;
+    final double chanceOfLearnedWords = 1d/15d;
 
     public DAO(){
         try{
@@ -89,7 +91,7 @@ public class DAO {
         ResultSet rs = null;
         try {
             st = conn.createStatement();
-            rs = st.executeQuery("SELECT COUNT(*) FROM " +table + "  WHERE PROB<=3");
+            rs = st.executeQuery("SELECT COUNT(*) FROM " + table + "  WHERE PROB<=3");
             rs.next();
             totalNumberOfLearnedWords = rs.getInt(1);
             rs = st.executeQuery("SELECT COUNT(*) FROM " +table);
@@ -100,6 +102,96 @@ public class DAO {
         }
 
 
+    }
+
+    public void reloadIndices() throws SQLException{
+        double temp = 0;
+        double nonLearnedWords = 0;
+        double indOfLW;     //Индекс выпадения изученных
+        double rangeOfNLW;  //Диапазон индексов неизученных слов
+        double scaleOf1prob;    //rangeOfNLW/summProbOfNLW  цена одного prob
+        ArrayList<Integer> idArr = new ArrayList<>();
+        ResultSet rs = null;
+        Statement statement = conn.createStatement();
+        int summProbOfNLW = 0;
+
+        //Заполняем idArr айдишниками
+        try {
+            rs = statement.executeQuery("SELECT id FROM " + table);
+            while(rs.next())
+                idArr.add(rs.getInt("ID"));
+
+            rs = statement.executeQuery("SELECT COUNT(prob_factor) FROM " + table + " WHERE prob_factor>3");
+            rs.next();
+            nonLearnedWords = rs.getInt(1);
+//            System.out.println("nonLearnedWords: " + nonLearnedWords);
+
+            rs = statement.executeQuery("SELECT SUM(prob_factor) FROM " + table + " WHERE prob_factor>3");
+            rs.next();
+            summProbOfNLW = rs.getInt(1);
+//            System.out.println("summProbOfNLW: " + summProbOfNLW);
+
+            rs = statement.executeQuery("SELECT COUNT(prob_factor) FROM " + table + " WHERE prob_factor<=3");
+            rs.next();
+            learnedWords = rs.getInt(1);
+
+            statement.execute("UPDATE " + user + " SET index_start = NULL ");
+            statement.execute("UPDATE " + user + " SET index_end = NULL ");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+
+        indOfLW = chanceOfLearnedWords/learnedWords;
+        rangeOfNLW = learnedWords>0?1-chanceOfLearnedWords:1;
+//        System.out.println("rangeOfNLW " + rangeOfNLW);
+        scaleOf1prob = rangeOfNLW/summProbOfNLW;
+        if(nonLearnedWords==0){
+            System.out.println("Все слова выучены!");
+        }
+        int countOfModIndices=0;
+        int test = 0;
+        try {
+            for (int i : idArr) { //Устанавилвает индексы для неизученных слов
+                System.out.println("--- for(" + i + ": idArr)");
+
+                //Переменной prob присваивается prob фразы с currentPhraseId = i;
+                rs = statement.executeQuery("SELECT prob_factor FROM " + user + " WHERE id=" + i);
+                float prob;
+                rs.next();
+                prob = rs.getFloat(1);
+                //            System.out.println("prob=" + prob);
+
+
+                //Если nonLearnedWords == 0, то есть, все слова выучены устанавливаются равные для всех индексы
+                if (nonLearnedWords == 0) {
+                    statement.execute("UPDATE " + user + " SET index_start=" + Math.round(temp * 1000000000) + " WHERE id=" + i);
+                    temp += chanceOfLearnedWords / learnedWords;
+                    statement.execute("UPDATE " + user + " SET index_end=" + Math.round((temp * 1000000000) - 1) + " WHERE id=" + i);
+                } else { //Если нет, то индексы ставяться по алгоритму
+                    if (prob > 3) {
+                        //                    System.out.println("UPDATE ALEKS SET INDEX1=" + Math.round(temp*1000000000) + " WHERE ID=" + i);
+                        statement.execute("UPDATE " + user + " SET index_start=" + Math.round(temp * 1000000000) + " WHERE id=" + i);
+                        double i1 = temp;
+                        temp += scaleOf1prob * prob;
+                        //                    System.out.println("UPDATE ALEKS SET INDEX2=" + Math.round((temp *1000000000)-1) + " WHERE ID=" + i);
+                        //                    System.out.println("%=" + (temp - MINFLOAT-i1));
+                        statement.execute("UPDATE " + user + " SET index_end=" + Math.round((temp * 1000000000) - 1) + " WHERE id=" + i);
+                    } else {
+                        //                    System.out.println("Index1LW для ID=" + i + "=" + temp);
+                        statement.execute("UPDATE " + user + " SET index_start=" + Math.round(temp * 1000000000) + " WHERE id=" + i);
+                        temp += indOfLW;
+                        //                    System.out.println("temp "+temp + "= temp "+temp+"+indOfLW "+indOfLW);
+                        //                    System.out.println("Index2LW для ID=" + i + "=" + (temp - 1));
+                        statement.execute("UPDATE " + user + " SET index_end=" + Math.round((temp * 1000000000) - 1) + " WHERE id=" + i);
+                    }
+                }
+                countOfModIndices++;
+            }
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+//        System.out.println("Изменено индексов для "+countOfModIndices+" позиций");
     }
 
     public Phrase nextPhrase(){
