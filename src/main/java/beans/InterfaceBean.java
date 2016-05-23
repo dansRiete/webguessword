@@ -124,8 +124,7 @@ public class InterfaceBean implements Serializable{
         if (choosedLabel != null &&  (!choosedLabel.equalsIgnoreCase(""))){
             if(!choosedLabel.equalsIgnoreCase("all")){
 //                System.out.println("--- hshset.add("+choosedLabel+")");
-                if(!hshset.add(choosedLabel))
-                    hshset.remove(choosedLabel);
+                hshset.add(choosedLabel);
             }else{
                 System.out.println("hshset.clear();");
                 hshset.clear();
@@ -179,8 +178,6 @@ public class InterfaceBean implements Serializable{
                 summ+=a;
                 counter++;
             }
-        avgTimeOfAccsToDb = new BigDecimal(summ/(counter==0?1:counter)/1000000).setScale(2, RoundingMode.HALF_UP);
-
     }
 
     public void resultProcessing(){
@@ -216,9 +213,7 @@ public class InterfaceBean implements Serializable{
             listOfPhrases.add(phrase);
             currPhrase = phrase;
         }
-        if(timeOfAccsToDbArrCounter==5)
-            timeOfAccsToDbArrCounter=0;
-        timeOfAccsToDbArr[timeOfAccsToDbArrCounter++] = (int)(System.nanoTime()-starTime);
+        avgTimeOfAccsToDb = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000)).setScale(2, RoundingMode.HALF_UP);
     }
 
     public void rightAnswer(){
