@@ -47,18 +47,8 @@ public class DAO {
             "ALTER TABLE " + "aleks" + " ADD CONSTRAINT unique_id UNIQUE (id);";
 
     private void copyDb(){
-        Statement inMemSt = null;
-        try{
-            inMemSt = inMemDbConn.createStatement();
-        }catch (SQLException e){
-            e.printStackTrace();
-        }
-        try{
-            inMemSt.execute("DROP TABLE aleks");
-        }catch (SQLException e){
-
-        }
         try {
+            Statement inMemSt = inMemDbConn.createStatement();
             inMemSt.execute(createTableSql);
             Statement mainSt = mainDbConn.createStatement();
             ResultSet rs = mainSt.executeQuery("SELECT * FROM " + "aleks");
@@ -112,6 +102,8 @@ public class DAO {
         System.out.println("inMemDbConn is " + inMemDbConn);
         copyDb();
     }
+
+
 
     private static Connection getDBConnection() {
         Connection dbConnection = null;
@@ -186,7 +178,7 @@ public class DAO {
 
     }
 
-    public void reloadIndices(){
+    public void reloadIndices() throws SQLException{
         long start = System.currentTimeMillis();
         double temp = 0;
         double nonLearnedWords = 0;
@@ -195,17 +187,10 @@ public class DAO {
         double scaleOf1prob;    //rangeOfNLW/summProbOfNLW  цена одного prob
         ArrayList<Integer> idArr = new ArrayList<>();
         ResultSet rs = null;
-        Statement statement = null;
-        try {
-            statement = inMemDbConn.createStatement();
-        } catch (SQLException e) {
-            System.out.println("error 1");
-            e.printStackTrace();
-        }
+        Statement statement = inMemDbConn.createStatement();
         int summProbOfNLW = 0;
 
         //Заполняем idArr айдишниками
-
         try {
             rs = statement.executeQuery("SELECT id FROM " + table);
             while(rs.next())
@@ -228,11 +213,8 @@ public class DAO {
             statement.execute("UPDATE " + user + " SET index_start = NULL ");
             statement.execute("UPDATE " + user + " SET index_end = NULL ");
         } catch (SQLException e) {
-            System.out.println("error 2");
             e.printStackTrace();
         }
-
-
 
 
         indOfLW = chanceOfLearnedWords/learnedWords;
@@ -244,101 +226,46 @@ public class DAO {
         }
         int countOfModIndices=0;
         int test = 0;
-
-        PreparedStatement psSelProb = null;
-        PreparedStatement psUpdIndStart =  null;
-        PreparedStatement psUpdIndEnd = null;
         try {
-            psSelProb = inMemDbConn.prepareStatement("SELECT prob_factor FROM " + user + " WHERE id=?");
-            psUpdIndStart = inMemDbConn.prepareStatement("UPDATE " + user + " SET index_start=" + "?" + " WHERE id=?");
-            psUpdIndEnd = inMemDbConn.prepareStatement("UPDATE " + user + " SET index_end=" + "?" + " WHERE id=?");
-        } catch (SQLException e) {
-            System.out.println("error 3");
-            e.printStackTrace();
-        }
-        ResultSet rs1 = null;
-
             for (int i : idArr) { //Устанавилвает индексы для неизученных слов
 //                System.out.println("--- for(" + i + ": idArr)");
 
                 //Переменной prob присваивается prob фразы с currentPhraseId = i;
-                float prob = 0;
-                try {
-                    psSelProb.setInt(1, i);
-                    rs1 = psSelProb.executeQuery();
-
-                    rs1.next();
-                    prob = rs1.getFloat(1);
-                    //            System.out.println("prob=" + prob);
-                } catch (SQLException e) {
-                    System.out.println("error 4");
-                    e.printStackTrace();
-                }
-
+                rs = statement.executeQuery("SELECT prob_factor FROM " + user + " WHERE id=" + i);
+                float prob;
+                rs.next();
+                prob = rs.getFloat(1);
+                //            System.out.println("prob=" + prob);
 
 
                 //Если nonLearnedWords == 0, то есть, все слова выучены устанавливаются равные для всех индексы
                 if (nonLearnedWords == 0) {
-                    try {
-                        psUpdIndStart.setLong(1, Math.round(temp * 1000000000));
-                        psUpdIndStart.setInt(2, i);
-                        psUpdIndStart.execute();
-//                    statement.execute("UPDATE " + user + " SET index_start=" + Math.round(temp * 1000000000) + " WHERE id=" + i);
-                        temp += chanceOfLearnedWords / learnedWords;
-                        psUpdIndEnd.setLong(1, Math.round(temp * 1000000000));
-                        psUpdIndEnd.setInt(2, i);
-                        psUpdIndEnd.execute();
-//                    statement.execute("UPDATE " + user + " SET index_end=" + Math.round((temp * 1000000000) - 1) + " WHERE id=" + i);
-                    } catch (SQLException e) {
-                        System.out.println("error 5");
-                        e.printStackTrace();
-                    }
-
+                    statement.execute("UPDATE " + user + " SET index_start=" + Math.round(temp * 1000000000) + " WHERE id=" + i);
+                    temp += chanceOfLearnedWords / learnedWords;
+                    statement.execute("UPDATE " + user + " SET index_end=" + Math.round((temp * 1000000000) - 1) + " WHERE id=" + i);
                 } else { //Если нет, то индексы ставяться по алгоритму
                     if (prob > 3) {
                         //                    System.out.println("UPDATE ALEKS SET INDEX1=" + Math.round(temp*1000000000) + " WHERE ID=" + i);
-                        try {
-                            psUpdIndStart.setLong(1, Math.round(temp * 1000000000));
-                            psUpdIndStart.setInt(2, i);
-                            psUpdIndStart.execute();
-//                        statement.execute("UPDATE " + user + " SET index_start=" + Math.round(temp * 1000000000) + " WHERE id=" + i);
-                            double i1 = temp;
-                            temp += scaleOf1prob * prob;
-                            //                    System.out.println("UPDATE ALEKS SET INDEX2=" + Math.round((temp *1000000000)-1) + " WHERE ID=" + i);
-                            //                    System.out.println("%=" + (temp - MINFLOAT-i1));
-                            psUpdIndEnd.setLong(1, Math.round(temp * 1000000000));
-                            psUpdIndEnd.setInt(2, i);
-                            psUpdIndEnd.execute();
-//                        statement.execute("UPDATE " + user + " SET index_end=" + Math.round((temp * 1000000000) - 1) + " WHERE id=" + i);
-                        } catch (SQLException e) {
-                            System.out.println("error 6");
-                            e.printStackTrace();
-                        }
-
+                        statement.execute("UPDATE " + user + " SET index_start=" + Math.round(temp * 1000000000) + " WHERE id=" + i);
+                        double i1 = temp;
+                        temp += scaleOf1prob * prob;
+                        //                    System.out.println("UPDATE ALEKS SET INDEX2=" + Math.round((temp *1000000000)-1) + " WHERE ID=" + i);
+                        //                    System.out.println("%=" + (temp - MINFLOAT-i1));
+                        statement.execute("UPDATE " + user + " SET index_end=" + Math.round((temp * 1000000000) - 1) + " WHERE id=" + i);
                     } else {
                         //                    System.out.println("Index1LW для ID=" + i + "=" + temp);
-                        try {
-                            psUpdIndStart.setLong(1, Math.round(temp * 1000000000));
-                            psUpdIndStart.setInt(2, i);
-                            psUpdIndStart.execute();
-//                        statement.execute("UPDATE " + user + " SET index_start=" + Math.round(temp * 1000000000) + " WHERE id=" + i);
-                            temp += indOfLW;
-                            //                    System.out.println("temp "+temp + "= temp "+temp+"+indOfLW "+indOfLW);
-                            //                    System.out.println("Index2LW для ID=" + i + "=" + (temp - 1));
-                            psUpdIndEnd.setLong(1, Math.round(temp * 1000000000));
-                            psUpdIndEnd.setInt(2, i);
-                            psUpdIndEnd.execute();
-//                        statement.execute("UPDATE " + user + " SET index_end=" + Math.round((temp * 1000000000) - 1) + " WHERE id=" + i);
-                        } catch (SQLException e) {
-                            System.out.println("error 7");
-                            e.printStackTrace();
-                        }
-
+                        statement.execute("UPDATE " + user + " SET index_start=" + Math.round(temp * 1000000000) + " WHERE id=" + i);
+                        temp += indOfLW;
+                        //                    System.out.println("temp "+temp + "= temp "+temp+"+indOfLW "+indOfLW);
+                        //                    System.out.println("Index2LW для ID=" + i + "=" + (temp - 1));
+                        statement.execute("UPDATE " + user + " SET index_end=" + Math.round((temp * 1000000000) - 1) + " WHERE id=" + i);
                     }
                 }
                 countOfModIndices++;
             }
-
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
 //        System.out.println("Изменено индексов для "+countOfModIndices+" позиций");
         System.out.println("Time of performing reloadIndices method is " + (System.currentTimeMillis()-start) + "ms");
     }
@@ -352,7 +279,7 @@ public class DAO {
         try {
             st = inMemDbConn.createStatement();
             String sql = "SELECT * FROM " + table + " WHERE index_start<=" + id + " AND index_end>=" + id;
-            System.out.println(sql);
+//            System.out.println(sql);
             rs = st.executeQuery(sql);
             rs.next();
             phrase = new Phrase(rs.getInt("id"), rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"), rs.getDouble("prob_factor"),
