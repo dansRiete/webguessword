@@ -44,8 +44,7 @@
         </h:commandButton>
         <h:selectOneMenu id="table" value="#{interfaceBean.choosedLabel}">
             <f:ajax event="change" execute="table; #{interfaceBean.setTable()}" render="@all"/>
-            <f:selectItems value="#{interfaceBean.listOfChooses}" var="group" itemValue="#{group}"
-                           itemLabel="#{group}"/>
+            <f:selectItems value="#{interfaceBean.listOfChooses}" var="group" itemValue="#{group}" itemLabel="#{group}"/>
         </h:selectOneMenu>
 
         <script type="text/javascript">

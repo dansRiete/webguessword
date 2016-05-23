@@ -38,6 +38,7 @@ public class InterfaceBean implements Serializable{
     public void setLoginBean(LoginBean loginBean) {
         this.loginBean = loginBean;
     }
+
     private RetDiff retDiff = new RetDiff();
 
     //>>Session statistics
@@ -118,14 +119,15 @@ public class InterfaceBean implements Serializable{
     }
 
     public void setTable() {
-//        System.out.println("--- inside setTable()");
+        System.out.println("--- inside setTable()");
 
         if (choosedLabel != null &&  (!choosedLabel.equalsIgnoreCase(""))){
             if(!choosedLabel.equalsIgnoreCase("all")){
 //                System.out.println("--- hshset.add("+choosedLabel+")");
-                hshset.add(choosedLabel);
+                if(!hshset.add(choosedLabel))
+                    hshset.remove(choosedLabel);
             }else{
-//                System.out.println("hshset.clear();");
+                System.out.println("hshset.clear();");
                 hshset.clear();
             }
         }
@@ -149,7 +151,6 @@ public class InterfaceBean implements Serializable{
             resultChoosedLabel = dao.table = loginBean.getUser();
         }
     }
-
 
     public ArrayList<Phrase> returnListOfPhrases(){
         return listOfPhrases;
@@ -181,7 +182,6 @@ public class InterfaceBean implements Serializable{
         avgTimeOfAccsToDb = new BigDecimal(summ/(counter==0?1:counter)/1000000).setScale(2, RoundingMode.HALF_UP);
 
     }
-
 
     public void resultProcessing(){
         calculateSessionStatistics();
@@ -454,11 +454,13 @@ public class InterfaceBean implements Serializable{
     public ArrayList<Phrase> getListOfPhrases(){
         return listOfPhrases;
     }
+    public void setListOfPhrases(ArrayList<Phrase> listOfPhrases){
+        this.listOfPhrases = listOfPhrases;
+    }
 
     public String getChoosedLabel() {
         return choosedLabel;
     }
-
     public void setChoosedLabel(String choosedLabel) {
         this.choosedLabel = choosedLabel;
     }
@@ -466,7 +468,6 @@ public class InterfaceBean implements Serializable{
     public ArrayList<String> getListOfChooses() {
         return listOfChooses;
     }
-
     public void setListOfChooses(ArrayList<String> listOfChooses) {
         this.listOfChooses = listOfChooses;
     }
@@ -474,15 +475,12 @@ public class InterfaceBean implements Serializable{
     public String getResultChoosedLabel() {
         return resultChoosedLabel;
     }
-
     public void setResultChoosedLabel(String resultChoosedLabel) {
         this.resultChoosedLabel = resultChoosedLabel;
-    }
 
-    public String getCurrPhrNatWord() {
+    }    public String getCurrPhrNatWord() {
         return currPhrNatWord;
     }
-
     public void setCurrPhrNatWord(String currPhrNatWord) {
         this.currPhrNatWord = currPhrNatWord;
         currPhrase.natWord = this.currPhrNatWord;
@@ -492,7 +490,6 @@ public class InterfaceBean implements Serializable{
         System.out.println("--- inside getCurrPhrForWord() currPhrForWord is " + currPhrForWord);
         return currPhrForWord;
     }
-
     public void setCurrPhrForWord(String currPhrForWord) {
         this.currPhrForWord = currPhrForWord;
         System.out.println("--- inside setCurrPhrForWord(String currPhrForWord) currPhrForWord's changed " + this.currPhrForWord);
@@ -502,7 +499,6 @@ public class InterfaceBean implements Serializable{
     public String getCurrPhrTransc() {
         return currPhrTransc;
     }
-
     public void setCurrPhrTransc(String currPhrTransc) {
         this.currPhrTransc = currPhrTransc;
         currPhrase.transcr = this.currPhrTransc;
@@ -511,7 +507,6 @@ public class InterfaceBean implements Serializable{
     public String getCurrPhrLabel() {
         return currPhrLabel;
     }
-
     public void setCurrPhrLabel(String currPhrLabel) {
         this.currPhrLabel = currPhrLabel;
         currPhrase.label = this.currPhrLabel;
