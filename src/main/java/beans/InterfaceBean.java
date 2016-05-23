@@ -219,7 +219,8 @@ public class InterfaceBean implements Serializable{
         try {
             index = listOfPhrases.size() - 1 - shift;
             currPhrase = listOfPhrases.get(index);
-            currPhrase.isAnswered = true;
+//            currPhrase.isAnswered = true;
+            currPhrase.rightAnswer();
             if (shift == 0)
                 nextQuestion();
             resultProcessing();
@@ -233,7 +234,8 @@ public class InterfaceBean implements Serializable{
         try{
             index = listOfPhrases.size() - 1 - shift;
             currPhrase = listOfPhrases.get(index);
-            currPhrase.isAnswered = false;
+//            currPhrase.isAnswered = false;
+            currPhrase.wrongAnswer();
             if(shift==0)
                 nextQuestion();
             resultProcessing();
@@ -248,7 +250,8 @@ public class InterfaceBean implements Serializable{
             if(shift==0){
                 index = listOfPhrases.size() - 2;
                 currPhrase = listOfPhrases.get(index);
-                currPhrase.isAnswered = true;
+//                currPhrase.isAnswered = true;
+                currPhrase.rightAnswer();
                 resultProcessing();
             }
         }catch (NullPointerException e){
@@ -262,7 +265,8 @@ public class InterfaceBean implements Serializable{
             if(shift==0){
                 index = listOfPhrases.size() - 2;
                 currPhrase = listOfPhrases.get(index);
-                currPhrase.isAnswered = false;
+//                currPhrase.isAnswered = false;
+                currPhrase.wrongAnswer();
                 resultProcessing();
             }
         }catch (NullPointerException e){

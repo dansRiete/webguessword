@@ -24,17 +24,6 @@ public class DAO {
     String password;
     public ArrayList<String> labels = new ArrayList<>();
 
-    public void setLoginBean(LoginBean loginBean){
-        user = loginBean.getUser();
-        password = loginBean.getPassword();
-        table = user;
-        System.out.println("user is " + user);
-        reloadLabelsList();
-
-    }
-    public Connection getConnection(){
-        return conn;
-    }
     public DAO(){
         try{
             conn = DriverManager.getConnection(host1, "adminLtuHq9R", "d-AUIKakd1Br");
@@ -50,6 +39,30 @@ public class DAO {
             }
 
         }
+    }
+
+    public void updateProb(Phrase phrase){
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        try {
+            Statement ps = conn.createStatement();
+            System.out.println("--- updateProb() SQL UPDATE " + user + " SET prob_factor=" + phrase.prob + ", last_accs_date='"+timestamp+"' WHERE id="+phrase.id);
+            ps.executeUpdate("UPDATE " + user + " SET prob_factor=" + phrase.prob + ", last_accs_date='"+timestamp+"' WHERE id="+phrase.id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setLoginBean(LoginBean loginBean){
+        user = loginBean.getUser();
+        password = loginBean.getPassword();
+        table = user;
+        System.out.println("user is " + user);
+        reloadLabelsList();
+
+    }
+
+    public Connection getConnection(){
+        return conn;
     }
 
     public void reloadLabelsList(){
@@ -70,6 +83,7 @@ public class DAO {
             e.printStackTrace();
         }
     }
+
     private void getStatistic(){
         Statement st = null;
         ResultSet rs = null;
@@ -88,7 +102,6 @@ public class DAO {
 
     }
 
-
     public Phrase nextPhrase(){
         int id = random.nextInt(999991183);
         ResultSet rs;
@@ -103,13 +116,14 @@ public class DAO {
             rs.next();
             phrase = new Phrase(rs.getInt("id"), rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"), rs.getDouble("prob_factor"),
                     rs.getTimestamp("create_date"), rs.getString("label"), rs.getTimestamp("last_accs_date"),
-                    rs.getDouble("index_start"), rs.getDouble("index_end"), rs.getBoolean("exactmatch"));
+                    rs.getDouble("index_start"), rs.getDouble("index_end"), rs.getBoolean("exactmatch"), this);
         } catch (SQLException e) {
             System.out.println("Exception during nextPhrase()");
             e.printStackTrace();
         }
         return phrase;
     }
+
     public void insertPhrase(Phrase phrase){
         try {
             PreparedStatement ps = conn.prepareStatement("INSERT INTO " + table + " (id, for_word, nat_word, transcr, prob_factor, create_date, label, last_accs_date, index_start, index_end, exactmatch) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -118,6 +132,7 @@ public class DAO {
             e.printStackTrace();
         }
     }
+
     public void backupDB(){
         Timestamp ts = new Timestamp(System.currentTimeMillis());
         int count = 0;
@@ -152,6 +167,8 @@ public class DAO {
         long end = System.currentTimeMillis()-start;
         System.out.println("Copied " + count + " elements, total time=" + end + " ms");
     }
+
+    //Getters setters
     public int getTotalNumberOfWords(){
         return totalNumberOfWords;
     }
