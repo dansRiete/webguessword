@@ -119,7 +119,7 @@ public class InterfaceBean implements Serializable{
     }
 
     public void setTable() {
-        System.out.println("--- inside setTable()");
+//        System.out.println("--- inside setTable()");
 
         if (choosedLabel != null &&  (!choosedLabel.equalsIgnoreCase(""))){
             if(!choosedLabel.equalsIgnoreCase("all")){
@@ -497,7 +497,7 @@ public class InterfaceBean implements Serializable{
     }
 
     public String getCurrPhrForWord() {
-        System.out.println("--- inside getCurrPhrForWord() currPhrForWord is " + currPhrForWord);
+//        System.out.println("--- inside getCurrPhrForWord() currPhrForWord is " + currPhrForWord);
         return currPhrForWord;
     }
     public void setCurrPhrForWord(String currPhrForWord) {
