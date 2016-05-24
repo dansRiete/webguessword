@@ -66,6 +66,11 @@ public class DAO {
                 throw new DataBaseConnectionException();
             }
         }
+        try {
+            mainDbConn.createStatement().execute("set names utf-8");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         inMemDbConn = getDBConnection();
 
     }
