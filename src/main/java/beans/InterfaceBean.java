@@ -43,8 +43,6 @@ public class InterfaceBean implements Serializable{
         this.loginBean = loginBean;
     }
 
-    private RetDiff retDiff = new RetDiff();
-
     //>>Session statistics
     private int numOfPhrForSession = 0;
     private int numOfAnswForSession = 0;
@@ -75,19 +73,7 @@ public class InterfaceBean implements Serializable{
     private String currPhrLabel;
     //<<
 
-
-    private void reloadPhraseData(){
-        pDprob = new BigDecimal(listOfPhrases.get(index).prob).setScale(1, RoundingMode.HALF_UP).doubleValue();
-        pdLastAccs = LocalDateTime.ofInstant(currPhrase.lastAccs.toInstant(),
-                ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH)).toString();
-        pdCreateDate = LocalDateTime.ofInstant(currPhrase.createDate.toInstant(),
-                ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH)).toString();
-        label = listOfPhrases.get(index).label;
-        strLastAccs = retDiff.retDiffInTime(System.currentTimeMillis() - currPhrase.lastAccs.getTime());
-        strCreateDate = retDiff.retDiffInTime(System.currentTimeMillis() - currPhrase.createDate.getTime());
-    }
-
-
+    private RetDiff retDiff = new RetDiff();
     private DAO dao;
     private Phrase currPhrase;
     private String question ="";
@@ -106,14 +92,13 @@ public class InterfaceBean implements Serializable{
 
 
     public InterfaceBean() throws SQLException{
-        System.out.println("--- Bean was created");
+        System.out.println("CALL: InterfaceBean constructor");
         init();
-
     }
 
     @PostConstruct
     private void init(){
-        System.out.println("--- loginbean is " + loginBean);
+        System.out.println("CALL: init() from InterfaceBean");
         if(loginBean!=null)
             dao = loginBean.returnDAO();
         if(dao!=null){
@@ -122,30 +107,43 @@ public class InterfaceBean implements Serializable{
         }
     }
 
+    private void reloadPhraseData(){
+        System.out.println("CALL: reloadPhraseData() from InterfaceBean");
+        pDprob = new BigDecimal(listOfPhrases.get(index).prob).setScale(1, RoundingMode.HALF_UP).doubleValue();
+        pdLastAccs = LocalDateTime.ofInstant(currPhrase.lastAccs.toInstant(),
+                ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH)).toString();
+        pdCreateDate = LocalDateTime.ofInstant(currPhrase.createDate.toInstant(),
+                ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH)).toString();
+        label = listOfPhrases.get(index).label;
+//        System.out.println("--- Curr. phrase is " + currPhrase);
+        strLastAccs = retDiff.retDiffInTime(System.currentTimeMillis() - currPhrase.lastAccs.getTime());
+        strCreateDate = retDiff.retDiffInTime(System.currentTimeMillis() - currPhrase.createDate.getTime());
+    }
+
     public void setTable() {
-//        System.out.println("--- inside setTable()");
+        System.out.println("CALL: setTable() from InterfaceBean");
 
         if (choosedLabel != null &&  (!choosedLabel.equalsIgnoreCase(""))){
+
             if(!choosedLabel.equalsIgnoreCase("all")){
-//                System.out.println("--- hshset.add("+choosedLabel+")");
                 hshset.add(choosedLabel);
             }else{
-                System.out.println("hshset.clear();");
                 hshset.clear();
             }
         }
 
         resultChoosedLabel = "";
         boolean temp = true;
+
         for(String str : hshset){
             if(temp){
-                resultChoosedLabel += "'"+str+"'";
+                resultChoosedLabel += "'" + str + "'";
                 temp = false;
             }else {
-                resultChoosedLabel += ",'"+str+"'";
+                resultChoosedLabel += ",'" + str + "'";
             }
         }
-//        System.out.println("--- hashset is " + hshset+ " size is " + hshset.size());
+
         if(!resultChoosedLabel.equalsIgnoreCase(""))
             dao.table = "(SELECT * FROM " + loginBean.getUser() + " WHERE LABEL IN(" + resultChoosedLabel + ")) As custom";
         else{
@@ -153,11 +151,8 @@ public class InterfaceBean implements Serializable{
         }
     }
 
-    public ArrayList<Phrase> returnListOfPhrases(){
-        return listOfPhrases;
-    }
-
     private void calculateSessionStatistics(){
+        System.out.println("CALL: calculateSessionStatistics() from InterfaceBean");
         int numOfNonAnswForSession = 0;
         int numOfRightAnswForSession = 0;
         numOfPhrForSession = listOfPhrases.size();
@@ -183,6 +178,7 @@ public class InterfaceBean implements Serializable{
     }
 
     public void resultProcessing(){
+        System.out.println("CALL: resultProcessing() from InterfaceBean");
         calculateSessionStatistics();
         reloadPhraseData();
         StringBuilder str = new StringBuilder();
@@ -200,17 +196,15 @@ public class InterfaceBean implements Serializable{
         currPhrNatWord = listOfPhrases.get(index).natWord;
         currPhrTransc = listOfPhrases.get(index).transcr;
         currPhrLabel = listOfPhrases.get(index).label;
+        if(currPhrase.isModified)
+            updatePhrase();
     }
 
     private void newPhrase(){
+        System.out.println("CALL: newPhrase() from InterfaceBean");
         long starTime = System.nanoTime();
-        try {
-            dao.reloadIndices();
-        } catch (SQLException e) {
-            System.out.println("--- Exception during newPhrase() dao.reloadIndices()");
-            e.printStackTrace();
-        }
-        Phrase phrase = dao.nextPhrase();
+        dao.reloadIndices();
+        Phrase phrase = dao.createRandPhrase();
         if(phrase!=null){
             listOfPhrases.add(phrase);
             currPhrase = phrase;
@@ -219,6 +213,7 @@ public class InterfaceBean implements Serializable{
     }
 
     public void rightAnswer(){
+        System.out.println("CALL: rightAnswer() from InterfaceBean");
         try {
             index = listOfPhrases.size() - 1 - shift;
             currPhrase = listOfPhrases.get(index);
@@ -228,12 +223,13 @@ public class InterfaceBean implements Serializable{
                 nextQuestion();
             resultProcessing();
         }catch (NullPointerException e){
-            System.out.println(listOfPhrases + " size=" + (listOfPhrases==null?"listOfPhrases=null":listOfPhrases.size()));
+            System.out.println("EXCEPTION: in rightAnswer() from InterfaceBean");
             e.printStackTrace();
         }
     }
 
     public void wrongAnswer(){
+        System.out.println("CALL: wrongAnswer() from InterfaceBean");
         try{
             index = listOfPhrases.size() - 1 - shift;
             currPhrase = listOfPhrases.get(index);
@@ -243,12 +239,13 @@ public class InterfaceBean implements Serializable{
                 nextQuestion();
             resultProcessing();
         }catch (NullPointerException e){
-            System.out.println(listOfPhrases + " size=" + (listOfPhrases==null?"listOfPhrases=null":listOfPhrases.size()));
+            System.out.println("EXCEPTION: in wrongAnswer() from InterfaceBean");
             e.printStackTrace();
         }
     }
 
     public void previousRight(){
+        System.out.println("CALL: previousRight() from InterfaceBean");
         try{
             if(shift==0){
                 index = listOfPhrases.size() - 2;
@@ -258,12 +255,13 @@ public class InterfaceBean implements Serializable{
                 resultProcessing();
             }
         }catch (NullPointerException e){
-            System.out.println(listOfPhrases + " size=" + (listOfPhrases==null?"listOfPhrases=null":listOfPhrases.size()));
+            System.out.println("EXCEPTION: in previousRight() from InterfaceBean");
             e.printStackTrace();
         }
     }
 
     public void previousWrong(){
+        System.out.println("CALL: previousWrong() from InterfaceBean");
         try{
             if(shift==0){
                 index = listOfPhrases.size() - 2;
@@ -273,12 +271,13 @@ public class InterfaceBean implements Serializable{
                 resultProcessing();
             }
         }catch (NullPointerException e){
-            System.out.println(listOfPhrases + " size=" + (listOfPhrases==null?"listOfPhrases=null":listOfPhrases.size()));
+            System.out.println("EXCEPTION: in previousWrong() from InterfaceBean");
             e.printStackTrace();
         }
     }
 
     public void checkTheAnswer(){
+        System.out.println("CALL: checkTheAnswer() from InterfaceBean");
         if(answer!=null){
             if(!(answer.equals("")||answer.equals("+")||answer.equals("-")||answer.equals("++")||answer.equals("--"))){
                 boolean bool = logic.IntelliFind.match(listOfPhrases.get(listOfPhrases.size() - 1 - shift).forWord, answer, false);
@@ -300,6 +299,7 @@ public class InterfaceBean implements Serializable{
     }
 
     public void nextQuestion(){
+        System.out.println("CALL: nextQuestion() from InterfaceBean");
         if(shift==0) {
             newPhrase();
             index = listOfPhrases.size() - 1;
@@ -315,6 +315,7 @@ public class InterfaceBean implements Serializable{
     }
 
     public void previousQuestion(){
+        System.out.println("CALL: previousQuestion() from InterfaceBean");
         if(shift<(listOfPhrases.size()-1))
             shift++;
         index = listOfPhrases.size() - 1 - shift;
@@ -326,30 +327,29 @@ public class InterfaceBean implements Serializable{
 //        System.out.println("--- previousQuestion() List size="+(listOfPhrases.size()+" Current shift="+shift+" Requested index="+index));
     }
 
+    public void updatePhrase(){
+        currPhrase.updatePhrase();
+    }
+
     public void exit(){
+        System.out.println("CALL: exit() from InterfaceBean");
         FacesContext context = FacesContext.getCurrentInstance();
-        System.out.println("1");
         HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
-        System.out.println("2");
         HttpSession sess = request.getSession();
-        System.out.println("3");
-        System.out.println("sess.getCreationTime() " + new Timestamp(sess.getCreationTime()));
-        System.out.println("4");
-        System.out.println("sess.getLastAccessedTime() " + new Timestamp(sess.getLastAccessedTime()));
-        System.out.println("5");
         sess.invalidate();
-        System.out.println("6");
         try {
             context.getExternalContext().redirect("index.xhtml");
         } catch (IOException e) {
+            System.out.println("EXCEPTION: in exit() from InterfaceBean");
             e.printStackTrace();
         }
 
-
-        System.out.println("7");
-
 //        dao.backupDB();
     }
+
+    /*public ArrayList<Phrase> returnListOfPhrases(){
+        return listOfPhrases;   //Was comented 24/5/2016
+    }*/
 
     //>>Setters an getters
     //*************************************************************************************
@@ -506,12 +506,15 @@ public class InterfaceBean implements Serializable{
     public void setResultChoosedLabel(String resultChoosedLabel) {
         this.resultChoosedLabel = resultChoosedLabel;
 
-    }    public String getCurrPhrNatWord() {
+    }
+
+    public String getCurrPhrNatWord() {
         return currPhrNatWord;
     }
     public void setCurrPhrNatWord(String currPhrNatWord) {
         this.currPhrNatWord = currPhrNatWord;
         currPhrase.natWord = this.currPhrNatWord;
+        currPhrase.isModified = true;
     }
 
     public String getCurrPhrForWord() {
@@ -520,8 +523,8 @@ public class InterfaceBean implements Serializable{
     }
     public void setCurrPhrForWord(String currPhrForWord) {
         this.currPhrForWord = currPhrForWord;
-        System.out.println("--- inside setCurrPhrForWord(String currPhrForWord) currPhrForWord's changed " + this.currPhrForWord);
         currPhrase.forWord = this.currPhrForWord;
+        currPhrase.isModified = true;
     }
 
     public String getCurrPhrTransc() {
@@ -530,6 +533,7 @@ public class InterfaceBean implements Serializable{
     public void setCurrPhrTransc(String currPhrTransc) {
         this.currPhrTransc = currPhrTransc;
         currPhrase.transcr = this.currPhrTransc;
+        currPhrase.isModified = true;
     }
 
     public String getCurrPhrLabel() {
@@ -538,6 +542,7 @@ public class InterfaceBean implements Serializable{
     public void setCurrPhrLabel(String currPhrLabel) {
         this.currPhrLabel = currPhrLabel;
         currPhrase.label = this.currPhrLabel;
+        currPhrase.isModified = true;
     }
 }
 

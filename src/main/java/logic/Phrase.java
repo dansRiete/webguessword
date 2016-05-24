@@ -10,7 +10,7 @@ import java.time.ZonedDateTime;
  * Created by Aleks on 11.05.2016.
  */
 public class Phrase {
-    public long uniqueId = System.currentTimeMillis();
+
     public ZonedDateTime lt = ZonedDateTime.now(ZoneId.of("EET"));
     public Boolean isAnswered;
     public int id;
@@ -25,10 +25,12 @@ public class Phrase {
     public double indexEnd;
     public boolean exactMatch;
     private DAO dao;
+    public boolean isModified;
+
     /**
      * Saved state of phrase object before changing isAnswered to false or true
      */
-    private Phrase currentPhrase;
+//    private Phrase currentPhrase;
 
     public Phrase(int id, String forWord, String natWord, String transcr, double prob, Timestamp createDate,
                   String label, Timestamp lastAccs, double indexStart, double indexEnd, boolean exactMatch, DAO dao){
@@ -59,7 +61,6 @@ public class Phrase {
             isAnswered = true;
             dao.updateProb(this);
         }
-
     }
 
     public void wrongAnswer(){
@@ -72,10 +73,11 @@ public class Phrase {
             isAnswered = false;
             dao.updateProb(this);
         }
-
     }
 
-
+    public void updatePhrase(){
+        dao.updatePhrase(this);
+    }
 
     boolean isLearnt(){
         return prob<=3;
@@ -86,6 +88,6 @@ public class Phrase {
     }
 
     public String toString(){
-        return forWord + " - " + natWord;
+        return forWord + " - " + natWord + " last. accs:" + lastAccs;
     }
 }
