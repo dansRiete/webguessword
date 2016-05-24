@@ -4,6 +4,7 @@ import logic.DAO;
 import logic.Phrase;
 import logic.RetDiff;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -18,6 +19,9 @@ import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
+import javax.faces.context.FacesContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 /**
  * Created by Aleks on 23.04.2016.
@@ -141,8 +145,6 @@ public class InterfaceBean implements Serializable{
                 resultChoosedLabel += ",'"+str+"'";
             }
         }
-
-
 //        System.out.println("--- hashset is " + hshset+ " size is " + hshset.size());
         if(!resultChoosedLabel.equalsIgnoreCase(""))
             dao.table = "(SELECT * FROM " + loginBean.getUser() + " WHERE LABEL IN(" + resultChoosedLabel + ")) As custom";
@@ -325,7 +327,28 @@ public class InterfaceBean implements Serializable{
     }
 
     public void exit(){
-        dao.backupDB();
+        FacesContext context = FacesContext.getCurrentInstance();
+        System.out.println("1");
+        HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
+        System.out.println("2");
+        HttpSession sess = request.getSession();
+        System.out.println("3");
+        System.out.println("sess.getCreationTime() " + new Timestamp(sess.getCreationTime()));
+        System.out.println("4");
+        System.out.println("sess.getLastAccessedTime() " + new Timestamp(sess.getLastAccessedTime()));
+        System.out.println("5");
+        sess.invalidate();
+        System.out.println("6");
+        try {
+            context.getExternalContext().redirect("index.xhtml");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        System.out.println("7");
+
+//        dao.backupDB();
     }
 
     //>>Setters an getters

@@ -23,13 +23,13 @@ import java.util.ArrayList;
 public class LoginBean implements Serializable {
     private String user;
     private String password;
-    private String text;
     User currentUser;
-    private DAO dao = new DAO();
+    private DAO dao;
     final static Logger logger = Logger.getLogger(LoginBean.class);
     Connection conn;
     private ArrayList<User> usersList = new ArrayList<>();
     public LoginBean(){
+        dao = new DAO(user);
         conn = dao.getConnection();
 
         //>>Создаём список юзеров ArrayList<User> usersList
@@ -68,10 +68,9 @@ public class LoginBean implements Serializable {
         //!!! EXC !!!
         boolean userExist = false;
 
+
         //Проверяем или введенный пользователь присутствует в базе данных
         for(User user : usersList){
-            System.out.println("Inside for(User user : usersList)");
-            dao.setLoginBean(this);
             if(this.user.equalsIgnoreCase(user.login)){
                 userExist = true;
                 currentUser = user;
@@ -82,7 +81,6 @@ public class LoginBean implements Serializable {
             //Если пользователь существует и пароль совпадает то dispatch("learn.xhtml")
             //в противном случае sendRedirect("error.xhtml")
             if ((userExist)&&(password.equalsIgnoreCase(currentUser.password))) {
-                System.out.println("--- from login user is" + user);
                 dao.setLoginBean(this);
                 try {
                     FacesContext.getCurrentInstance().getExternalContext().dispatch("learn.xhtml");
@@ -120,13 +118,7 @@ public class LoginBean implements Serializable {
             }
     }
 
-    public String getText() {
-        return text;
-    }
 
-    public void setText(String text) {
-        this.text = text;
-    }
     public DAO returnDAO(){
         return this.dao;
     }

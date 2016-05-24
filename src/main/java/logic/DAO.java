@@ -25,12 +25,14 @@ public class DAO {
     public ArrayList<String> labels = new ArrayList<>();
     public double learnedWords;
     final double chanceOfLearnedWords = 1d/15d;
+    private boolean isCopyDbExecuted;
 
     private static final String DB_DRIVER = "org.h2.Driver";
     private static final String DB_CONNECTION = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
     private static final String DB_USER = "";
     private static final String DB_PASSWORD = "";
-    private final String createTableSql = "CREATE TABLE " + "aleks" + "\n" +
+    private String createTableSql() {
+     return "CREATE TABLE " + user + "\n" +
             "(\n" +
             "    id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,\n" +
             "    for_word VARCHAR(250) NOT NULL,\n" +
@@ -44,47 +46,11 @@ public class DAO {
             "    index_start DOUBLE,\n" +
             "    index_end DOUBLE\n" +
             ");\n" +
-            "ALTER TABLE " + "aleks" + " ADD CONSTRAINT unique_id UNIQUE (id);";
-
-    private void copyDb(){
-        try {
-            Statement inMemSt = inMemDbConn.createStatement();
-            inMemSt.execute(createTableSql);
-            Statement mainSt = mainDbConn.createStatement();
-            ResultSet rs = mainSt.executeQuery("SELECT * FROM " + "aleks");
-            PreparedStatement ps = inMemDbConn.prepareStatement("INSERT INTO aleks " +
-                    "(id, for_word, nat_word, transcr, prob_factor, create_date, label, last_accs_date, " +
-                    "index_start, index_end, exactmatch) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
-
-            while (rs.next()){
-                ps.setInt(1, rs.getInt("id"));
-                ps.setString(2, rs.getString("for_word"));
-                ps.setString(3, rs.getString("nat_word"));
-                ps.setString(4, (rs.getString("transcr")==null?null:rs.getString("transcr")));
-                ps.setDouble(5, rs.getDouble("prob_factor"));
-                ps.setTimestamp(6, rs.getTimestamp("create_date"));
-                ps.setString(7, (rs.getString("label")==null?null:rs.getString("label")));
-                ps.setTimestamp(8, (rs.getTimestamp("last_accs_date")==null?null:rs.getTimestamp("last_accs_date")));
-                ps.setDouble(9, rs.getDouble("index_start"));
-                ps.setDouble(10, rs.getDouble("index_end"));
-                ps.setBoolean(11, rs.getBoolean("exactmatch"));
-                ps.execute();
-            }
-
-            rs = inMemSt.executeQuery("SELECT * FROM " + "aleks");
-            int counter = 0;
-            while (rs.next()){
-//                System.out.println("--- id from in memory DB " + rs.getInt("id"));
-                counter++;
-            }
-            System.out.println("--- " + counter + " elements was added into in memory DB");
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            "ALTER TABLE " + user + " ADD CONSTRAINT unique_id UNIQUE (id);";
     }
 
-    public DAO(){
+    public DAO(String user){
+        this.user = user;
         try{
             mainDbConn = DriverManager.getConnection(host1, "adminLtuHq9R", "d-AUIKakd1Br");
             System.out.println("--- Remote DB was connected");
@@ -100,10 +66,68 @@ public class DAO {
         }
         inMemDbConn = getDBConnection();
         System.out.println("inMemDbConn is " + inMemDbConn);
-        copyDb();
+
     }
 
+    private void copyDb(){
+        Statement inMemSt = null;
+        try {
+            inMemSt = inMemDbConn.createStatement();
+            inMemSt.execute("DROP TABLE " + user);
+        } catch (SQLException e) {
+//            e.printStackTrace();
+        }
 
+        ResultSet rs = null;
+        PreparedStatement ps = null;
+        try {
+            inMemSt.execute(createTableSql());
+            Statement mainSt = mainDbConn.createStatement();
+            rs = mainSt.executeQuery("SELECT * FROM " + user);
+            ps = inMemDbConn.prepareStatement("INSERT INTO " + user +
+                    "(id, for_word, nat_word, transcr, prob_factor, create_date, label, last_accs_date, " +
+                    "index_start, index_end, exactmatch) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+        } catch (SQLException e) {
+            System.out.println("--- Exception during prepare statement");
+            e.printStackTrace();
+        }
+
+        int id = 0;
+        try {
+
+            while (rs.next()) {
+                id = rs.getInt("id");
+                ps.setInt(1, id);
+                ps.setString(2, rs.getString("for_word"));
+                ps.setString(3, rs.getString("nat_word"));
+                ps.setString(4, (rs.getString("transcr") == null ? null : rs.getString("transcr")));
+                ps.setDouble(5, rs.getDouble("prob_factor"));
+                ps.setTimestamp(6, rs.getTimestamp("create_date"));
+                ps.setString(7, (rs.getString("label") == null ? null : rs.getString("label")));
+                ps.setTimestamp(8, (rs.getTimestamp("last_accs_date") == null ? null : rs.getTimestamp("last_accs_date")));
+                ps.setDouble(9, rs.getDouble("index_start"));
+                ps.setDouble(10, rs.getDouble("index_end"));
+                ps.setBoolean(11, rs.getBoolean("exactmatch"));
+                ps.execute();
+            }
+        }catch (SQLException e){
+            e.printStackTrace();
+            System.out.println("--- Exception during prepare while (rs.next()) id is " + id);
+        }
+
+        try {
+            rs = inMemSt.executeQuery("SELECT * FROM " + user);
+            int counter = 0;
+            while (rs.next()){
+//                System.out.println("--- id from in memory DB " + rs.getInt("id"));
+                counter++;
+            }
+            System.out.println("--- " + counter + " elements was added into in memory DB");
+        } catch (SQLException e) {
+            System.out.println("--- Exception during calculating the added records in the table inMemDb");
+            e.printStackTrace();
+        }
+    }
 
     private static Connection getDBConnection() {
         Connection dbConnection = null;
@@ -133,6 +157,10 @@ public class DAO {
         password = loginBean.getPassword();
         table = user;
         System.out.println("user is " + user);
+        if(!isCopyDbExecuted){
+            copyDb();
+            isCopyDbExecuted = true;
+        }
         reloadLabelsList();
 
     }
@@ -271,6 +299,7 @@ public class DAO {
     }
 
     public Phrase nextPhrase(){
+
         int id = random.nextInt(999991183);
         ResultSet rs;
         Phrase phrase = null;
