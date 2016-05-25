@@ -158,8 +158,9 @@ public class InterfaceBean implements Serializable{
         if(currPhrase.isAnswered==null)
             pDpercentOfAppearance = new BigDecimal(currPhrase.indexEnd-currPhrase.indexStart).divide(new BigDecimal(1.0e+7)).setScale(5, RoundingMode.HALF_UP).toString();
         else {
-            BigDecimal bigDec = new BigDecimal(currPhrase.indexEnd-currPhrase.indexStart).divide(new BigDecimal(1.0e+7)).setScale(5, RoundingMode.HALF_UP);
-            pDpercentOfAppearance = bigDec.toString() + "(" + new BigDecimal(currPhrase.returnUnmodified().indexEnd-currPhrase.returnUnmodified().indexStart).divide(new BigDecimal(1.0e+7)).setScale(5, RoundingMode.HALF_UP).subtract()
+            BigDecimal percentOfAppear = new BigDecimal(currPhrase.indexEnd-currPhrase.indexStart).divide(new BigDecimal(1.0e+7)).setScale(5, RoundingMode.HALF_UP);
+            BigDecimal residual = percentOfAppear.subtract(new BigDecimal(currPhrase.returnUnmodified().indexEnd-currPhrase.returnUnmodified().indexStart).divide(new BigDecimal(1.0e+7)).setScale(5, RoundingMode.HALF_UP));
+            pDpercentOfAppearance = percentOfAppear.toString() + "% (" + (residual.doubleValue()>0?"+":"") + residual + "%)";
         }
         numOfPhrForSession = listOfPhrases.size();
         for(Phrase phrs : listOfPhrases){
