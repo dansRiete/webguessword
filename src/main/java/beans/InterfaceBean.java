@@ -46,8 +46,6 @@ public class InterfaceBean implements Serializable{
     //>>Session statistics
     private int numOfPhrForSession = 0;
     private int numOfAnswForSession = 0;
-    private int numOfRightAnswForSession = 0;
-    private int numOfWrongAnswForSession = 0;
     private int totalNumberOfWords;
     private int totalNumberOfLearnedWords;
     private String percentOfRightAnswers;
@@ -56,7 +54,12 @@ public class InterfaceBean implements Serializable{
     private BigDecimal avgTimeOfAccsToDb;
     //<<
 
-    //>>Phrase data
+
+    //>>Current phrase data
+    private String currPhrNatWord;
+    private String currPhrForWord;
+    private String currPhrTransc;
+    private String currPhrLabel;
     private String pDpercentOfAppearance;
     private double pDprob;
     private String pdLastAccs;
@@ -64,13 +67,9 @@ public class InterfaceBean implements Serializable{
     private String label;
     private String strLastAccs;
     private String strCreateDate;
-    //<<
+    private int id;
 
-    //>>Current phrase data
-    private String currPhrNatWord;
-    private String currPhrForWord;
-    private String currPhrTransc;
-    private String currPhrLabel;
+
     //<<
 
     private RetDiff retDiff = new RetDiff();
@@ -155,6 +154,13 @@ public class InterfaceBean implements Serializable{
         System.out.println("CALL: calculateSessionStatistics() from InterfaceBean");
         int numOfNonAnswForSession = 0;
         int numOfRightAnswForSession = 0;
+        id = currPhrase.id;
+        if(currPhrase.isAnswered==null)
+            pDpercentOfAppearance = new BigDecimal(currPhrase.indexEnd-currPhrase.indexStart).divide(new BigDecimal(1.0e+7)).setScale(5, RoundingMode.HALF_UP).toString();
+        else {
+            BigDecimal bigDec = new BigDecimal(currPhrase.indexEnd-currPhrase.indexStart).divide(new BigDecimal(1.0e+7)).setScale(5, RoundingMode.HALF_UP);
+            pDpercentOfAppearance = bigDec.toString() + "(" + new BigDecimal(currPhrase.returnUnmodified().indexEnd-currPhrase.returnUnmodified().indexStart).divide(new BigDecimal(1.0e+7)).setScale(5, RoundingMode.HALF_UP).subtract()
+        }
         numOfPhrForSession = listOfPhrases.size();
         for(Phrase phrs : listOfPhrases){
             if(phrs.isAnswered==null)
@@ -163,8 +169,6 @@ public class InterfaceBean implements Serializable{
                 numOfRightAnswForSession++;
         }
         numOfAnswForSession = numOfPhrForSession-numOfNonAnswForSession;
-        this.numOfRightAnswForSession = numOfRightAnswForSession;
-        this.numOfWrongAnswForSession = numOfAnswForSession-numOfRightAnswForSession;
         //Формирует строку с процентным соотношением правильных ответов к общему кол-ву ответов
         percentOfRightAnswers = ((new BigDecimal(numOfRightAnswForSession)).divide(new BigDecimal(numOfAnswForSession==0?1:numOfAnswForSession),2, RoundingMode.HALF_UP).multiply(new BigDecimal(100))).setScale(0, RoundingMode.HALF_UP)+"%";
         //>>Рассчитываем среднее время доступа к базе данных
@@ -203,7 +207,7 @@ public class InterfaceBean implements Serializable{
     private void newPhrase(){
         System.out.println("CALL: newPhrase() from InterfaceBean");
         long starTime = System.nanoTime();
-        dao.reloadIndices();
+//        dao.reloadIndices();
         Phrase phrase = dao.createRandPhrase();
         if(phrase!=null){
             listOfPhrases.add(phrase);
@@ -219,8 +223,8 @@ public class InterfaceBean implements Serializable{
             currPhrase = listOfPhrases.get(index);
 //            currPhrase.isAnswered = true;
             currPhrase.rightAnswer();
-            if (shift == 0)
-                nextQuestion();
+            /*if (shift == 0)
+                */nextQuestion();
             resultProcessing();
         }catch (NullPointerException e){
             System.out.println("EXCEPTION: in rightAnswer() from InterfaceBean");
@@ -235,8 +239,8 @@ public class InterfaceBean implements Serializable{
             currPhrase = listOfPhrases.get(index);
 //            currPhrase.isAnswered = false;
             currPhrase.wrongAnswer();
-            if(shift==0)
-                nextQuestion();
+            /*if(shift==0)
+                */nextQuestion();
             resultProcessing();
         }catch (NullPointerException e){
             System.out.println("EXCEPTION: in wrongAnswer() from InterfaceBean");
@@ -247,13 +251,8 @@ public class InterfaceBean implements Serializable{
     public void previousRight(){
         System.out.println("CALL: previousRight() from InterfaceBean");
         try{
-            if(shift==0){
-                index = listOfPhrases.size() - 2;
-                currPhrase = listOfPhrases.get(index);
-//                currPhrase.isAnswered = true;
-                currPhrase.rightAnswer();
-                resultProcessing();
-            }
+            listOfPhrases.get(index-1).rightAnswer();
+            resultProcessing();
         }catch (NullPointerException e){
             System.out.println("EXCEPTION: in previousRight() from InterfaceBean");
             e.printStackTrace();
@@ -263,13 +262,8 @@ public class InterfaceBean implements Serializable{
     public void previousWrong(){
         System.out.println("CALL: previousWrong() from InterfaceBean");
         try{
-            if(shift==0){
-                index = listOfPhrases.size() - 2;
-                currPhrase = listOfPhrases.get(index);
-//                currPhrase.isAnswered = false;
-                currPhrase.wrongAnswer();
-                resultProcessing();
-            }
+            listOfPhrases.get(index -1).wrongAnswer();
+            resultProcessing();
         }catch (NullPointerException e){
             System.out.println("EXCEPTION: in previousWrong() from InterfaceBean");
             e.printStackTrace();
@@ -409,20 +403,6 @@ public class InterfaceBean implements Serializable{
         this.numOfAnswForSession = numOfAnswForSession;
     }
 
-    public int getNumOfRightAnswForSession() {
-        return numOfRightAnswForSession;
-    }
-    public void setNumOfRightAnswForSession(int numOfRightAnswForSession) {
-        this.numOfRightAnswForSession = numOfRightAnswForSession;
-    }
-
-    public int getNumOfWrongAnswForSession() {
-        return numOfWrongAnswForSession;
-    }
-    public void setNumOfWrongAnswForSession(int numOfWrongAnswForSession) {
-        this.numOfWrongAnswForSession = numOfWrongAnswForSession;
-    }
-
     public String getpDpercentOfAppearance() {
         return pDpercentOfAppearance;
     }
@@ -543,6 +523,14 @@ public class InterfaceBean implements Serializable{
         this.currPhrLabel = currPhrLabel;
         currPhrase.label = this.currPhrLabel;
         currPhrase.isModified = true;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }
 

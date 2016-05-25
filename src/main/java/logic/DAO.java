@@ -151,7 +151,7 @@ public class DAO {
         return dbConnection;
     }
 
-    public void updateProb(Phrase phrase){
+    public long[] updateProb(Phrase phrase){
         System.out.println("CALL: updateProb(Phrase phrase) with id=" + phrase.id +" from DAO");
 //        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         String dateTime = ZonedDateTime.now(ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
@@ -174,6 +174,7 @@ public class DAO {
                 }
             }
         }.run();
+        return reloadIndices(phrase.id);
     }
 
     public void updatePhrase(Phrase phrase){
@@ -288,7 +289,7 @@ public class DAO {
 
     }
 
-    public void reloadIndices(){
+    public long[] reloadIndices(int id){
         System.out.println("CALL: reloadIndices() from DAO");
         long start = System.currentTimeMillis();
         double temp = 0;
@@ -300,6 +301,7 @@ public class DAO {
         ResultSet rs = null;
         Statement statement = null;
         int summProbOfNLW = 0;
+        long[] indexes = new long[2];
 
         //Заполняем idArr айдишниками
         try {
@@ -341,6 +343,8 @@ public class DAO {
         int test = 0;
         try {
             for (int i : idArr) { //Устанавилвает индексы для неизученных слов
+                long indexStart = 0;
+                long indexEnd = 0;
 //                System.out.println("--- for(" + i + ": idArr)");
 
                 //Переменной prob присваивается prob фразы с currentPhraseId = i;
@@ -353,28 +357,38 @@ public class DAO {
 
                 //Если nonLearnedWords == 0, то есть, все слова выучены устанавливаются равные для всех индексы
                 if (nonLearnedWords == 0) {
-                    statement.execute("UPDATE " + user + " SET index_start=" + Math.round(temp * 1000000000) + " WHERE id=" + i);
+                    indexStart = Math.round(temp * 1000000000);
+                    statement.execute("UPDATE " + user + " SET index_start=" + indexStart + " WHERE id=" + i);
                     temp += chanceOfLearnedWords / learnedWords;
-                    statement.execute("UPDATE " + user + " SET index_end=" + Math.round((temp * 1000000000) - 1) + " WHERE id=" + i);
+                    indexEnd = Math.round((temp * 1000000000) - 1);
+                    statement.execute("UPDATE " + user + " SET index_end=" + indexEnd + " WHERE id=" + i);
                 } else { //Если нет, то индексы ставяться по алгоритму
                     if (prob > 3) {
                         //                    System.out.println("UPDATE ALEKS SET INDEX1=" + Math.round(temp*1000000000) + " WHERE ID=" + i);
-                        statement.execute("UPDATE " + user + " SET index_start=" + Math.round(temp * 1000000000) + " WHERE id=" + i);
+                        indexStart = Math.round(temp * 1000000000);
+                        statement.execute("UPDATE " + user + " SET index_start=" + indexStart + " WHERE id=" + i);
 //                        double i1 = temp;
                         temp += scaleOf1prob * prob;
                         //                    System.out.println("UPDATE ALEKS SET INDEX2=" + Math.round((temp *1000000000)-1) + " WHERE ID=" + i);
                         //                    System.out.println("%=" + (temp - MINFLOAT-i1));
-                        statement.execute("UPDATE " + user + " SET index_end=" + Math.round((temp * 1000000000) - 1) + " WHERE id=" + i);
+                        indexEnd = Math.round((temp * 1000000000) - 1);
+                        statement.execute("UPDATE " + user + " SET index_end=" + indexEnd + " WHERE id=" + i);
                     } else {
                         //                    System.out.println("Index1LW для ID=" + i + "=" + temp);
-                        statement.execute("UPDATE " + user + " SET index_start=" + Math.round(temp * 1000000000) + " WHERE id=" + i);
+                        indexStart = Math.round(temp * 1000000000);
+                        statement.execute("UPDATE " + user + " SET index_start=" + indexStart + " WHERE id=" + i);
                         temp += indOfLW;
                         //                    System.out.println("temp "+temp + "= temp "+temp+"+indOfLW "+indOfLW);
                         //                    System.out.println("Index2LW для ID=" + i + "=" + (temp - 1));
-                        statement.execute("UPDATE " + user + " SET index_end=" + Math.round((temp * 1000000000) - 1) + " WHERE id=" + i);
+                        indexEnd = Math.round((temp * 1000000000) - 1);
+                        statement.execute("UPDATE " + user + " SET index_end=" + indexEnd + " WHERE id=" + i);
                     }
                 }
                 countOfModIndices++;
+                if(i==id){
+                    indexes[0]=indexStart;
+                    indexes[1]=indexEnd;
+                }
             }
         }catch (SQLException e){
             System.out.println("EXCEPTION#2: in reloadIndices() from DAO");
@@ -382,6 +396,7 @@ public class DAO {
         }
 //        System.out.println("Изменено индексов для "+countOfModIndices+" позиций");
 //        System.out.println("Time of performing reloadIndices method is " + (System.currentTimeMillis()-start) + "ms");
+        return indexes;
     }
 
     public Phrase createRandPhrase(){

@@ -136,14 +136,6 @@
                 <td>#{interfaceBean.numOfAnswForSession}</td>
             </tr>
             <tr>
-                <td>Number of right answers</td>
-                <td>#{interfaceBean.numOfRightAnswForSession}</td>
-            </tr>
-            <tr>
-                <td>Number of wrong answers</td>
-                <td>#{interfaceBean.numOfWrongAnswForSession}</td>
-            </tr>
-            <tr>
                 <td>Percent of right answers</td>
                 <td>#{interfaceBean.percentOfRightAnswers}</td>
             </tr>
@@ -162,8 +154,16 @@
             </thead>
             <tbody>
             <tr>
-                <td>The probability of occurrence</td>
+                <td>The probability of occurrence (points)</td>
                 <td>#{interfaceBean.pDprob}</td>
+            </tr>
+            <tr>
+                <td>The probability of occurrence (percents)</td>
+                <td>#{interfaceBean.pDpercentOfAppearance}%</td>
+            </tr>
+            <tr>
+                <td>Id of current phrase</td>
+                <td>#{interfaceBean.id}</td>
             </tr>
             <tr>
                 <td>Last access date</td>

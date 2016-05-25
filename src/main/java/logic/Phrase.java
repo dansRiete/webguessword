@@ -30,7 +30,7 @@ public class Phrase {
     /**
      * Saved state of phrase object before changing isAnswered to false or true
      */
-//    private Phrase currentPhrase;
+    private Phrase unmofifiedPhrase;
 
     public Phrase(int id, String forWord, String natWord, String transcr, double prob, Timestamp createDate,
                   String label, Timestamp lastAccs, double indexStart, double indexEnd, boolean exactMatch, DAO dao){
@@ -46,32 +46,62 @@ public class Phrase {
         this.indexStart = indexStart;
         this.indexEnd = indexEnd;
         this.exactMatch = exactMatch;
+        this.unmofifiedPhrase = new Phrase(forWord, natWord, transcr, prob, createDate, label, lastAccs, indexStart, indexEnd, exactMatch);
+    }
+
+    public Phrase(String forWord, String natWord, String transcr, double prob, Timestamp createDate,
+                  String label, Timestamp lastAccs, double indexStart, double indexEnd, boolean exactMatch){
+        this.forWord = forWord;
+        this.natWord = natWord;
+        this.transcr = transcr;
+        this.prob = prob;
+        this.createDate = createDate;
+        this.label = label;
+        this.lastAccs = lastAccs;
+        this.indexStart = indexStart;
+        this.indexEnd = indexEnd;
+        this.exactMatch = exactMatch;
+        this.unmofifiedPhrase = null;
+    }
+
+    public Phrase returnUnmodified(){
+        return unmofifiedPhrase;
     }
 
     public void rightAnswer(){
+        long[] indexes = null;
         if(isAnswered==null){
             if(!isLearnt()){
                 prob-=3;
             }
             isAnswered = true;
-            dao.updateProb(this);
+            indexes = dao.updateProb(this);
         }else if(!isAnswered){
             if(!isLearnt())
                 prob-=9;
             isAnswered = true;
-            dao.updateProb(this);
+            indexes =  dao.updateProb(this);
+        }
+        if(indexes!=null){
+            this.indexStart = indexes[0];
+            this.indexEnd = indexes[1];
         }
     }
 
     public void wrongAnswer(){
+        long[] indexes = null;
         if(isAnswered==null){
             prob+=6;
             isAnswered = false;
-            dao.updateProb(this);
+            indexes = dao.updateProb(this);
         }else if(isAnswered){
             prob+=9;
             isAnswered = false;
-            dao.updateProb(this);
+            indexes = dao.updateProb(this);
+        }
+        if(indexes!=null){
+            this.indexStart = indexes[0];
+            this.indexEnd = indexes[1];
         }
     }
 
