@@ -11,7 +11,7 @@ import java.util.Random;
  * Created by Aleks on 11.05.2016.
  */
 public class DAO {
-    Random random = new Random();
+    Random random = new Random(); //hgj
     static String host1 = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false";
     static String host2 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false";
     Connection mainDbConn;
