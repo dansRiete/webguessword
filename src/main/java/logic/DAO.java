@@ -4,6 +4,8 @@ import Exceptions.DataBaseConnectionException;
 import beans.LoginBean;
 
 import java.sql.*;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -150,11 +152,12 @@ public class DAO {
 
     public void updateProb(Phrase phrase){
         System.out.println("CALL: updateProb(Phrase phrase) with id=" + phrase.id +" from DAO");
-        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+//        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        String dateTime = ZonedDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
         try {
             Statement inMemDbPrepStat = inMemDbConn.createStatement();
 //            System.out.println("--- updateProb() SQL UPDATE " + user + " SET prob_factor=" + phrase.prob + ", last_accs_date='"+timestamp+"' WHERE id="+phrase.id);
-            inMemDbPrepStat.executeUpdate("UPDATE " + user + " SET prob_factor=" + phrase.prob + ", last_accs_date='" + timestamp + "' WHERE id=" + phrase.id);
+            inMemDbPrepStat.executeUpdate("UPDATE " + user + " SET prob_factor=" + phrase.prob + ", last_accs_date='" + dateTime + "' WHERE id=" + phrase.id);
         } catch (SQLException e) {
             System.out.println("EXCEPTION#1: in updateProb(Phrase phrase) from DAO");
             e.printStackTrace();
@@ -163,7 +166,7 @@ public class DAO {
             public void run(){
                 try {
                     Statement st = mainDbConn.createStatement();
-                    st.execute("UPDATE " + user + " SET prob_factor=" + phrase.prob + ", last_accs_date='" + timestamp + "' WHERE id=" + phrase.id);
+                    st.execute("UPDATE " + user + " SET prob_factor=" + phrase.prob + ", last_accs_date='" + dateTime + "' WHERE id=" + phrase.id);
                 } catch (SQLException e) {
                     System.out.println("EXCEPTION#2: in updateProb(Phrase phrase) from DAO");
                     e.printStackTrace();
@@ -174,7 +177,8 @@ public class DAO {
 
     public void updatePhrase(Phrase phrase){
         System.out.println("CALL: updatePhrase(Phrase phrase) from DAO with id=" + phrase.id);
-        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+//        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        String dateTime = ZonedDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
         try {
             PreparedStatement inMemDbPrepStat = inMemDbConn.prepareStatement("UPDATE " + user + " SET for_word=?, nat_word=?, transcr=?, last_accs_date=?, exactmatch=?, label=? WHERE id =" + phrase.id);
             inMemDbPrepStat.setString(1, phrase.forWord);
@@ -190,7 +194,7 @@ public class DAO {
             else
                 inMemDbPrepStat.setString(6, phrase.label);
 
-            inMemDbPrepStat.setTimestamp(4, timestamp);
+            inMemDbPrepStat.setString(4, dateTime);
             inMemDbPrepStat.setBoolean(5, phrase.exactMatch);
         } catch (SQLException e) {
             System.out.println("EXCEPTION#1: in updateProb(Phrase phrase) from DAO");
@@ -213,7 +217,7 @@ public class DAO {
                     else
                         mainDbPrepStat.setString(6, phrase.label);
 
-                    mainDbPrepStat.setTimestamp(4, timestamp);
+                    mainDbPrepStat.setString(4, dateTime);
                     mainDbPrepStat.setBoolean(5, phrase.exactMatch);
                     mainDbPrepStat.execute();
                 } catch (SQLException e) {

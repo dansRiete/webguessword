@@ -11,7 +11,7 @@ import javax.faces.context.FacesContext;
 public class MessagesView {
 
     public void info() {
-        FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Info", "Changes have been saved."));
+        FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Info", "Changes have been sent."));
     }
 
     public void warn() {
