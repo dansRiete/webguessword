@@ -28,7 +28,9 @@ public class LoginBean implements Serializable {
     final static Logger logger = Logger.getLogger(LoginBean.class);
     Connection conn;
     private ArrayList<User> usersList = new ArrayList<>();
+
     public LoginBean(){
+        System.out.println("CALL: LoginBean() constructor");
         dao = new DAO(user);
         conn = dao.getConnection();
 
@@ -41,30 +43,14 @@ public class LoginBean implements Serializable {
                         rs.getString("password"), rs.getString("email")));
             }
         } catch (SQLException e) {
+            System.out.println("EXCEPTION: in LoginBean constructor");
             e.printStackTrace();
         }
         //<<
     }
-    public String getUser() {
-        return user;
-    }
-
-    public void setUser(String user) {
-        this.user = user;
-    }
-
-
-    public String getPassword() {
-        return password;
-    }
-
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
 
     public void checkUser(){
+        System.out.println("CALL: checkUser() method");
         //!!! EXC !!!
         boolean userExist = false;
 
@@ -85,6 +71,7 @@ public class LoginBean implements Serializable {
                 try {
                     FacesContext.getCurrentInstance().getExternalContext().dispatch("learn.xhtml");
                 } catch (IOException e) {
+                    System.out.println("EXCEPTION#1: in checkUser() from LoginBean");
                     e.printStackTrace();
                 }
 
@@ -112,14 +99,27 @@ public class LoginBean implements Serializable {
                 try {
                     response.sendRedirect("error.xhtml");
                 } catch (IOException e) {
-                    System.out.println("--- IOException during response.sendRedirect(\"error.xhtml\");");
+                    System.out.println("EXCEPTION#2: in checkUser() from LoginBean");
                     e.printStackTrace();
                 }
             }
     }
 
-
     public DAO returnDAO(){
         return this.dao;
+    }
+
+    public String getUser() {
+        return user;
+    }
+    public void setUser(String user) {
+        this.user = user;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+    public void setPassword(String password) {
+        this.password = password;
     }
 }
