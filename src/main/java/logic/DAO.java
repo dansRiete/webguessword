@@ -79,6 +79,7 @@ public class DAO {
     }
 
     private void copyDb(){
+
         System.out.println("CALL: copyDb() from DAO");
         Statement inMemSt = null;
         try {
@@ -136,6 +137,7 @@ public class DAO {
             System.out.println("EXCEPTION#3: in copyDb() from DAO");
             e.printStackTrace();
         }
+        reloadIndices(1);
     }
 
     private static Connection getDBConnection() {

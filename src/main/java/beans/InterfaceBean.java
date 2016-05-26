@@ -49,8 +49,6 @@ public class InterfaceBean implements Serializable{
     private int totalNumberOfWords;
     private int totalNumberOfLearnedWords;
     private String percentOfRightAnswers;
-    private int[] timeOfAccsToDbArr = new int[5];
-    private int timeOfAccsToDbArrCounter;
     private BigDecimal avgTimeOfAccsToDb;
     //<<
 
@@ -61,7 +59,7 @@ public class InterfaceBean implements Serializable{
     private String currPhrTransc;
     private String currPhrLabel;
     private String pDpercentOfAppearance;
-    private double pDprob;
+    private String pDprob;
     private String pdLastAccs;
     private String pdCreateDate;
     private String label;
@@ -108,11 +106,14 @@ public class InterfaceBean implements Serializable{
 
     private void reloadPhraseData(){
         System.out.println("CALL: reloadPhraseData() from InterfaceBean");
-        pDprob = new BigDecimal(listOfPhrases.get(index).prob).setScale(1, RoundingMode.HALF_UP).doubleValue();
+        if(currPhrase.isAnswered==null)
+            pDprob = new BigDecimal(currPhrase.prob).setScale(1, RoundingMode.HALF_UP).toString();
+        else
+            pDprob = new BigDecimal(currPhrase.returnUnmodified().prob).setScale(1, RoundingMode.HALF_UP) + "➩" + new BigDecimal(currPhrase.prob).setScale(1, RoundingMode.HALF_UP);
         pdLastAccs = LocalDateTime.ofInstant(currPhrase.lastAccs.toInstant(),
-                ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH)).toString();
+                ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
         pdCreateDate = LocalDateTime.ofInstant(currPhrase.createDate.toInstant(),
-                ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH)).toString();
+                ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
         label = listOfPhrases.get(index).label;
 //        System.out.println("--- Curr. phrase is " + currPhrase);
         strLastAccs = retDiff.retDiffInTime(System.currentTimeMillis() - currPhrase.lastAccs.getTime());
@@ -156,10 +157,10 @@ public class InterfaceBean implements Serializable{
         int numOfRightAnswForSession = 0;
         id = currPhrase.id;
         if(currPhrase.isAnswered==null)
-            pDpercentOfAppearance = new BigDecimal(currPhrase.indexEnd-currPhrase.indexStart).divide(new BigDecimal(1.0e+7)).setScale(5, RoundingMode.HALF_UP).toString();
+            pDpercentOfAppearance = new BigDecimal(currPhrase.indexEnd-currPhrase.indexStart).divide(new BigDecimal(1.0e+7)).setScale(5, RoundingMode.HALF_UP) + "%";
         else {
             BigDecimal percentOfAppear = new BigDecimal(currPhrase.indexEnd-currPhrase.indexStart).divide(new BigDecimal(1.0e+7)).setScale(5, RoundingMode.HALF_UP);
-            BigDecimal residual = percentOfAppear.subtract(new BigDecimal(currPhrase.returnUnmodified().indexEnd-currPhrase.returnUnmodified().indexStart).divide(new BigDecimal(1.0e+7)).setScale(5, RoundingMode.HALF_UP));
+            BigDecimal residual = percentOfAppear.subtract(new BigDecimal(currPhrase.returnUnmodified().indexEnd - currPhrase.returnUnmodified().indexStart).divide(new BigDecimal(1.0e+7)).setScale(5, RoundingMode.HALF_UP));
             pDpercentOfAppearance = percentOfAppear.toString() + "% (" + (residual.doubleValue()>0?"+":"") + residual + "%)";
         }
         numOfPhrForSession = listOfPhrases.size();
@@ -173,13 +174,13 @@ public class InterfaceBean implements Serializable{
         //Формирует строку с процентным соотношением правильных ответов к общему кол-ву ответов
         percentOfRightAnswers = ((new BigDecimal(numOfRightAnswForSession)).divide(new BigDecimal(numOfAnswForSession==0?1:numOfAnswForSession),2, RoundingMode.HALF_UP).multiply(new BigDecimal(100))).setScale(0, RoundingMode.HALF_UP)+"%";
         //>>Рассчитываем среднее время доступа к базе данных
-        double summ = 0;
+        /*double summ = 0;
         double counter = 0;
         for(int a : timeOfAccsToDbArr)
             if (a!=0){
                 summ+=a;
                 counter++;
-            }
+            }*/
     }
 
     public void resultProcessing(){
@@ -219,6 +220,7 @@ public class InterfaceBean implements Serializable{
 
     public void rightAnswer(){
         System.out.println("CALL: rightAnswer() from InterfaceBean");
+        long starTime = System.nanoTime();
         try {
             index = listOfPhrases.size() - 1 - shift;
             currPhrase = listOfPhrases.get(index);
@@ -231,10 +233,12 @@ public class InterfaceBean implements Serializable{
             System.out.println("EXCEPTION: in rightAnswer() from InterfaceBean");
             e.printStackTrace();
         }
+        avgTimeOfAccsToDb = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000)).setScale(2, RoundingMode.HALF_UP);
     }
 
     public void wrongAnswer(){
         System.out.println("CALL: wrongAnswer() from InterfaceBean");
+        long starTime = System.nanoTime();
         try{
             index = listOfPhrases.size() - 1 - shift;
             currPhrase = listOfPhrases.get(index);
@@ -247,10 +251,12 @@ public class InterfaceBean implements Serializable{
             System.out.println("EXCEPTION: in wrongAnswer() from InterfaceBean");
             e.printStackTrace();
         }
+        avgTimeOfAccsToDb = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000)).setScale(2, RoundingMode.HALF_UP);
     }
 
     public void previousRight(){
         System.out.println("CALL: previousRight() from InterfaceBean");
+        long starTime = System.nanoTime();
         try{
             listOfPhrases.get(index-1).rightAnswer();
             resultProcessing();
@@ -258,10 +264,12 @@ public class InterfaceBean implements Serializable{
             System.out.println("EXCEPTION: in previousRight() from InterfaceBean");
             e.printStackTrace();
         }
+        avgTimeOfAccsToDb = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000)).setScale(2, RoundingMode.HALF_UP);
     }
 
     public void previousWrong(){
         System.out.println("CALL: previousWrong() from InterfaceBean");
+        long starTime = System.nanoTime();
         try{
             listOfPhrases.get(index -1).wrongAnswer();
             resultProcessing();
@@ -269,6 +277,7 @@ public class InterfaceBean implements Serializable{
             System.out.println("EXCEPTION: in previousWrong() from InterfaceBean");
             e.printStackTrace();
         }
+        avgTimeOfAccsToDb = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000)).setScale(2, RoundingMode.HALF_UP);
     }
 
     public void checkTheAnswer(){
@@ -411,10 +420,10 @@ public class InterfaceBean implements Serializable{
         this.pDpercentOfAppearance = pDpercentOfAppearance;
     }
 
-    public double getpDprob() {
+    public String getpDprob() {
         return pDprob;
     }
-    public void setpDprob(float pDprob) {
+    public void setpDprob(String pDprob) {
         this.pDprob = pDprob;
     }
 
