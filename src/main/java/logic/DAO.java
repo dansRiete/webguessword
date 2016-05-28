@@ -15,8 +15,8 @@ import java.util.Random;
  */
 public class DAO {
     Random random = new Random();
-    static String host1 = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false"; //&useJDBCCompliantTimezoneShift=true
-    static String host2 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false";//&useJDBCCompliantTimezoneShift=true
+    static String host1 = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false"; //
+    static String host2 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false";
     Connection mainDbConn;
     Connection inMemDbConn;
     public String table;
@@ -143,7 +143,7 @@ public class DAO {
                 ps.setString(7, (rs.getString("label") == null ? null : rs.getString("label")));
                 String lastDate = (rs.getString("last_accs_date") == null ? null : rs.getString("last_accs_date"));
                 if(id == 1760)
-                    System.out.println("--- LAST DATE FROM DAO IS " + lastDate);
+                    System.out.println("--- LAST DATE OF ID=1760 FROM DAO DURING copyDb() IS " + lastDate);
                 ps.setString(8, lastDate);
                 ps.setDouble(9, rs.getDouble("index_start"));
                 ps.setDouble(10, rs.getDouble("index_end"));
