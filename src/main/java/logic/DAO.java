@@ -19,13 +19,12 @@ public class DAO {
     static String host2 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false";
     Connection mainDbConn;
     Connection inMemDbConn;
-    private int totalNumberOfWords;
-    private int totalNumberOfLearnedWords;
     public String table;
     String user;
     String password;
     public ArrayList<String> labels = new ArrayList<>();
     public double learnedWords;
+    public double nonLearnedWords;
     final double chanceOfLearnedWords = 1d/15d;
     private boolean isCopyDbExecuted;
 
@@ -270,31 +269,11 @@ public class DAO {
         }
     }
 
-    private void getStatistic(){
-        System.out.println("CALL: getStatistic() from DAO");
-        Statement st = null;
-        ResultSet rs = null;
-        try {
-            st = inMemDbConn.createStatement();
-            rs = st.executeQuery("SELECT COUNT(*) FROM " + table + "  WHERE PROB<=3");
-            rs.next();
-            totalNumberOfLearnedWords = rs.getInt(1);
-            rs = st.executeQuery("SELECT COUNT(*) FROM " +table);
-            rs.next();
-            totalNumberOfWords = rs.getInt(1);
-        } catch (SQLException e) {
-            System.out.println("EXCEPTION: in getStatistic() from DAO");
-            e.printStackTrace();
-        }
-
-
-    }
-
     public long[] reloadIndices(int id){
         System.out.println("CALL: reloadIndices() from DAO");
         long start = System.currentTimeMillis();
         double temp = 0;
-        double nonLearnedWords = 0;
+
         double indOfLW;     //Индекс выпадения изученных
         double rangeOfNLW;  //Диапазон индексов неизученных слов
         double scaleOf1prob;    //rangeOfNLW/summProbOfNLW  цена одного prob
@@ -472,12 +451,6 @@ public class DAO {
         System.out.println("Copied " + count + " elements, total time=" + end + " ms");
     }
 
-    //Getters setters
-    public int getTotalNumberOfWords(){
-        return totalNumberOfWords;
-    }
-    public int getTotalNumberOfLearnedWords(){
-        return totalNumberOfLearnedWords;
-    }
+
 
 }

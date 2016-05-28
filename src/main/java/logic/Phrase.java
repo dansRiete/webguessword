@@ -1,8 +1,6 @@
 package logic;
 
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
@@ -12,7 +10,7 @@ import java.time.ZonedDateTime;
 public class Phrase {
 
     public ZonedDateTime lt = ZonedDateTime.now(ZoneId.of("Europe/Kiev"));
-    public Boolean isAnswered;
+    public Boolean howWasAnswered;
     public int id;
     public String forWord;
     public String natWord;
@@ -26,9 +24,10 @@ public class Phrase {
     public boolean exactMatch;
     private DAO dao;
     public boolean isModified;
+    public String answer;
 
     /**
-     * Saved state of phrase object before changing isAnswered to false or true
+     * Saved state of phrase object before changing howWasAnswered to false or true
      */
     private Phrase unmofifiedPhrase;
 
@@ -68,18 +67,21 @@ public class Phrase {
         return unmofifiedPhrase;
     }
 
-    public void rightAnswer(){
+    public void rightAnswer(String answer){
         long[] indexes = null;
-        if(isAnswered==null){
+        this.answer = answer;
+        if(howWasAnswered == null){
             if(!isLearnt()){
                 prob-=3;
             }
-            isAnswered = true;
+            howWasAnswered = true;
             indexes = dao.updateProb(this);
-        }else if(!isAnswered){
-            if(!isLearnt())
+        }else if(!howWasAnswered){
+            if(!unmofifiedPhrase.isLearnt())
                 prob-=9;
-            isAnswered = true;
+            else
+                prob=3;
+            howWasAnswered = true;
             indexes =  dao.updateProb(this);
         }
         if(indexes!=null){
@@ -88,15 +90,19 @@ public class Phrase {
         }
     }
 
-    public void wrongAnswer(){
+    public void wrongAnswer(String answer){
         long[] indexes = null;
-        if(isAnswered==null){
+        this.answer = answer;
+        if(howWasAnswered == null){
             prob+=6;
-            isAnswered = false;
+            howWasAnswered = false;
             indexes = dao.updateProb(this);
-        }else if(isAnswered){
-            prob+=9;
-            isAnswered = false;
+        }else if(howWasAnswered){
+            if(!unmofifiedPhrase.isLearnt())
+                prob+=9;
+            else
+                prob+=6;
+            howWasAnswered = false;
             indexes = dao.updateProb(this);
         }
         if(indexes!=null){
@@ -109,7 +115,7 @@ public class Phrase {
         dao.updatePhrase(this);
     }
 
-    boolean isLearnt(){
+    public boolean isLearnt(){
         return prob<=3;
     }
 
