@@ -156,7 +156,7 @@ public class DAO {
     public long[] updateProb(Phrase phrase){
         System.out.println("CALL: updateProb(Phrase phrase) with id=" + phrase.id +" from DAO");
 //        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-        String dateTime = ZonedDateTime.now(ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+        String dateTime = ZonedDateTime.now(ZoneId.of("Europe/Kiev")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
         try {
             Statement inMemDbPrepStat = inMemDbConn.createStatement();
 //            System.out.println("--- updateProb() SQL UPDATE " + user + " SET prob_factor=" + phrase.prob + ", last_accs_date='"+timestamp+"' WHERE id="+phrase.id);
