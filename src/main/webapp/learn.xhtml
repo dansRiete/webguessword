@@ -62,19 +62,19 @@
             <f:ajax render="@all"> </f:ajax>
         </h:commandButton>
         <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="know" value="I know it"
-                         action="#{interfaceBean.rightAnswer}">
+                         action="#{interfaceBean.rightAnswer(null)}">
             <f:ajax render="@all"> </f:ajax>
         </h:commandButton>
         <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="donotknow" value="I don't know it"
-                         action="#{interfaceBean.wrongAnswer}">
+                         action="#{interfaceBean.wrongAnswer(null)}">
             <f:ajax render="@all"> </f:ajax>
         </h:commandButton>
         <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevWrong" value="Prev.Wrong"
-                         action="#{interfaceBean.previousWrong}">
+                         action="#{interfaceBean.previousWrong()}">
             <f:ajax render="@all"> </f:ajax>
         </h:commandButton>
         <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevRight" value="Prev.Right"
-                         action="#{interfaceBean.previousRight}">
+                         action="#{interfaceBean.previousRight()}">
             <f:ajax render="@all"> </f:ajax>
         </h:commandButton>
         <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="dialogButton" value="Modificate"
