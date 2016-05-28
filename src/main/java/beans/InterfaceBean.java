@@ -11,6 +11,7 @@ import java.math.RoundingMode;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -178,12 +179,16 @@ public class InterfaceBean implements Serializable{
         if(currPhrase.lastAccs!=null){
             pdLastAccs = LocalDateTime.ofInstant(currPhrase.lastAccs.toInstant(),
                     ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
-            strLastAccs = retDiff.retDiffInTime(System.currentTimeMillis() - currPhrase.lastAccs.getTime());
+            //Приводим время к гринвичу для корректного сравнения с UNIX-time
+            ZonedDateTime zdt = ZonedDateTime.ofInstant(currPhrase.lastAccs.toInstant(), ZoneId.of("GMT"));
+            strLastAccs = retDiff.retDiffInTime(System.currentTimeMillis() - zdt.toEpochSecond()*1000);
         }
         if(currPhrase.createDate!=null){
             pdCreateDate = LocalDateTime.ofInstant(currPhrase.createDate.toInstant(),
                     ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
-            strCreateDate = retDiff.retDiffInTime(System.currentTimeMillis() - currPhrase.createDate.getTime());
+            //Приводим время к гринвичу для корректного сравнения с UNIX-time
+            ZonedDateTime zdt = ZonedDateTime.ofInstant(currPhrase.createDate.toInstant(), ZoneId.of("GMT"));
+            strCreateDate = retDiff.retDiffInTime(System.currentTimeMillis() - zdt.toEpochSecond()*1000);
         }
         label = listOfPhrases.get(index).label;
 //        System.out.println("--- Curr. phrase is " + currPhrase);
