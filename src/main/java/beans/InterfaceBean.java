@@ -144,10 +144,13 @@ public class InterfaceBean implements Serializable{
             }
         }
 
-        if(!resultChoosedLabel.equalsIgnoreCase(""))
+        if(!resultChoosedLabel.equalsIgnoreCase("")){
             dao.table = "(SELECT * FROM " + loginBean.getUser() + " WHERE LABEL IN(" + resultChoosedLabel + ")) As custom";
+            dao.reloadIndices(1);
+        }
         else{
             resultChoosedLabel = dao.table = loginBean.getUser();
+            dao.reloadIndices(1);
         }
     }
 

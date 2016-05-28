@@ -11,7 +11,7 @@ import java.time.ZonedDateTime;
  */
 public class Phrase {
 
-    public ZonedDateTime lt = ZonedDateTime.now(ZoneId.of("EET"));
+    public ZonedDateTime lt = ZonedDateTime.now(ZoneId.of("Europe/Kiev"));
     public Boolean isAnswered;
     public int id;
     public String forWord;

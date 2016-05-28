@@ -14,14 +14,13 @@ import java.util.Random;
  * Created by Aleks on 11.05.2016.
  */
 public class DAO {
-    Random random = new Random(); //hgj
+    Random random = new Random();
     static String host1 = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false";
     static String host2 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false";
     Connection mainDbConn;
     Connection inMemDbConn;
     private int totalNumberOfWords;
     private int totalNumberOfLearnedWords;
-    private LoginBean loginBean;
     public String table;
     String user;
     String password;
@@ -182,7 +181,7 @@ public class DAO {
     public void updatePhrase(Phrase phrase){
         System.out.println("CALL: updatePhrase(Phrase phrase) from DAO with id=" + phrase.id);
 //        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-        String dateTime = ZonedDateTime.now(ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+        String dateTime = ZonedDateTime.now(ZoneId.of("Europe/Kiev")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
         try {
             PreparedStatement inMemDbPrepStat = inMemDbConn.prepareStatement("UPDATE " + user + " SET for_word=?, nat_word=?, transcr=?, last_accs_date=?, exactmatch=?, label=? WHERE id =" + phrase.id);
             inMemDbPrepStat.setString(1, phrase.forWord);
