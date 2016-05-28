@@ -180,6 +180,8 @@ public class InterfaceBean implements Serializable{
             pdLastAccs = LocalDateTime.ofInstant(currPhrase.lastAccs.toInstant(),
                     ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
             //Приводим время к гринвичу для корректного сравнения с UNIX-time
+            System.out.println("--- last accs date is " + currPhrase.lastAccs);
+            System.out.println("--- last accs date from DB is " + dao.getDateTime(currPhrase.id));
             ZonedDateTime zdt = ZonedDateTime.ofInstant(currPhrase.lastAccs.toInstant(), ZoneId.of("GMT"));
             strLastAccs = retDiff.retDiffInTime(System.currentTimeMillis() - zdt.toEpochSecond()*1000);
         }
@@ -187,6 +189,7 @@ public class InterfaceBean implements Serializable{
             pdCreateDate = LocalDateTime.ofInstant(currPhrase.createDate.toInstant(),
                     ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
             //Приводим время к гринвичу для корректного сравнения с UNIX-time
+            System.out.println("--- createDate date is " + currPhrase.createDate);
             ZonedDateTime zdt = ZonedDateTime.ofInstant(currPhrase.createDate.toInstant(), ZoneId.of("GMT"));
             strCreateDate = retDiff.retDiffInTime(System.currentTimeMillis() - zdt.toEpochSecond()*1000);
         }

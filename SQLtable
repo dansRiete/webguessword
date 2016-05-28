@@ -6,8 +6,8 @@ CREATE TABLE guessword.aleks
   transcr VARCHAR(100),
   prob_factor DOUBLE,
   label VARCHAR(50),
-  create_date TIMESTAMP NULL,
-  last_accs_date TIMESTAMP NULL,
+  create_date DATETIME NULL,
+  last_accs_date DATETIME NULL,
   exactmatch BOOLEAN,
   index_start DOUBLE,
   index_end DOUBLE

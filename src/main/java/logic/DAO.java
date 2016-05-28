@@ -40,9 +40,9 @@ public class DAO {
             "    nat_word VARCHAR(250) NOT NULL,\n" +
             "    transcr VARCHAR(100),\n" +
             "    prob_factor DOUBLE,\n" +
-            "    create_date TIMESTAMP,\n" +
+            "    create_date DATETIME,\n" +
             "    label VARCHAR(50),\n" +
-            "    last_accs_date TIMESTAMP,\n" +
+            "    last_accs_date DATETIME,\n" +
             "    exactmatch BOOLEAN,\n" +
             "    index_start DOUBLE,\n" +
             "    index_end DOUBLE\n" +
@@ -91,6 +91,20 @@ public class DAO {
 
     }
 
+    public String getDateTime(int id){
+        String date = null;
+        try {
+            Statement st = inMemDbConn.createStatement();
+            ResultSet rs = st.executeQuery("SELECT last_accs_date FROM " + user + " WHERE ID=" + id);
+            rs.next();
+            date = rs.getString("last_accs_date");
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return date;
+    }
+
     private void copyDb(){
 
         System.out.println("CALL: copyDb() from DAO");
@@ -125,9 +139,9 @@ public class DAO {
                 ps.setString(3, rs.getString("nat_word"));
                 ps.setString(4, (rs.getString("transcr") == null ? null : rs.getString("transcr")));
                 ps.setDouble(5, rs.getDouble("prob_factor"));
-                ps.setTimestamp(6, rs.getTimestamp("create_date"));
+                ps.setString(6, rs.getString("create_date"));
                 ps.setString(7, (rs.getString("label") == null ? null : rs.getString("label")));
-                ps.setTimestamp(8, (rs.getTimestamp("last_accs_date") == null ? null : rs.getTimestamp("last_accs_date")));
+                ps.setString(8, (rs.getString("last_accs_date") == null ? null : rs.getString("last_accs_date")));
                 ps.setDouble(9, rs.getDouble("index_start"));
                 ps.setDouble(10, rs.getDouble("index_end"));
                 ps.setBoolean(11, rs.getBoolean("exactmatch"));
@@ -410,7 +424,7 @@ public class DAO {
             rs = st.executeQuery(sql);
             rs.next();
             phrase = new Phrase(rs.getInt("id"), rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"), rs.getDouble("prob_factor"),
-                    rs.getTimestamp("create_date"), rs.getString("label"), rs.getTimestamp("last_accs_date"),
+                    rs.getString("create_date"), rs.getString("label"), rs.getString("last_accs_date"),
                     rs.getDouble("index_start"), rs.getDouble("index_end"), rs.getBoolean("exactmatch"), this);
         } catch (SQLException e) {
             System.out.println("EXCEPTION: in createRandPhrase() from DAO SQL was " + sql);
@@ -450,9 +464,9 @@ public class DAO {
                 ps.setString(4, rs.getString("nat_word"));
                 ps.setString(5, (rs.getString("transcr")==null?null:rs.getString("transcr")));
                 ps.setDouble(6, rs.getDouble("prob_factor"));
-                ps.setTimestamp(7, rs.getTimestamp("create_date"));
+                ps.setString(7, rs.getString("create_date"));
                 ps.setString(8, (rs.getString("label")==null?null:rs.getString("label")));
-                ps.setTimestamp(9, (rs.getTimestamp("last_accs_date")==null?null:rs.getTimestamp("last_accs_date")));
+                ps.setString(9, (rs.getString("last_accs_date") == null ? null : rs.getString("last_accs_date")));
                 ps.setDouble(10, rs.getDouble("index_start"));
                 ps.setDouble(11, rs.getDouble("index_end"));
                 ps.setBoolean(12, rs.getBoolean("exactmatch"));
