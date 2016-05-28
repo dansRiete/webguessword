@@ -15,8 +15,8 @@ import java.util.Random;
  */
 public class DAO {
     Random random = new Random();
-    static String host1 = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false";
-    static String host2 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false";
+    static String host1 = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false"; //&useJDBCCompliantTimezoneShift=true
+    static String host2 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false";//&useJDBCCompliantTimezoneShift=true
     Connection mainDbConn;
     Connection inMemDbConn;
     public String table;
@@ -141,7 +141,10 @@ public class DAO {
                 ps.setDouble(5, rs.getDouble("prob_factor"));
                 ps.setString(6, rs.getString("create_date"));
                 ps.setString(7, (rs.getString("label") == null ? null : rs.getString("label")));
-                ps.setString(8, (rs.getString("last_accs_date") == null ? null : rs.getString("last_accs_date")));
+                String lastDate = (rs.getString("last_accs_date") == null ? null : rs.getString("last_accs_date"));
+                if(id == 1760)
+                    System.out.println("--- LAST DATE FROM DAO IS " + lastDate);
+                ps.setString(8, lastDate);
                 ps.setDouble(9, rs.getDouble("index_start"));
                 ps.setDouble(10, rs.getDouble("index_end"));
                 ps.setBoolean(11, rs.getBoolean("exactmatch"));
