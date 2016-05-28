@@ -50,6 +50,21 @@ public class DAO {
         //"ALTER TABLE " + user + " ADD CONSTRAINT unique_id UNIQUE (id);";
 
     }
+    private String createNewTable = "CREATE TABLE guessword.aleks\n" +
+            "(\n" +
+            "  id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,\n" +
+            "  for_word VARCHAR(250) NOT NULL,\n" +
+            "  nat_word VARCHAR(250) NOT NULL,\n" +
+            "  transcr VARCHAR(100),\n" +
+            "  prob_factor DOUBLE,\n" +
+            "  label VARCHAR(50),\n" +
+            "  create_date TIMESTAMP NULL,\n" +
+            "  last_accs_date TIMESTAMP NULL,\n" +
+            "  exactmatch BOOLEAN,\n" +
+            "  index_start DOUBLE,\n" +
+            "  index_end DOUBLE\n" +
+            ");\n" +
+            "ALTER TABLE guessword.aleks ADD CONSTRAINT unique_id UNIQUE (id);";
 
     public DAO(String user){
         System.out.println("CALL: DAO constructor");
