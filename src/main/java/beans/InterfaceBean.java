@@ -175,14 +175,20 @@ public class InterfaceBean implements Serializable{
         else
             pDprob = new BigDecimal(currPhrase.returnUnmodified().prob).setScale(1, RoundingMode.HALF_UP) + "➩"
                     + new BigDecimal(currPhrase.prob).setScale(1, RoundingMode.HALF_UP);
-        pdLastAccs = LocalDateTime.ofInstant(currPhrase.lastAccs.toInstant(),
-                ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
-        pdCreateDate = LocalDateTime.ofInstant(currPhrase.createDate.toInstant(),
-                ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
+        if(currPhrase.lastAccs!=null){
+            pdLastAccs = LocalDateTime.ofInstant(currPhrase.lastAccs.toInstant(),
+                    ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
+            strLastAccs = retDiff.retDiffInTime(System.currentTimeMillis() - currPhrase.lastAccs.getTime());
+        }
+        if(currPhrase.createDate!=null){
+            pdCreateDate = LocalDateTime.ofInstant(currPhrase.createDate.toInstant(),
+                    ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
+            strCreateDate = retDiff.retDiffInTime(System.currentTimeMillis() - currPhrase.createDate.getTime());
+        }
         label = listOfPhrases.get(index).label;
 //        System.out.println("--- Curr. phrase is " + currPhrase);
-        strLastAccs = retDiff.retDiffInTime(System.currentTimeMillis() - currPhrase.lastAccs.getTime());
-        strCreateDate = retDiff.retDiffInTime(System.currentTimeMillis() - currPhrase.createDate.getTime());
+
+
     }
 
     public void resultProcessing(){

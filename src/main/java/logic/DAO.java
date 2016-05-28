@@ -82,11 +82,11 @@ public class DAO {
                 throw new DataBaseConnectionException();
             }
         }
-        try {
+        /*try {
             mainDbConn.createStatement().execute("set names utf-8");
         } catch (SQLException e) {
             e.printStackTrace();
-        }
+        }*/
         inMemDbConn = getDBConnection();
 
     }
@@ -401,10 +401,11 @@ public class DAO {
         ResultSet rs;
         Phrase phrase = null;
         Statement st = null;
+        String sql = null;
 
         try {
             st = inMemDbConn.createStatement();
-            String sql = "SELECT * FROM " + table + " WHERE index_start<=" + id + " AND index_end>=" + id;
+            sql = "SELECT * FROM " + table + " WHERE index_start<=" + id + " AND index_end>=" + id;
 //            System.out.println(sql);
             rs = st.executeQuery(sql);
             rs.next();
@@ -412,7 +413,7 @@ public class DAO {
                     rs.getTimestamp("create_date"), rs.getString("label"), rs.getTimestamp("last_accs_date"),
                     rs.getDouble("index_start"), rs.getDouble("index_end"), rs.getBoolean("exactmatch"), this);
         } catch (SQLException e) {
-            System.out.println("EXCEPTION: in createRandPhrase() from DAO");
+            System.out.println("EXCEPTION: in createRandPhrase() from DAO SQL was " + sql);
             e.printStackTrace();
         }
         return phrase;
