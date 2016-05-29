@@ -31,44 +31,32 @@ public class Phrase {
      */
     private Phrase unmofifiedPhrase;
 
-    public Phrase(int id, String forWord, String natWord, String transcr, double prob, String createDate,
-                  String label, String lastAccs, double indexStart, double indexEnd, boolean exactMatch, DAO dao){
+    public Phrase(int id, String forWord, String natWord, String transcr, double prob, Timestamp createDate,
+                  String label, Timestamp lastAccs, double indexStart, double indexEnd, boolean exactMatch, DAO dao){
         this.dao = dao;
         this.id = id;
         this.forWord = forWord;
         this.natWord = natWord;
         this.transcr = transcr;
         this.prob = prob;
-        if(createDate==null)
-            this.createDate = null;
-        else
-            this.createDate = Timestamp.valueOf(createDate);
+        this.createDate = createDate;
         this.label = label;
-        if(lastAccs==null)
-            this.lastAccs = null;
-        else
-            this.lastAccs = Timestamp.valueOf(lastAccs);
+        this.lastAccs = lastAccs;
         this.indexStart = indexStart;
         this.indexEnd = indexEnd;
         this.exactMatch = exactMatch;
         this.unmofifiedPhrase = new Phrase(forWord, natWord, transcr, prob, createDate, label, lastAccs, indexStart, indexEnd, exactMatch);
     }
 
-    public Phrase(String forWord, String natWord, String transcr, double prob, String createDate,
-                  String label, String lastAccs, double indexStart, double indexEnd, boolean exactMatch){
+    public Phrase(String forWord, String natWord, String transcr, double prob, Timestamp createDate,
+                  String label, Timestamp lastAccs, double indexStart, double indexEnd, boolean exactMatch){
         this.forWord = forWord;
         this.natWord = natWord;
         this.transcr = transcr;
         this.prob = prob;
-        if(createDate==null)
-            this.createDate = null;
-        else
-            this.createDate = Timestamp.valueOf(createDate);
+        this.createDate = createDate;
         this.label = label;
-        if(lastAccs==null)
-            this.lastAccs = null;
-        else
-            this.lastAccs = Timestamp.valueOf(lastAccs);
+        this.lastAccs = lastAccs;
         this.indexStart = indexStart;
         this.indexEnd = indexEnd;
         this.exactMatch = exactMatch;

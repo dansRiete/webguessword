@@ -15,7 +15,7 @@ import java.util.Random;
  */
 public class DAO {
     Random random = new Random();
-    static String host1 = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useTimezone=false&serverTimezone=UTC&useSSL=false"; //
+    static String host1 = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useTimezone=false&serverTimezone=UTC&useSSL=false";
     static String host2 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useTimezone=false&serverTimezone=UTC&useSSL=false";
     Connection mainDbConn;
     Connection inMemDbConn;
@@ -91,19 +91,6 @@ public class DAO {
 
     }
 
-    public String getDateTime(int id){
-        String date = null;
-        try {
-            Statement st = inMemDbConn.createStatement();
-            ResultSet rs = st.executeQuery("SELECT last_accs_date FROM " + user + " WHERE ID=" + id);
-            rs.next();
-            date = rs.getString("last_accs_date");
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return date;
-    }
 
     private void copyDb(){
 
@@ -139,12 +126,9 @@ public class DAO {
                 ps.setString(3, rs.getString("nat_word"));
                 ps.setString(4, (rs.getString("transcr") == null ? null : rs.getString("transcr")));
                 ps.setDouble(5, rs.getDouble("prob_factor"));
-                ps.setString(6, rs.getString("create_date"));
+                ps.setTimestamp(6, rs.getTimestamp("create_date"));
                 ps.setString(7, (rs.getString("label") == null ? null : rs.getString("label")));
-                String lastDate = (rs.getString("last_accs_date") == null ? null : rs.getString("last_accs_date"));
-                if(id == 1760)
-                    System.out.println("--- LAST DATE OF ID=1760 FROM DAO DURING copyDb() IS " + lastDate);
-                ps.setString(8, lastDate);
+                ps.setTimestamp(8, (rs.getTimestamp("last_accs_date") == null ? null : rs.getTimestamp("last_accs_date")));
                 ps.setDouble(9, rs.getDouble("index_start"));
                 ps.setDouble(10, rs.getDouble("index_end"));
                 ps.setBoolean(11, rs.getBoolean("exactmatch"));
@@ -427,7 +411,7 @@ public class DAO {
             rs = st.executeQuery(sql);
             rs.next();
             phrase = new Phrase(rs.getInt("id"), rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"), rs.getDouble("prob_factor"),
-                    rs.getString("create_date"), rs.getString("label"), rs.getString("last_accs_date"),
+                    rs.getTimestamp("create_date"), rs.getString("label"), rs.getTimestamp("last_accs_date"),
                     rs.getDouble("index_start"), rs.getDouble("index_end"), rs.getBoolean("exactmatch"), this);
         } catch (SQLException e) {
             System.out.println("EXCEPTION: in createRandPhrase() from DAO SQL was " + sql);
@@ -467,9 +451,9 @@ public class DAO {
                 ps.setString(4, rs.getString("nat_word"));
                 ps.setString(5, (rs.getString("transcr")==null?null:rs.getString("transcr")));
                 ps.setDouble(6, rs.getDouble("prob_factor"));
-                ps.setString(7, rs.getString("create_date"));
+                ps.setTimestamp(7, rs.getTimestamp("create_date"));
                 ps.setString(8, (rs.getString("label")==null?null:rs.getString("label")));
-                ps.setString(9, (rs.getString("last_accs_date") == null ? null : rs.getString("last_accs_date")));
+                ps.setTimestamp(9, (rs.getTimestamp("last_accs_date") == null ? null : rs.getTimestamp("last_accs_date")));
                 ps.setDouble(10, rs.getDouble("index_start"));
                 ps.setDouble(11, rs.getDouble("index_end"));
                 ps.setBoolean(12, rs.getBoolean("exactmatch"));
