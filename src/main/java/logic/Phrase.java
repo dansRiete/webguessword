@@ -72,15 +72,15 @@ public class Phrase {
         this.answer = answer;
         if(howWasAnswered == null){
             if(!isLearnt()){
-                prob-=3;
+                prob-=3*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d);
             }
             howWasAnswered = true;
             indexes = dao.updateProb(this);
         }else if(!howWasAnswered){
             if(!unmofifiedPhrase.isLearnt())
-                prob-=9;
+                prob-=9*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d);
             else
-                prob=3;
+                prob=3*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d);
             howWasAnswered = true;
             indexes =  dao.updateProb(this);
         }
@@ -94,14 +94,14 @@ public class Phrase {
         long[] indexes = null;
         this.answer = answer;
         if(howWasAnswered == null){
-            prob+=6;
+            prob+=6*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d);
             howWasAnswered = false;
             indexes = dao.updateProb(this);
         }else if(howWasAnswered){
             if(!unmofifiedPhrase.isLearnt())
-                prob+=9;
+                prob+=9*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d);
             else
-                prob+=6;
+                prob+=6*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d);
             howWasAnswered = false;
             indexes = dao.updateProb(this);
         }

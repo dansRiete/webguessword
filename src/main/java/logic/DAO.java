@@ -93,6 +93,22 @@ public class DAO {
 
     }
 
+    public ArrayList<PhraseDb> returnPhrasesList(){
+        System.out.println("CALL: returnPhrasesList() from DAO");
+        ArrayList<PhraseDb> list = new ArrayList<>();
+        try {
+            Statement st = inMemDbConn.createStatement();
+            ResultSet rs = st.executeQuery("SELECT * FROM " + user);
+            while (rs.next()){
+                list.add(new PhraseDb(rs.getInt("id"), rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"), rs.getDouble("prob_factor"),
+                        rs.getString("label"), rs.getTimestamp("create_date"), rs.getTimestamp("last_accs_date"), rs.getBoolean("exactmatch")));
+            }
+        } catch (SQLException e) {
+            System.out.println("EXCEPTION: in returnPhrasesList() in DAO");
+            e.printStackTrace();
+        }
+        return list;
+    }
 
     private void copyDb(){
 
@@ -156,7 +172,7 @@ public class DAO {
         reloadIndices(1);
     }
 
-    private static Connection getDBConnection() {
+    private Connection getDBConnection() {
         System.out.println("CALL: getDBConnection() from DAO");
         Connection dbConnection = null;
         try {

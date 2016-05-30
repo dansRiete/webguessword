@@ -53,6 +53,7 @@
         </script>
     </div>
     <div>
+        <h:form>
         <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="previous" value="Previous"
                          action="#{interfaceBean.previousQuestion()}">
             <f:ajax render="@all"> </f:ajax>
@@ -81,6 +82,10 @@
                          onclick="PF('wdialog').show();">
 
         </h:commandButton>
+        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="content" value="Show All"
+             action="content.xhtml">
+        </h:commandButton>
+        </h:form>
 
         <p:dialog id="dialog" widgetVar="wdialog" modal="true" resizable="false" header="Edit the current phrase">
             <h:form>
@@ -138,6 +143,10 @@
             <tr>
                 <td>Percent of right answers</td>
                 <td>#{interfaceBean.percentOfRightAnswers}</td>
+            </tr>
+            <tr>
+                <td>Number of words learnt per current session</td>
+                <td>#{interfaceBean.numberOfLearnedPhrasePerSession}</td>
             </tr>
             <tr>
                 <td>Number of learned phrases</td>

@@ -1,6 +1,7 @@
 package beans;
 
 import logic.DAO;
+import logic.Hints;
 import logic.Phrase;
 import logic.RetDiff;
 
@@ -54,6 +55,7 @@ public class InterfaceBean implements Serializable{
     private int learnedWords;
     private int nonLearnedWords;
     private int totalNumberOfPhrases;
+    private int numberOfLearnedPhrasePerSession = 0;
     //<<
 
 
@@ -90,6 +92,7 @@ public class InterfaceBean implements Serializable{
     private HashSet<String> hshset = new HashSet<>();
     private int shift = 0;
     private int index;
+    private Hints hint = new Hints();
 
 
     public InterfaceBean() throws SQLException{
@@ -197,24 +200,31 @@ public class InterfaceBean implements Serializable{
         calculateSessionStatistics();
         reloadPhraseData();
         StringBuilder str = new StringBuilder();
+        int countOfLearnedPhrases = 0;
 //        int currPos = listOfPhrases.size() - 1 - shift; //is never used
         for(int i = listOfPhrases.size()-1; i>=0; i--){
-            if(listOfPhrases.get(i).howWasAnswered ==null)
+            //If the phrase has been learnt and had not been learnt before then increase the counter of learnt phrases per current session
+            if(listOfPhrases.get(i).isLearnt()&&!listOfPhrases.get(i).returnUnmodified().isLearnt()){
+                countOfLearnedPhrases++;
+            }
+            if(listOfPhrases.get(i).howWasAnswered == null)
                 str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
-                .append(NONANSWERED_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt()?"<font color=\"green\">":"")
-                .append(listOfPhrases.get(i).natWord).append(listOfPhrases.get(i).isLearnt() ? "</font>" : "")
+                .append(NONANSWERED_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt()?"<font color=\"green\">" : "")
+                        .append(listOfPhrases.get(i).natWord).append(listOfPhrases.get(i).isLearnt()?"</font>":"")
                 .append((i == index ? "</strong>" : "")).append("</br>");
             else if(listOfPhrases.get(i).howWasAnswered)
                 str.append(i==index?"<strong>":"").append("[").append(listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
                 .append(RIGHT_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt()?"<font color=\"green\">":"")
-                .append(listOfPhrases.get(i).natWord).append(" - ").append(listOfPhrases.get(i).forWord).append(listOfPhrases.get(i).isLearnt() ? "</font>" : "")
+                .append(listOfPhrases.get(i).natWord).append(" - ").append(listOfPhrases.get(i).forWord).append(listOfPhrases.get(i).transcr==null?"":(" - " + listOfPhrases.get(i).transcr)).append(listOfPhrases.get(i).isLearnt()?"</font>":"")
                 .append((i == index ? "</strong>" : "")).append("</br>");
             else if(!listOfPhrases.get(i).howWasAnswered)
                 str.append(i==index?"<strong>":"").append("[").append(listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
                 .append(WRONG_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt()?"<font color=\"green\">":"")
-                .append(listOfPhrases.get(i).natWord).append(" - ").append(listOfPhrases.get(i).forWord)
-                .append(listOfPhrases.get(i).isLearnt() ? "</font>" : "").append((i==index?"</strong>":"")).append("</br>");
+                .append(listOfPhrases.get(i).natWord).append(" - ").append(listOfPhrases.get(i).forWord).append(listOfPhrases.get(i).transcr==null||listOfPhrases.get(i).transcr.equals("")?"":(" - " + listOfPhrases.get(i).transcr))
+                .append(listOfPhrases.get(i).isLearnt()?"</font>":"").append((i==index?"</strong>":"")).append("</br>");
+
         }
+        numberOfLearnedPhrasePerSession = countOfLearnedPhrases;
         result = str.toString();
         currPhrForWord = listOfPhrases.get(index).forWord;
         currPhrNatWord = listOfPhrases.get(index).natWord;
@@ -326,11 +336,11 @@ public class InterfaceBean implements Serializable{
             newPhrase();
             index = listOfPhrases.size() - 1;
             currPhrase = listOfPhrases.get(index);
-            question = currPhrase.natWord;
+            question = currPhrase.natWord + " " + hint.getSlashHint(currPhrase.forWord);
         }else {
             index = listOfPhrases.size() - 1 - --shift;
             currPhrase = listOfPhrases.get(index);
-            question = currPhrase.natWord;
+            question = currPhrase.natWord + " " + hint.getSlashHint(currPhrase.forWord);
         }
         resultProcessing();
 //        System.out.println("--- nextQuestion() List size="+(listOfPhrases.size()+" Current shift="+shift+" Requested index="+index));
@@ -583,6 +593,14 @@ public class InterfaceBean implements Serializable{
 
     public void setTotalNumberOfPhrases(int totalNumberOfPhrases) {
         this.totalNumberOfPhrases = totalNumberOfPhrases;
+    }
+
+    public int getNumberOfLearnedPhrasePerSession() {
+        return numberOfLearnedPhrasePerSession;
+    }
+
+    public void setNumberOfLearnedPhrasePerSession(int numberOfLearnedPhrasePerSession) {
+        this.numberOfLearnedPhrasePerSession = numberOfLearnedPhrasePerSession;
     }
 }
 
