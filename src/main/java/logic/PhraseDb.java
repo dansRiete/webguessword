@@ -1,5 +1,7 @@
 package logic;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Timestamp;
 
 /**
@@ -10,11 +12,12 @@ public class PhraseDb {
     private String forWord;
     private String natWord;
     private String transcr;
-    private double probFactor;
+    private BigDecimal probFactor;
     private String label;
     private Timestamp createDate;
     private Timestamp lastAccsDate;
     private boolean exactmatch;
+    private boolean editable = false;
 
     PhraseDb(int id, String forWord, String natWord, String transcr, double probFactor,
              String label, Timestamp createDate, Timestamp lastAccsDate, boolean exactmatch){
@@ -22,12 +25,14 @@ public class PhraseDb {
         this.forWord = forWord;
         this.natWord = natWord;
         this.transcr = transcr;
-        this.probFactor = probFactor;
+        this.probFactor = new BigDecimal(probFactor).setScale(2, RoundingMode.HALF_UP);
         this.label = label;
         this.createDate = createDate;
         this.lastAccsDate = lastAccsDate;
         this.exactmatch = exactmatch;
     }
+
+
 
     public int getId() {
         return id;
@@ -61,11 +66,11 @@ public class PhraseDb {
         this.transcr = transcr;
     }
 
-    public double getProbFactor() {
+    public BigDecimal getProbFactor() {
         return probFactor;
     }
 
-    public void setProbFactor(double probFactor) {
+    public void setProbFactor(BigDecimal probFactor) {
         this.probFactor = probFactor;
     }
 
@@ -99,5 +104,13 @@ public class PhraseDb {
 
     public void setExactmatch(boolean exactmatch) {
         this.exactmatch = exactmatch;
+    }
+
+    public boolean isEditable() {
+        return editable;
+    }
+
+    public void setEditable(boolean editable) {
+        this.editable = editable;
     }
 }

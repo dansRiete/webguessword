@@ -37,6 +37,19 @@ public class EditBean {
             myList = dao.returnPhrasesList();
     }
 
+    public String editAction(PhraseDb order) {
+        order.setEditable(true);
+        return null;
+    }
+    public void saveAction(){
+        for(PhraseDb phr : myList){
+            phr.setEditable(false);
+        }
+    }
+    public void deleteUsers(){
+
+    }
+
     public ArrayList<PhraseDb> getMyList() {
         return myList;
     }

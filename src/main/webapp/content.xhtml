@@ -7,18 +7,62 @@
       xmlns:f="http://xmlns.jcp.org/jsf/core">
 
 <h:head>
-
+    <h:outputStylesheet library="css" name="table-style.css"  />
 </h:head>
 <h:body>
-    <h:dataTable value="#{editBean.myList}" var="list">
+    <h:form>
+
+    <h:dataTable value="#{editBean.myList}" var="v"
+                 styleClass="order-table"
+                 headerClass="order-table-header"
+                 rowClasses="order-table-odd-row,order-table-even-row">
         <h:column>
-            <f:facet name="header">First</f:facet>
-            <h:outputText value="#{list.forWord}"> </h:outputText>
+            <f:facet name="header">ID</f:facet>
+            <h:outputText value="#{v.id}" > </h:outputText>
         </h:column>
         <h:column>
-            <f:facet name="header">Second</f:facet>
-            <h:outputText value="#{list.natWord}"> </h:outputText>
+            <f:facet name="header">Foreign word</f:facet>
+            <h:outputText value="#{v.forWord}" rendered="#{not v.editable}"> </h:outputText>
+            <h:inputText value="#{v.forWord}" rendered="#{v.editable}"> </h:inputText>
+        </h:column>
+        <h:column>
+            <f:facet name="header">Native word</f:facet>
+            <h:outputText value="#{v.natWord}" rendered="#{not v.editable}"> </h:outputText>
+            <h:inputText value="#{v.natWord}" rendered="#{v.editable}"> </h:inputText>
+        </h:column>
+        <h:column>
+            <f:facet name="header">Transcription</f:facet>
+            <h:outputText value="#{v.transcr}" rendered="#{not v.editable}"> </h:outputText>
+            <h:inputText value="#{v.transcr}" rendered="#{v.editable}"> </h:inputText>
+        </h:column>
+        <h:column>
+            <f:facet name="header">Label</f:facet>
+            <h:outputText value="#{v.label}" rendered="#{not v.editable}"> </h:outputText>
+            <h:inputText value="#{v.label}" rendered="#{v.editable}"> </h:inputText>
+        </h:column>
+        <h:column>
+            <f:facet name="header">Probability factor</f:facet>
+            <h:outputText value="#{v.probFactor}" rendered="#{not v.editable}"> </h:outputText>
+            <h:inputText value="#{v.probFactor}" size="" rendered="#{v.editable}"> </h:inputText>
+        </h:column>
+        <h:column>
+            <f:facet name="header">Create date</f:facet>
+            <h:outputText value="#{v.createDate}"> </h:outputText>
+        </h:column>
+        <h:column>
+            <f:facet name="header">Last acces date</f:facet>
+            <h:outputText value="#{v.lastAccsDate}"> </h:outputText>
+        </h:column>
+        <h:column>
+            <f:facet name="header">Action</f:facet>
+            <h:commandLink value="Edit" action="#{editBean.editAction(v)}" rendered="#{not v.editable}">
+                <f:ajax render="@all"> </f:ajax>
+            </h:commandLink>
+            <h:commandLink value="Save" action="#{editBean.saveAction}" rendered="#{v.editable}">
+                <f:ajax render="@all"> </f:ajax>
+            </h:commandLink>
         </h:column>
     </h:dataTable>
+    </h:form>
 </h:body>
 </html>
