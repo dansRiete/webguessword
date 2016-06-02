@@ -207,6 +207,10 @@ public class InterfaceBean implements Serializable{
             if(listOfPhrases.get(i).isLearnt()&&!listOfPhrases.get(i).returnUnmodified().isLearnt()){
                 countOfLearnedPhrases++;
             }
+            //If vice-versa --
+            if(!listOfPhrases.get(i).isLearnt()&&listOfPhrases.get(i).returnUnmodified().isLearnt()){
+                countOfLearnedPhrases--;
+            }
             if(listOfPhrases.get(i).howWasAnswered == null)
                 str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
                 .append(NONANSWERED_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt()?"<font color=\"green\">" : "")
@@ -536,13 +540,15 @@ public class InterfaceBean implements Serializable{
     }
 
     public String getCurrPhrForWord() {
-//        System.out.println("--- inside getCurrPhrForWord() currPhrForWord is " + currPhrForWord);
+        System.out.println("--- inside getCurrPhrForWord() currPhrForWord is " + currPhrForWord);
         return currPhrForWord;
     }
     public void setCurrPhrForWord(String currPhrForWord) {
+
         this.currPhrForWord = currPhrForWord;
         currPhrase.forWord = this.currPhrForWord;
         currPhrase.isModified = true;
+        System.out.println("--- inside setCurrPhrForWord(String currPhrForWord) currPhrForWord is " + this.currPhrForWord);
     }
 
     public String getCurrPhrTransc() {

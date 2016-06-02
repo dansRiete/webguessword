@@ -16,75 +16,75 @@
     <meta content="charset=UTF-8"/>
     <title>GuessWord</title>
     <style type="text/css">
-        html, body {
+        html{
             height: 100%;
         }
-
-        div {
+        body{
             height: 100%;
         }
         th {
             background-color: #4CAF50;
             color: white;
         }
-
         tr:nth-child(even) {background-color: #f2f2f2}
     </style>
+    <script type="text/javascript">
+        document.getElementsByName('j_idt6:answer')[0].focus();
+    </script>
 </h:head>
 
 <body>
 <h:outputLabel style="color: #2a2a2a;font-size: 200%; font-weight: bold" id="out1"
                value="#{interfaceBean.question}"> </h:outputLabel>
 <br> </br>
-<h:form>
+<div>
     <div>
-        <h:inputText size="50" id="answer" value="#{interfaceBean.answer}" lang="en" autocomplete="off"> </h:inputText>
-        <h:commandButton style="margin-left: 3px" type="submit" id="answerAction" value="Answer"
-                         action="#{interfaceBean.checkTheAnswer()}">
-            <f:ajax execute="answer" render="@all"> </f:ajax>
-        </h:commandButton>
-        <h:selectOneMenu id="table" value="#{interfaceBean.choosedLabel}">
-            <f:ajax event="change" execute="table; #{interfaceBean.setTable()}" render="@all"/>
-            <f:selectItems value="#{interfaceBean.listOfChooses}" var="group" itemValue="#{group}" itemLabel="#{group}"/>
-        </h:selectOneMenu>
-
-        <script type="text/javascript">
-            document.getElementsByName('j_idt6:answer')[0].focus();
-        </script>
+        <h:form>
+            <h:inputText size="50" id="answer" value="#{interfaceBean.answer}" lang="en" autocomplete="off"> </h:inputText>
+            <h:commandButton style="margin-left: 3px" type="submit" id="answerAction" value="Answer"
+                             action="#{interfaceBean.checkTheAnswer()}">
+                <f:ajax execute="answer" render="@all"> </f:ajax>
+            </h:commandButton>
+            <h:selectOneMenu id="table" value="#{interfaceBean.choosedLabel}">
+                <f:ajax event="change" execute="table; #{interfaceBean.setTable()}" render="@all"/>
+                <f:selectItems value="#{interfaceBean.listOfChooses}" var="group" itemValue="#{group}" itemLabel="#{group}"/>
+            </h:selectOneMenu>
+        </h:form>
     </div>
     <div>
         <h:form>
-        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="previous" value="Previous"
-                         action="#{interfaceBean.previousQuestion()}">
-            <f:ajax render="@all"> </f:ajax>
-        </h:commandButton>
-        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="next" value="Next"
-                         action="#{interfaceBean.nextQuestion()}">
-            <f:ajax render="@all"> </f:ajax>
-        </h:commandButton>
-        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="know" value="I know it"
-                         action="#{interfaceBean.rightAnswer(null)}">
-            <f:ajax render="@all"> </f:ajax>
-        </h:commandButton>
-        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="donotknow" value="I don't know it"
-                         action="#{interfaceBean.wrongAnswer(null)}">
-            <f:ajax render="@all"> </f:ajax>
-        </h:commandButton>
-        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevWrong" value="Prev.Wrong"
-                         action="#{interfaceBean.previousWrong()}">
-            <f:ajax render="@all"> </f:ajax>
-        </h:commandButton>
-        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevRight" value="Prev.Right"
-                         action="#{interfaceBean.previousRight()}">
-            <f:ajax render="@all"> </f:ajax>
-        </h:commandButton>
-        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="dialogButton" value="Modificate"
-                         onclick="PF('wdialog').show();">
+            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="previous" value="Previous"
+                             action="#{interfaceBean.previousQuestion()}">
+                <f:ajax render="@all"> </f:ajax>
+            </h:commandButton>
+            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="next" value="Next"
+                             action="#{interfaceBean.nextQuestion()}">
+                <f:ajax render="@all"> </f:ajax>
+            </h:commandButton>
+            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="know" value="I know it"
+                             action="#{interfaceBean.rightAnswer(null)}">
+                <f:ajax render="@all"> </f:ajax>
+            </h:commandButton>
+            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="donotknow" value="I don't know it"
+                             action="#{interfaceBean.wrongAnswer(null)}">
+                <f:ajax render="@all"> </f:ajax>
+            </h:commandButton>
+            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevWrong" value="Prev.Wrong"
+                             action="#{interfaceBean.previousWrong()}">
+                <f:ajax render="@all"> </f:ajax>
+            </h:commandButton>
+            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevRight" value="Prev.Right"
+                             action="#{interfaceBean.previousRight()}">
+                <f:ajax render="@all"> </f:ajax>
+            </h:commandButton>
+            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="dialogButton" value="Modificate"
+                             onclick="PF('wdialog').show();">
 
-        </h:commandButton>
-        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="submit" id="content" value="Show All"
-             action="content">
-        </h:commandButton>
+            </h:commandButton>
+            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="submit" id="content" value="Show All"
+                 action="content">
+            </h:commandButton>
+            <h:commandButton id="exit" value="Exit" action="#{interfaceBean.exit()}"> </h:commandButton>
         </h:form>
 
         <p:dialog id="dialog" widgetVar="wdialog" modal="true" resizable="false" header="Edit the current phrase">
@@ -113,21 +113,19 @@
             </h:form>
         </p:dialog>
     </div>
-</h:form>
+</div>
 
 
-<div>
-    <div style="display:inline-block; width: 60%">
-        <h:form style="height: 100%">
-            <h:panelGroup id="myblock" layout="block" escape="false" style="height:70%; width:100%; overflow:scroll">
+<div style="height: 80%">
+    <div style="display:inline-block; width: 71%">
+        <h:form>
+            <h:panelGroup id="myblock" layout="block" escape="false" style="height:70%; width:100%">
                 <h:outputText id="list" escape="false" style="font-size: 130%"
                               value="#{interfaceBean.result}"> </h:outputText>
             </h:panelGroup>
-
-            <h:commandButton id="exit" value="Exit" action="#{interfaceBean.exit()}"> </h:commandButton>
         </h:form>
     </div>
-    <div style="width: 35%; display:inline-table; vertical-align: top; horiz-align: center">
+    <div style="width: 28%; display:inline-table; vertical-align: top; horiz-align: center">
         <table >
             <thead>
             <tr>
@@ -202,8 +200,6 @@
             </tr>
             </tbody>
         </table>
-
-
     </div>
 </div>
 </body>

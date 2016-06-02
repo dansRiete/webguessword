@@ -79,8 +79,11 @@ public class Phrase {
         }else if(!howWasAnswered){
             if(!unmofifiedPhrase.isLearnt())
                 prob-=9*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d);
-            else
-                prob=3*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d);
+            else{
+                prob=unmofifiedPhrase.prob;
+//                prob=3*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d);
+            }
+
             howWasAnswered = true;
             indexes =  dao.updateProb(this);
         }
