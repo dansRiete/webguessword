@@ -1,18 +1,13 @@
 package beans;
 
-import logic.DAO;
-import logic.Hints;
-import logic.Phrase;
-import logic.RetDiff;
+import logic.*;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -72,8 +67,6 @@ public class InterfaceBean implements Serializable{
     private String strLastAccs;
     private String strCreateDate;
     private int id;
-
-
     //<<
 
     private RetDiff retDiff = new RetDiff();
@@ -82,9 +75,9 @@ public class InterfaceBean implements Serializable{
     private String question ="";
     private String answer = "";
     private String result = "";
-    private final String WRONG_MESSAGE = " <strong><font color=\"#BBBBB9\">right</font>/<font color=\"#ff0000\">wrong</font></strong>";
-    private final String RIGHT_MESSAGE = " <strong><font color=\"green\">right</font>/<font color=\"#BBBBB9\">wrong</font></strong>";
-    private final String NONANSWERED_MESSAGE = " <strong><font color=\"#BBBBB9\">right</font>/<font color=\"#BBBBB9\">wrong</font></strong>";
+    private final static String WRONG_MESSAGE = " <strong><font color=\"#BBBBB9\">right</font>/<font color=\"#ff0000\">wrong</font></strong>";
+    private final static String RIGHT_MESSAGE = " <strong><font color=\"green\">right</font>/<font color=\"#BBBBB9\">wrong</font></strong>";
+    private final static String NONANSWERED_MESSAGE = " <strong><font color=\"#BBBBB9\">right</font>/<font color=\"#BBBBB9\">wrong</font></strong>";
     private ArrayList<Phrase> listOfPhrases = new ArrayList<>();
     private ArrayList<String> listOfChooses;
     private String choosedLabel;
@@ -95,7 +88,7 @@ public class InterfaceBean implements Serializable{
     private Hints hint = new Hints();
 
 
-    public InterfaceBean() throws SQLException{
+    public InterfaceBean(){
         System.out.println("CALL: InterfaceBean constructor");
         init();
     }
@@ -235,7 +228,7 @@ public class InterfaceBean implements Serializable{
         currPhrTransc = listOfPhrases.get(index).transcr;
         currPhrLabel = listOfPhrases.get(index).label;
         if(currPhrase.isModified)
-            updatePhrase();
+            currPhrase.updatePhrase();
     }
 
     private void newPhrase(){
@@ -363,10 +356,6 @@ public class InterfaceBean implements Serializable{
 //        System.out.println("--- previousQuestion() List size="+(listOfPhrases.size()+" Current shift="+shift+" Requested index="+index));
     }
 
-    public void updatePhrase(){
-        currPhrase.updatePhrase();
-    }
-
     public void exit(){
         System.out.println("CALL: exit() from InterfaceBean");
         FacesContext context = FacesContext.getCurrentInstance();
@@ -383,9 +372,7 @@ public class InterfaceBean implements Serializable{
 //        dao.backupDB();
     }
 
-    /*public ArrayList<Phrase> returnListOfPhrases(){
-        return listOfPhrases;   //Was comented 24/5/2016
-    }*/
+
 
     //>>Setters an getters
     //*************************************************************************************
@@ -572,7 +559,6 @@ public class InterfaceBean implements Serializable{
     public int getId() {
         return id;
     }
-
     public void setId(int id) {
         this.id = id;
     }
@@ -580,7 +566,6 @@ public class InterfaceBean implements Serializable{
     public double getLearnedWords() {
         return learnedWords;
     }
-
     public void setLearnedWords(int learnedWords) {
         this.learnedWords = learnedWords;
     }
@@ -588,7 +573,6 @@ public class InterfaceBean implements Serializable{
     public double getNonLearnedWords() {
         return nonLearnedWords;
     }
-
     public void setNonLearnedWords(int nonLearnedWords) {
         this.nonLearnedWords = nonLearnedWords;
     }
@@ -596,7 +580,6 @@ public class InterfaceBean implements Serializable{
     public double getTotalNumberOfPhrases() {
         return totalNumberOfPhrases;
     }
-
     public void setTotalNumberOfPhrases(int totalNumberOfPhrases) {
         this.totalNumberOfPhrases = totalNumberOfPhrases;
     }
@@ -604,7 +587,6 @@ public class InterfaceBean implements Serializable{
     public int getNumberOfLearnedPhrasePerSession() {
         return numberOfLearnedPhrasePerSession;
     }
-
     public void setNumberOfLearnedPhrasePerSession(int numberOfLearnedPhrasePerSession) {
         this.numberOfLearnedPhrasePerSession = numberOfLearnedPhrasePerSession;
     }
