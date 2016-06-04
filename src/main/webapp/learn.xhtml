@@ -37,6 +37,11 @@
 
 <h:body>
 
+    <!--<p:ajaxStatus>
+        <f:facet name="start">
+            <p:graphicImage value="ajax-loading.gif" />
+        </f:facet>
+    </p:ajaxStatus>-->
 <h:outputLabel style="color: #2a2a2a;font-size: 200%; font-weight: bold" id="out1"
                value="#{interfaceBean.question}"> </h:outputLabel>
 <br> </br>
@@ -59,37 +64,60 @@
             </script>
         </h:form>
     </div>
+
     <div>
 
+        <h:panelGroup>
+        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="previous" value="Previous"
+                         action="#{interfaceBean.previousQuestion()}">
+            <f:ajax render="@all"> </f:ajax>
+        </h:commandButton>
 
-            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="previous" value="Previous"
-                             action="#{interfaceBean.previousQuestion()}">
-                <f:ajax render="@all"> </f:ajax>
-            </h:commandButton>
-            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="next" value="Next"
-                             action="#{interfaceBean.nextQuestion()}">
+        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="next" value="Next"
+                         action="#{interfaceBean.nextQuestion()}">
 
-                <f:ajax render="@all"> </f:ajax>
-            </h:commandButton>
-            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="know" value="I know it"
-                             action="#{interfaceBean.rightAnswer(null)}">
-                <f:ajax render="@all"> </f:ajax>
-            </h:commandButton>
-            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="donotknow" value="I don't know it"
-                             action="#{interfaceBean.wrongAnswer(null)}">
-                <f:ajax render="@all"> </f:ajax>
-            </h:commandButton>
-            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevWrong" value="Prev.Wrong"
-                             action="#{interfaceBean.previousWrong()}">
-                <f:ajax render="@all"> </f:ajax>
-            </h:commandButton>
-            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevRight" value="Prev.Right"
-                             action="#{interfaceBean.previousRight()}">
-                <f:ajax render="@all"> </f:ajax>
-            </h:commandButton>
+            <f:ajax render="@all"> </f:ajax>
+        </h:commandButton>
+
+        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="know" value="I know it"
+                         action="#{interfaceBean.rightAnswer(null)}">
+            <f:ajax render="@all"> </f:ajax>
+        </h:commandButton>
+
+        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="donotknow" value="I don't know it"
+                         action="#{interfaceBean.wrongAnswer(null)}">
+            <f:ajax render="@all"> </f:ajax>
+        </h:commandButton>
+
+        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevWrong" value="Prev.Wrong"
+                         action="#{interfaceBean.previousWrong()}">
+            <f:ajax render="@all"> </f:ajax>
+        </h:commandButton>
+        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevRight" value="Prev.Right"
+                         action="#{interfaceBean.previousRight()}">
+            <f:ajax render="@all"> </f:ajax>
+        </h:commandButton>
+
+        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="dialogButton" value="Modificate"
+                         onclick="PF('wdialog').show();">
+        </h:commandButton>
+
+        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="deleteButton" value="Delete"
+                         onclick="PF('deleteDialog').show();">
+        </h:commandButton>
+
+        <h:form style="display: inline-block">
+        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="submit" id="content" value="Show All"
+                         action="content">
+        </h:commandButton>
+        </h:form>
+
+        <h:form style="display: inline-block">
+        <h:commandButton id="exit" type="submit" value="Exit" action="#{interfaceBean.exit()}"> </h:commandButton>
+        </h:form>
 
         <p:dialog id="dialog" widgetVar="wdialog" modal="true" resizable="false" header="Edit the current phrase">
-            <h:form>
+            <h:form id="red">
                 <h:panelGrid columns="2" layout="grid">
                     <p:outputLabel value="Native word"/>
                     <p:inputText size="40" value="#{interfaceBean.currPhrNatWord}" title="Native word"
@@ -113,31 +141,17 @@
                 <p:messages id="messages" showDetail="true" autoUpdate="true" closable="true"/>
             </h:form>
         </p:dialog>
-        <p:dialog id="deleteDialog" widgetVar="deleteDialog"  modal="true" resizable="false" header="Delete the current phrase">
-            <p:commandButton type="button" value="Yes">
+
+        <p:dialog id="deleteDialog" widgetVar="deleteDialog" hideEffect="highlight" modal="true" resizable="false" header="Delete the current phrase">
+            <p:commandButton type="submit" value="Yes" action="#{interfaceBean.delete()}" oncomplete="PF('deleteDialog').hide();">
 
             </p:commandButton>
-            <p:commandButton type="button" value="No" onclick="PF(this).close();">
+            <p:commandButton type="button" value="No" onclick="PF('deleteDialog').hide();">
 
             </p:commandButton>
 
         </p:dialog>
-
-
-
-        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="dialogButton" value="Modificate"
-                         onclick="PF('wdialog').show();">
-
-        </h:commandButton>
-        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="deleteButton" value="Delete"
-                         onclick="PF('deleteDialog').show();">
-
-        </h:commandButton>
-        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="submit" id="content" value="Show All"
-                         action="content">
-        </h:commandButton>
-        <h:commandButton id="exit" value="Exit" action="#{interfaceBean.exit()}"> </h:commandButton>
-
+        </h:panelGroup>
 
     </div>
 </div>

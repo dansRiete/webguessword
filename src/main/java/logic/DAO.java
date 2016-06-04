@@ -267,6 +267,30 @@ public class DAO {
         }.run();
     }
 
+    public void deleteById(int id){
+        System.out.println("CALL: deleteById(int id) from DAO");
+        try {
+            Statement st = inMemDbConn.createStatement();
+            st.execute("DELETE FROM " + user + " WHERE ID=" + id);
+        } catch (SQLException e) {
+            System.out.println("EXCEPTION#1: in deleteById(int id) from DAO");
+            e.printStackTrace();
+            throw new RuntimeException();
+        }
+        new Thread(){
+            public void run(){
+                try {
+                    Statement st = mainDbConn.createStatement();
+                    st.execute("DELETE FROM " + user + " WHERE ID=" + id);
+                } catch (SQLException e) {
+                    System.out.println("EXCEPTION#2: in deleteById(int id) from DAO");
+                    e.printStackTrace();
+                    throw new RuntimeException();
+                }
+            }
+        }.run();
+    }
+
     public void setLoginBean(LoginBean loginBean){
         System.out.println("CALL: setLoginBean(LoginBean loginBean) from DAO");
         user = loginBean.getUser();

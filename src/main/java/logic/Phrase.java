@@ -114,6 +114,10 @@ public class Phrase {
         }
     }
 
+    public void delete(){
+        dao.deleteById(id);
+    }
+
     public void updatePhrase(){
         dao.updatePhrase(this);
     }

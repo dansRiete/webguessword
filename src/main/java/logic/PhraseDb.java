@@ -51,10 +51,12 @@ public class PhraseDb {
     }
 
     public String getNatWord() {
+//        System.out.println("CALL: getNatWord() from PhraseDb");
         return natWord;
     }
 
     public void setNatWord(String natWord) {
+        System.out.println("CALL: setNatWord(String natWord) from PhraseDb");
         this.natWord = natWord;
     }
 

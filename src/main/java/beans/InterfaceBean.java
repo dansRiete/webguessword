@@ -356,6 +356,11 @@ public class InterfaceBean implements Serializable{
 //        System.out.println("--- previousQuestion() List size="+(listOfPhrases.size()+" Current shift="+shift+" Requested index="+index));
     }
 
+    public void delete(){
+        System.out.println("CALL: delete() from InterfaceBean");
+        currPhrase.delete();
+    }
+
     public void exit(){
         System.out.println("CALL: exit() from InterfaceBean");
         FacesContext context = FacesContext.getCurrentInstance();
