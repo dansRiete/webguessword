@@ -13,7 +13,8 @@ public class Hints {
      * подсказку типа ***\** ****, если фраза не содержит слеш("/") возвращает ""
      */
     public String getSlashHint(String engWord){
-        if(engWord.contains("/")||engWord.contains("\\")||engWord.contains(" ")||engWord.contains("-")||engWord.contains("`")||engWord.contains("'")){
+        if(engWord.contains("/")||engWord.contains("\\")||engWord.contains(" ")||engWord.contains("-")||
+                engWord.contains("`")||engWord.contains("'")){
             char[] hintAr = engWord.toCharArray();
             char[] newHintAr = new char[hintAr.length+2];
             int i = 1;

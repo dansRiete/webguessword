@@ -40,7 +40,9 @@
 <h:outputLabel style="color: #2a2a2a;font-size: 200%; font-weight: bold" id="out1"
                value="#{interfaceBean.question}"> </h:outputLabel>
 <br> </br>
+
 <div>
+
     <div>
         <h:form>
             <h:inputText size="50" id="answer" value="#{interfaceBean.answer}" lang="en" autocomplete="off"> </h:inputText>
@@ -53,18 +55,20 @@
                 <f:selectItems value="#{interfaceBean.listOfChooses}" var="group" itemValue="#{group}" itemLabel="#{group}"/>
             </h:selectOneMenu>
             <script type="text/javascript">
-                document.getElementsByName('j_idt6:answer')[0].focus();
+                document.getElementsByName('j_idt18:answer')[0].focus();
             </script>
         </h:form>
     </div>
     <div>
-        <h:form>
+
+
             <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="previous" value="Previous"
                              action="#{interfaceBean.previousQuestion()}">
                 <f:ajax render="@all"> </f:ajax>
             </h:commandButton>
             <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="next" value="Next"
                              action="#{interfaceBean.nextQuestion()}">
+
                 <f:ajax render="@all"> </f:ajax>
             </h:commandButton>
             <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="know" value="I know it"
@@ -83,15 +87,6 @@
                              action="#{interfaceBean.previousRight()}">
                 <f:ajax render="@all"> </f:ajax>
             </h:commandButton>
-            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="dialogButton" value="Modificate"
-                             onclick="PF('wdialog').show();">
-
-            </h:commandButton>
-            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="submit" id="content" value="Show All"
-                 action="content">
-            </h:commandButton>
-            <h:commandButton id="exit" value="Exit" action="#{interfaceBean.exit()}"> </h:commandButton>
-        </h:form>
 
         <p:dialog id="dialog" widgetVar="wdialog" modal="true" resizable="false" header="Edit the current phrase">
             <h:form>
@@ -118,6 +113,32 @@
                 <p:messages id="messages" showDetail="true" autoUpdate="true" closable="true"/>
             </h:form>
         </p:dialog>
+        <p:dialog id="deleteDialog" widgetVar="deleteDialog"  modal="true" resizable="false" header="Delete the current phrase">
+            <p:commandButton type="button" value="Yes">
+
+            </p:commandButton>
+            <p:commandButton type="button" value="No" onclick="PF(this).close();">
+
+            </p:commandButton>
+
+        </p:dialog>
+
+
+
+        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="dialogButton" value="Modificate"
+                         onclick="PF('wdialog').show();">
+
+        </h:commandButton>
+        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="deleteButton" value="Delete"
+                         onclick="PF('deleteDialog').show();">
+
+        </h:commandButton>
+        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="submit" id="content" value="Show All"
+                         action="content">
+        </h:commandButton>
+        <h:commandButton id="exit" value="Exit" action="#{interfaceBean.exit()}"> </h:commandButton>
+
+
     </div>
 </div>
 
