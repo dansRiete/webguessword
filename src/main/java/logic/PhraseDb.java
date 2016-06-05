@@ -47,6 +47,7 @@ public class PhraseDb {
     }
 
     public void setForWord(String forWord) {
+        System.out.println("CALL: setForWord(String forWord) from PhraseDb");
         this.forWord = forWord;
     }
 

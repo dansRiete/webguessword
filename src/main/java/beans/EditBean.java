@@ -41,6 +41,13 @@ public class EditBean {
         order.setEditable(true);
         return null;
     }
+
+    public int rowNumbers(){
+        if(myList.size()/100>10)
+            return myList.size()/10+5;
+        else
+            return 100;
+    }
     public void saveAction(){
         for(PhraseDb phr : myList){
             phr.setEditable(false);

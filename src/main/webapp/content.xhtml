@@ -13,38 +13,69 @@
 <h:body>
     <h:form>
 
-    <p:dataTable value="#{editBean.myList}" var="v"
-                 styleClass="order-table"
-                 headerClass="order-table-header"
-                 rowClasses="order-table-odd-row,order-table-even-row" paginator="true" rows="100">
-        <p:column>
+    <p:dataTable value="#{editBean.myList}" var="v" styleClass="order-table" headerClass="order-table-header"
+                 rowClasses="order-table-odd-row,order-table-even-row" paginator="true" rows="#{editBean.rowNumbers()}" editable="true"
+                 editMode="cell">
+        <p:column width="30">
             <f:facet name="header">ID</f:facet>
             <h:outputText value="#{v.id}" > </h:outputText>
         </p:column>
-        <p:column width="30%">
+        <p:column width="25%">
             <f:facet name="header">Foreign word</f:facet>
-            <h:outputText value="#{v.forWord}" rendered="#{not v.editable}"> </h:outputText>
-            <h:inputText value="#{v.forWord}" rendered="#{v.editable}"> </h:inputText>
+            <!--<h:outputText value="#{v.forWord}" rendered="#{not v.editable}"> </h:outputText>
+            <h:inputText value="#{v.forWord}" rendered="#{v.editable}"> </h:inputText>-->
+            <p:cellEditor>
+                <f:facet name="output">
+                    <h:outputText value="#{v.forWord}"/>
+                </f:facet>
+                <f:facet name="input">
+                    <p:inputText value="#{v.forWord}" style="width:96%"/>
+                </f:facet>
+            </p:cellEditor>
         </p:column>
-        <p:column width="30%">
+        <p:column width="25%">
             <f:facet name="header">Native word</f:facet>
-            <h:outputText value="#{v.natWord}" rendered="#{not v.editable}"> </h:outputText>
-            <h:inputText value="#{v.natWord}" rendered="#{v.editable}"> </h:inputText>
+            <p:cellEditor>
+                <f:facet name="output">
+                    <h:outputText value="#{v.natWord}"/>
+                </f:facet>
+                <f:facet name="input">
+                    <p:inputText value="#{v.natWord}" style="width:96%"/>
+                </f:facet>
+            </p:cellEditor>
         </p:column>
         <p:column>
-            <f:facet name="header">Transcription</f:facet>
-            <h:outputText value="#{v.transcr}" rendered="#{not v.editable}"> </h:outputText>
-            <h:inputText value="#{v.transcr}" rendered="#{v.editable}"> </h:inputText>
+            <f:facet name="header">Transcr</f:facet>
+            <p:cellEditor>
+                <f:facet name="output">
+                    <h:outputText value="#{v.transcr}"/>
+                </f:facet>
+                <f:facet name="input">
+                    <p:inputText value="#{v.transcr}" style="width:96%"/>
+                </f:facet>
+            </p:cellEditor>
         </p:column>
         <p:column>
             <f:facet name="header">Label</f:facet>
-            <h:outputText value="#{v.label}" rendered="#{not v.editable}"> </h:outputText>
-            <h:inputText value="#{v.label}" rendered="#{v.editable}"> </h:inputText>
+            <p:cellEditor>
+                <f:facet name="output">
+                    <h:outputText value="#{v.label}"/>
+                </f:facet>
+                <f:facet name="input">
+                    <p:inputText value="#{v.label}" style="width:96%"/>
+                </f:facet>
+            </p:cellEditor>
         </p:column>
-        <p:column>
-            <f:facet name="header">Probability factor</f:facet>
-            <h:outputText value="#{v.probFactor}" rendered="#{not v.editable}"> </h:outputText>
-            <h:inputText value="#{v.probFactor}" size="5" rendered="#{v.editable}"> </h:inputText>
+        <p:column width="40">
+            <f:facet name="header">Probab</f:facet>
+            <p:cellEditor>
+                <f:facet name="output">
+                    <h:outputText value="#{v.probFactor}"/>
+                </f:facet>
+                <f:facet name="input">
+                    <p:inputText value="#{v.probFactor}" style="width:96%"/>
+                </f:facet>
+            </p:cellEditor>
         </p:column>
         <p:column>
             <f:facet name="header">Create date</f:facet>
@@ -54,14 +85,9 @@
             <f:facet name="header">Last access date</f:facet>
             <h:outputText value="#{v.lastAccsDate}"> </h:outputText>
         </p:column>
-        <p:column>
+        <p:column width="50">
             <f:facet name="header">Action</f:facet>
-            <h:commandLink value="Edit" action="#{editBean.editAction(v)}" rendered="#{not v.editable}">
-                <f:ajax render="@all"> </f:ajax>
-            </h:commandLink>
-            <h:commandLink value="Save" type="submit" action="#{editBean.saveAction}" rendered="#{v.editable}">
-                <f:ajax render="@all"> </f:ajax>
-            </h:commandLink>
+
         </p:column>
     </p:dataTable>
     </h:form>
