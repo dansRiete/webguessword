@@ -1,5 +1,6 @@
 package logic;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.Timestamp;
@@ -7,7 +8,7 @@ import java.sql.Timestamp;
 /**
  * Created by Aleks on 31.05.2016.
  */
-public class PhraseDb {
+public class PhraseDb implements Serializable {
     private int id;
     private String forWord;
     private String natWord;
@@ -19,7 +20,7 @@ public class PhraseDb {
     private boolean exactmatch;
     private boolean editable = false;
 
-    PhraseDb(int id, String forWord, String natWord, String transcr, double probFactor,
+    public PhraseDb(int id, String forWord, String natWord, String transcr, double probFactor,
              String label, Timestamp createDate, Timestamp lastAccsDate, boolean exactmatch){
         this.id = id;
         this.forWord = forWord;

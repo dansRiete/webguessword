@@ -8,6 +8,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -102,6 +103,26 @@ public class DAO {
             throw new RuntimeException();
         }
         return list;
+    }
+
+    public List<String> returnLabelsList(){
+        System.out.println("CALL: returnLabelsList() from DAO");
+        ArrayList<String> labelsList = new ArrayList<>();
+//        labelsList.add("");
+        try {
+            Statement st = inMemDbConn.createStatement();
+            ResultSet rs = st.executeQuery("SELECT DISTINCT label FROM " + user);
+            while (rs.next()){
+                if(rs.getString(1)!=null&&!rs.getString(1).equals(""))
+                    labelsList.add(rs.getString(1));
+            }
+        } catch (SQLException e) {
+            System.out.println("EXCEPTION: in returnLabelsList() in DAO");
+            e.printStackTrace();
+            throw new RuntimeException();
+        }
+        return labelsList;
+
     }
 
     private void copyDb(){
