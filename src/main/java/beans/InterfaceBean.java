@@ -168,10 +168,10 @@ public class InterfaceBean implements Serializable{
     private void reloadPhraseData(){
         System.out.println("CALL: reloadPhraseData() from InterfaceBean");
         if(currPhrase.howWasAnswered == null)
-            pDprob = new BigDecimal(currPhrase.prob).setScale(1, RoundingMode.HALF_UP).toString();
+            pDprob = currPhrase.prob.setScale(1, RoundingMode.HALF_UP).toString();
         else
-            pDprob = new BigDecimal(currPhrase.returnUnmodified().prob).setScale(1, RoundingMode.HALF_UP) + "➩"
-                    + new BigDecimal(currPhrase.prob).setScale(1, RoundingMode.HALF_UP);
+            pDprob = currPhrase.returnUnmodified().prob.setScale(1, RoundingMode.HALF_UP) + "➩"
+                    + currPhrase.prob.setScale(1, RoundingMode.HALF_UP);
         if(currPhrase.lastAccs!=null){
             pdLastAccs = LocalDateTime.ofInstant(currPhrase.lastAccs.toInstant(),
                     ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));

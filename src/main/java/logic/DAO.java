@@ -3,6 +3,7 @@ package logic;
 import Exceptions.DataBaseConnectionException;
 import beans.LoginBean;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -87,15 +88,15 @@ public class DAO {
         inMemDbConn = getDBConnection();
     }
 
-    public ArrayList<PhraseDb> returnPhrasesList(){
+    public ArrayList<Phrase> returnPhrasesList(){
         System.out.println("CALL: returnPhrasesList() from DAO");
-        ArrayList<PhraseDb> list = new ArrayList<>();
+        ArrayList<Phrase> list = new ArrayList<>();
         try {
             Statement st = inMemDbConn.createStatement();
             ResultSet rs = st.executeQuery("SELECT * FROM " + user);
             while (rs.next()){
-                list.add(new PhraseDb(rs.getInt("id"), rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"), rs.getDouble("prob_factor"),
-                        rs.getString("label"), rs.getTimestamp("create_date"), rs.getTimestamp("last_accs_date"), rs.getBoolean("exactmatch")));
+                list.add(new Phrase(rs.getInt("id"), rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"), rs.getBigDecimal("prob_factor"),
+                        rs.getTimestamp("create_date"), rs.getString("label"), rs.getTimestamp("last_accs_date"), 0, 0, rs.getBoolean("exactmatch"), null));
             }
         } catch (SQLException e) {
             System.out.println("EXCEPTION: in returnPhrasesList() in DAO");
@@ -237,7 +238,7 @@ public class DAO {
         String dateTime = ZonedDateTime.now(ZoneId.of("Europe/Kiev")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
         try {
             PreparedStatement inMemDbPrepStat = inMemDbConn.prepareStatement("UPDATE " + user + " SET for_word=?, nat_word=?, transcr=?, last_accs_date=?, " +
-                    "exactmatch=?, label=? WHERE id =" + phrase.id);
+                    "exactmatch=?, label=?, prob=?  WHERE id =" + phrase.id);
             inMemDbPrepStat.setString(1, phrase.forWord);
             inMemDbPrepStat.setString(2, phrase.natWord);
 
@@ -250,6 +251,7 @@ public class DAO {
                 inMemDbPrepStat.setString(6, null);
             else
                 inMemDbPrepStat.setString(6, phrase.label);
+            inMemDbPrepStat.setDouble(7, phrase.prob.doubleValue());
 
             inMemDbPrepStat.setString(4, dateTime);
             inMemDbPrepStat.setBoolean(5, phrase.exactMatch);
@@ -262,7 +264,7 @@ public class DAO {
             public void run(){
                 try {
                     PreparedStatement mainDbPrepStat = mainDbConn.prepareStatement("UPDATE " + user + " SET for_word=?, nat_word=?, transcr=?, last_accs_date=?, " +
-                            "exactmatch=?, label=? WHERE id =" + phrase.id);
+                            "exactmatch=?, label=?, prob=? WHERE id =" + phrase.id);
                     mainDbPrepStat.setString(1, phrase.forWord);
                     mainDbPrepStat.setString(2, phrase.natWord);
 
@@ -278,6 +280,7 @@ public class DAO {
 
                     mainDbPrepStat.setString(4, dateTime);
                     mainDbPrepStat.setBoolean(5, phrase.exactMatch);
+                    mainDbPrepStat.setDouble(7, phrase.prob.doubleValue());
                     mainDbPrepStat.execute();
                 } catch (SQLException e) {
                     System.out.println("EXCEPTION#2: in updateProb(Phrase phrase) from DAO");
@@ -288,13 +291,13 @@ public class DAO {
         }.run();
     }
 
-    public void deleteById(int id){
-        System.out.println("CALL: deleteById(int id) from DAO");
+    public void deletePhrase(Phrase phr){
+        System.out.println("CALL: deletePhrase(int id) from DAO");
         try {
             Statement st = inMemDbConn.createStatement();
-            st.execute("DELETE FROM " + user + " WHERE ID=" + id);
+            st.execute("DELETE FROM " + user + " WHERE ID=" + phr.id);
         } catch (SQLException e) {
-            System.out.println("EXCEPTION#1: in deleteById(int id) from DAO");
+            System.out.println("EXCEPTION#1: in deletePhrase(int id) from DAO");
             e.printStackTrace();
             throw new RuntimeException();
         }
@@ -302,9 +305,9 @@ public class DAO {
             public void run(){
                 try {
                     Statement st = mainDbConn.createStatement();
-                    st.execute("DELETE FROM " + user + " WHERE ID=" + id);
+                    st.execute("DELETE FROM " + user + " WHERE ID=" + phr.id);
                 } catch (SQLException e) {
-                    System.out.println("EXCEPTION#2: in deleteById(int id) from DAO");
+                    System.out.println("EXCEPTION#2: in deletePhrase(int id) from DAO");
                     e.printStackTrace();
                     throw new RuntimeException();
                 }
@@ -479,7 +482,7 @@ public class DAO {
 //            System.out.println(sql);
             rs = st.executeQuery(sql);
             rs.next();
-            phrase = new Phrase(rs.getInt("id"), rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"), rs.getDouble("prob_factor"),
+            phrase = new Phrase(rs.getInt("id"), rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"), new BigDecimal(rs.getDouble("prob_factor")),
                     rs.getTimestamp("create_date"), rs.getString("label"), rs.getTimestamp("last_accs_date"),
                     rs.getDouble("index_start"), rs.getDouble("index_end"), rs.getBoolean("exactmatch"), this);
         } catch (SQLException e) {

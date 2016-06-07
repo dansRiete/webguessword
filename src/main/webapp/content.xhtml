@@ -88,10 +88,10 @@
             <f:facet name="header">Prob</f:facet>
             <p:cellEditor>
                 <f:facet name="output">
-                    <h:outputText value="#{v.probFactor}"/>
+                    <h:outputText value="#{v.prob}"/>
                 </f:facet>
                 <f:facet name="input">
-                    <p:inputText value="#{v.probFactor}" style="width:96%"/>
+                    <p:inputText value="#{v.prob}" style="width:96%"/>
                 </f:facet>
             </p:cellEditor>
         </p:column>
@@ -103,11 +103,24 @@
 
         <p:column>
             <f:facet name="header">Last access date</f:facet>
-            <h:outputText value="#{v.lastAccsDate}"> </h:outputText>
+            <h:outputText value="#{v.lastAccs}"> </h:outputText>
         </p:column>
 
-        <p:column width="50">
+        <p:column>
             <f:facet name="header">Action</f:facet>
+            <p:commandButton value="Delete" actionListener="#{editBean.deleteById(v)}" update="@form" ajax="true">
+
+                <p:confirm header="Confirmation" message="Are you sure you want to delete phrase #{v.forWord} - #{v.natWord}?">
+
+                </p:confirm>
+                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                    <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check">
+
+                    </p:commandButton>
+                    <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+                </p:confirmDialog>
+            </p:commandButton>
+
         </p:column>
 
     </p:dataTable>

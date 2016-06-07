@@ -1,5 +1,9 @@
 package logic;
 
+import javax.enterprise.context.Dependent;
+import javax.faces.bean.ManagedBean;
+import java.io.Serializable;
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -7,31 +11,38 @@ import java.time.ZonedDateTime;
 /**
  * Created by Aleks on 11.05.2016.
  */
-public class Phrase {
+@ManagedBean
+@Dependent
+public class Phrase implements Serializable{
 
-    public ZonedDateTime lt = ZonedDateTime.now(ZoneId.of("Europe/Kiev"));
-    public Boolean howWasAnswered;
     public int id;
     public String forWord;
     public String natWord;
     public String transcr;
-    public double prob;
-    public Timestamp createDate;
+    public BigDecimal prob;
     public String label;
+    public Timestamp createDate;
     public Timestamp lastAccs;
+    public boolean exactMatch;
+
+
+
+    public ZonedDateTime lt = ZonedDateTime.now(ZoneId.of("Europe/Kiev"));
+    public Boolean howWasAnswered;
     public double indexStart;
     public double indexEnd;
-    public boolean exactMatch;
     private DAO dao;
     public boolean isModified;
     public String answer;
-
     /**
      * Saved state of phrase object before changing howWasAnswered to false or true
      */
     private Phrase unmofifiedPhrase;
 
-    public Phrase(int id, String forWord, String natWord, String transcr, double prob, Timestamp createDate,
+
+
+    public Phrase(){}
+    public Phrase(int id, String forWord, String natWord, String transcr, BigDecimal prob, Timestamp createDate,
                   String label, Timestamp lastAccs, double indexStart, double indexEnd, boolean exactMatch, DAO dao){
         this.dao = dao;
         this.id = id;
@@ -48,7 +59,7 @@ public class Phrase {
         this.unmofifiedPhrase = new Phrase(forWord, natWord, transcr, prob, createDate, label, lastAccs, indexStart, indexEnd, exactMatch);
     }
 
-    public Phrase(String forWord, String natWord, String transcr, double prob, Timestamp createDate,
+    public Phrase(String forWord, String natWord, String transcr, BigDecimal prob, Timestamp createDate,
                   String label, Timestamp lastAccs, double indexStart, double indexEnd, boolean exactMatch){
         this.forWord = forWord;
         this.natWord = natWord;
@@ -63,6 +74,7 @@ public class Phrase {
         this.unmofifiedPhrase = null;
     }
 
+
     public Phrase returnUnmodified(){
         return unmofifiedPhrase;
     }
@@ -72,14 +84,16 @@ public class Phrase {
         this.answer = answer;
         if(howWasAnswered == null){
             if(!isLearnt()){
-                prob-=3*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d);
+                BigDecimal subtr = new BigDecimal(3*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d));
+                prob = prob.subtract(subtr);
             }
             howWasAnswered = true;
             indexes = dao.updateProb(this);
         }else if(!howWasAnswered){
-            if(!unmofifiedPhrase.isLearnt())
-                prob-=9*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d);
-            else{
+            if(!unmofifiedPhrase.isLearnt()){
+                BigDecimal subtr = new BigDecimal(9*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d));
+                prob = prob.subtract(subtr);
+            } else{
                 prob=unmofifiedPhrase.prob;
 //                prob=3*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d);
             }
@@ -97,14 +111,18 @@ public class Phrase {
         long[] indexes = null;
         this.answer = answer;
         if(howWasAnswered == null){
-            prob+=6*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d);
+            BigDecimal summ = new BigDecimal(6*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d));
+            prob = prob.add(summ);
             howWasAnswered = false;
             indexes = dao.updateProb(this);
         }else if(howWasAnswered){
-            if(!unmofifiedPhrase.isLearnt())
-                prob+=9*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d);
-            else
-                prob+=6*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d);
+            if(!unmofifiedPhrase.isLearnt()) {
+                BigDecimal summ = new BigDecimal(9 * Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d));
+
+            }else{
+                BigDecimal summ = new BigDecimal(6*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d));
+                prob = prob.add(summ);
+            }
             howWasAnswered = false;
             indexes = dao.updateProb(this);
         }
@@ -115,15 +133,26 @@ public class Phrase {
     }
 
     public void delete(){
-        dao.deleteById(id);
+        System.out.println("CALL delete(), requested id=" + id);
+        dao.deletePhrase(this);
     }
+
+    /*public void delete(int id){
+        System.out.println("CALL delete(int id), requested id=" + id);
+        dao.deletePhrase(id);
+    }
+
+    public void delete(Phrase phr){
+        System.out.println("CALL delete(Phrase phr), requested id=" + phr.id);
+        dao.deletePhrase(phr.id);
+    }*/
 
     public void updatePhrase(){
         dao.updatePhrase(this);
     }
 
     public boolean isLearnt(){
-        return prob<=3;
+        return prob.doubleValue()<=3;
     }
 
     public String getForWord(){
@@ -133,4 +162,76 @@ public class Phrase {
     public String toString(){
         return forWord + " - " + natWord + " last. accs:" + lastAccs;
     }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setForWord(String forWord) {
+        System.out.println("CALL setForWord("+forWord+") from Phrase");
+        this.forWord = forWord;
+        updatePhrase();
+    }
+
+    public String getNatWord() {
+        return natWord;
+    }
+
+    public void setNatWord(String natWord) {
+        System.out.println("CALL setNatWord("+natWord+") from Phrase");
+        this.natWord = natWord;
+        updatePhrase();
+    }
+
+    public String getTranscr() {
+        return transcr;
+    }
+
+    public void setTranscr(String transcr) {
+        System.out.println("CALL setTranscr("+transcr+") from Phrase");
+        this.transcr = transcr;
+        updatePhrase();
+    }
+
+    public BigDecimal getProb() {
+        return prob;
+    }
+
+    public void setProb(BigDecimal prob) {
+        System.out.println("CALL setProb("+prob+") from Phrase");
+        this.prob = prob;
+        updatePhrase();
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        System.out.println("CALL setLabel("+label+") from Phrase");
+        this.label = label;
+        updatePhrase();
+    }
+
+    public Timestamp getCreateDate() {
+        return createDate;
+    }
+
+    public Timestamp getLastAccs() {
+        return lastAccs;
+    }
+
+    public void setLastAccs(Timestamp lastAccs) {
+        this.lastAccs = lastAccs;
+    }
+
+    public boolean isExactMatch() {
+        return exactMatch;
+    }
+
+    public void setExactMatch(boolean exactMatch) {
+        this.exactMatch = exactMatch;
+    }
+
+
 }
