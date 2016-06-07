@@ -84,14 +84,14 @@ public class Phrase implements Serializable{
         this.answer = answer;
         if(howWasAnswered == null){
             if(!isLearnt()){
-                BigDecimal subtr = new BigDecimal(3*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d));
+                BigDecimal subtr = new BigDecimal(3*Math.sqrt((dao.nonLearnedWords) / dao.totalWords));
                 prob = prob.subtract(subtr);
             }
             howWasAnswered = true;
             indexes = dao.updateProb(this);
         }else if(!howWasAnswered){
             if(!unmofifiedPhrase.isLearnt()){
-                BigDecimal subtr = new BigDecimal(9*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d));
+                BigDecimal subtr = new BigDecimal(9*Math.sqrt((dao.nonLearnedWords) / dao.totalWords));
                 prob = prob.subtract(subtr);
             } else{
                 prob=unmofifiedPhrase.prob;
@@ -111,16 +111,16 @@ public class Phrase implements Serializable{
         long[] indexes = null;
         this.answer = answer;
         if(howWasAnswered == null){
-            BigDecimal summ = new BigDecimal(6*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d));
+            BigDecimal summ = new BigDecimal(6*Math.sqrt((dao.nonLearnedWords) / dao.totalWords));
             prob = prob.add(summ);
             howWasAnswered = false;
             indexes = dao.updateProb(this);
         }else if(howWasAnswered){
             if(!unmofifiedPhrase.isLearnt()) {
-                BigDecimal summ = new BigDecimal(9 * Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d));
+                BigDecimal summ = new BigDecimal(9 * Math.sqrt((dao.nonLearnedWords) / dao.totalWords));
 
             }else{
-                BigDecimal summ = new BigDecimal(6*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d));
+                BigDecimal summ = new BigDecimal(6*Math.sqrt((dao.nonLearnedWords) / dao.totalWords));
                 prob = prob.add(summ);
             }
             howWasAnswered = false;
