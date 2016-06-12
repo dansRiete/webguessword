@@ -14,7 +14,7 @@ public class Hints {
      */
     public String getSlashHint(String engWord){
         if(engWord.contains("/")||engWord.contains("\\")||engWord.contains(" ")||engWord.contains("-")||
-                engWord.contains("`")||engWord.contains("'")){
+                engWord.contains("`")||engWord.contains("'")||engWord.contains(",")){
             char[] hintAr = engWord.toCharArray();
             char[] newHintAr = new char[hintAr.length+2];
             int i = 1;
@@ -37,6 +37,8 @@ public class Hints {
                 }else if(temp=='\\'){
                     newHintAr[i]='\\';
                     i++;
+                }else if(temp==','){
+                    newHintAr[i]=',';
                 }else{
                     newHintAr[i]='*';
                     i++;
