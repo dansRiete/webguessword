@@ -55,12 +55,9 @@
                              action="#{interfaceBean.checkTheAnswer()}">
                 <f:ajax execute="answer" render="@all"> </f:ajax>
             </h:commandButton>
-            <h:selectOneMenu id="table" value="#{interfaceBean.choosedLabel}">
-                <f:ajax event="change" execute="table; #{interfaceBean.setTable()}" render="@all"/>
-                <f:selectItems value="#{interfaceBean.listOfChooses}" var="group" itemValue="#{group}" itemLabel="#{group}"/>
-            </h:selectOneMenu>
+
             <script type="text/javascript">
-                document.getElementsByName('j_idt18:answer')[0].focus();
+                document.getElementsByName('j_idt7:answer')[0].focus();
             </script>
         </h:form>
     </div>
@@ -236,7 +233,14 @@
                 <td>#{interfaceBean.label}</td>
             </tr>
             <tr>
-                <td>Choosed phrase</td>
+                <td>Choosed phrase
+                    <h:form>
+                    <h:selectOneMenu id="table" value="#{interfaceBean.choosedLabel}">
+                        <f:ajax event="change" execute="table; #{interfaceBean.setTable()}" render="@all"/>
+                        <f:selectItems value="#{interfaceBean.listOfChooses}" var="group" itemValue="#{group}" itemLabel="#{group}"/>
+                    </h:selectOneMenu>
+                    </h:form>
+                </td>
                 <td>#{interfaceBean.resultChoosedLabel}</td>
             </tr>
             </tbody>

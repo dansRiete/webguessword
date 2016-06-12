@@ -12,18 +12,19 @@
 
 
 <h:body>
-    <h1 style="color:seagreen">Hello, it's my new OpenShift Project</h1>
+    <h1 style="color:seagreen">Hello, here is my new OpenShift Project. I hope it'll help you to learn foreign languages.</h1>
 
 
     <h:form>
         <h:panelGroup>
             <h:panelGrid columns="2">
-                <h:outputText value="Логин"/>
+                <h:outputText value="Login"/>
                 <h:inputText value="#{login.user}"/>
-                <h:outputText value="Пароль"/>
+                <h:outputText value="Password"/>
                 <h:inputSecret value="#{login.password}"/>
             </h:panelGrid>
             <h:commandButton id="submit" value="submit" action="#{login.checkUser()}"/>
+            <h3 style="color: #1c6bbf">Credentials for guests. Login: guest - Password: guest</h3>
 
         </h:panelGroup>
     </h:form>

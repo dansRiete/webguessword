@@ -29,6 +29,7 @@ public class DAO {
     public ArrayList<String> labels = new ArrayList<>();
     public double learnedWords;
     public double nonLearnedWords;
+    public double totalWords;
     final double chanceOfLearnedWords = 1d/15d;
     private boolean isCopyDbExecuted;
     private static final String DB_CONNECTION = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
@@ -93,10 +94,10 @@ public class DAO {
         ArrayList<Phrase> list = new ArrayList<>();
         try {
             Statement st = inMemDbConn.createStatement();
-            ResultSet rs = st.executeQuery("SELECT * FROM " + user);
+            ResultSet rs = st.executeQuery("SELECT * FROM " + user + " ORDER BY create_date DESC");
             while (rs.next()){
                 list.add(new Phrase(rs.getInt("id"), rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"), rs.getBigDecimal("prob_factor"),
-                        rs.getTimestamp("create_date"), rs.getString("label"), rs.getTimestamp("last_accs_date"), 0, 0, rs.getBoolean("exactmatch"), null));
+                        rs.getTimestamp("create_date"), rs.getString("label"), rs.getTimestamp("last_accs_date"), 0, 0, rs.getBoolean("exactmatch"), this));
             }
         } catch (SQLException e) {
             System.out.println("EXCEPTION: in returnPhrasesList() in DAO");
@@ -238,7 +239,7 @@ public class DAO {
         String dateTime = ZonedDateTime.now(ZoneId.of("Europe/Kiev")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
         try {
             PreparedStatement inMemDbPrepStat = inMemDbConn.prepareStatement("UPDATE " + user + " SET for_word=?, nat_word=?, transcr=?, last_accs_date=?, " +
-                    "exactmatch=?, label=?, prob=?  WHERE id =" + phrase.id);
+                    "exactmatch=?, label=?, prob_factor=?  WHERE id =" + phrase.id);
             inMemDbPrepStat.setString(1, phrase.forWord);
             inMemDbPrepStat.setString(2, phrase.natWord);
 
@@ -264,7 +265,7 @@ public class DAO {
             public void run(){
                 try {
                     PreparedStatement mainDbPrepStat = mainDbConn.prepareStatement("UPDATE " + user + " SET for_word=?, nat_word=?, transcr=?, last_accs_date=?, " +
-                            "exactmatch=?, label=?, prob=? WHERE id =" + phrase.id);
+                            "exactmatch=?, label=?, prob_factor=? WHERE id =" + phrase.id);
                     mainDbPrepStat.setString(1, phrase.forWord);
                     mainDbPrepStat.setString(2, phrase.natWord);
 
@@ -380,6 +381,10 @@ public class DAO {
             rs.next();
             nonLearnedWords = rs.getInt(1);
 //            System.out.println("nonLearnedWords: " + nonLearnedWords);
+
+            rs = statement.executeQuery("SELECT COUNT(*) FROM " + user);
+            rs.next();
+            totalWords = rs.getInt(1);
 
             rs = statement.executeQuery("SELECT SUM(prob_factor) FROM " + table + " WHERE prob_factor>3");
             rs.next();
