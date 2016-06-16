@@ -73,6 +73,15 @@ public class Phrase implements Serializable{
         this.exactMatch = exactMatch;
         this.unmofifiedPhrase = null;
     }
+    public Phrase(String forWord, String natWord, String transcr, String label){
+        this.forWord = forWord;
+        this.natWord = natWord;
+        this.transcr = transcr.equals("")||transcr==null?null:transcr;
+        this.prob = new BigDecimal(30);
+        this.createDate = new Timestamp(System.currentTimeMillis());
+        this.label = label.equals("")||label==null?null:label;
+        this.exactMatch = false;
+    }
 
 
     public Phrase returnUnmodified(){

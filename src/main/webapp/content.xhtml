@@ -5,19 +5,32 @@
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
       xmlns:f="http://xmlns.jcp.org/jsf/core"
-      xmlns:p="http://primefaces.org/ui">
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:pt="http://xmlns.jcp.org/jsf/passthrough">
 
 <h:head>
     <h:outputStylesheet library="css" name="table-style.css"  />
 </h:head>
 <h:body>
-    <h:form>
+    <p:commandLink type="submit" value="Back to learn" action="learn"> </p:commandLink>
+    <!--<h:form id="addform">
 
-        <p:commandButton type="submit" value="Back" action="learn"> </p:commandButton>
+    </h:form>-->
+    <h:form>
+        <p:panelGrid>
+            <p:inputText value="#{editBean.forWord}" pt:placeholder="Foreign Word"> </p:inputText>
+            <p:inputText value="#{editBean.natWord}" pt:placeholder="Native Word"> </p:inputText>
+            <p:inputText value="#{editBean.transcr}" pt:placeholder="Transcription"> </p:inputText>
+            <p:inputText value="#{editBean.label}" pt:placeholder="Label"> </p:inputText>
+            <p:commandButton type="submit" value="Add new" action="#{editBean.addAction()}" update="@form"> </p:commandButton>
+        </p:panelGrid>
+
+
+
 
     <p:dataTable value="#{editBean.myList}" var="v" styleClass="order-table" headerClass="order-table-header"
                  rowClasses="order-table-odd-row,order-table-even-row" paginator="true" rows="#{editBean.rowNumbers()}" editable="true"
-                 editMode="cell" id="table" resizableColumns="true" widgetVar="table">
+                 editMode="cell" id="table" resizableColumns="true" widgetVar="table" style="font-size: 75%" lazy="true">
 
         <p:column width="30" headerText="ID" filterBy="#{v.id}" filterMatchMode="contains">
             <f:facet name="filter">

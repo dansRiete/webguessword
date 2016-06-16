@@ -26,9 +26,12 @@ public class EditBean {
     private DAO dao;
     private ArrayList<Phrase> myList;
     private List<String> labelsList;
+    private String forWord;
+    private String natWord;
+    private String transcr;
+    private String label;
     public EditBean(){
         init();
-
     }
     @PostConstruct
     private void init(){
@@ -38,6 +41,33 @@ public class EditBean {
             myList = dao.returnPhrasesList();
             labelsList = dao.returnLabelsList();
         }
+    }
+
+    public void addAction(){
+        System.out.println("CALL addAction() from editBean mylist.size=" + myList.size());
+        String forWord = this.forWord;
+        String natWord = this.natWord;
+        String transcr = this.transcr;
+        String label = this.label;
+        this.forWord = this.natWord = this.transcr = "";
+        Phrase phrase = new Phrase(forWord, natWord, transcr, label);
+        myList.add(0, phrase);
+        new Thread(){
+            public void run(){
+
+                dao.insertPhrase(phrase);
+                /*myList.clear();
+                labelsList.clear();
+                if(dao!=null){
+                    myList = dao.returnPhrasesList();
+                    labelsList = dao.returnLabelsList();
+                }*/
+
+                /*myList = dao.returnPhrasesList();
+                labelsList = dao.returnLabelsList();*/
+            }
+        }.run();
+
     }
 
     public void deleteById(Phrase phr){
@@ -67,5 +97,37 @@ public class EditBean {
 
     public void setLabelsList(List<String> labelsList) {
         this.labelsList = labelsList;
+    }
+
+    public String getForWord() {
+        return forWord;
+    }
+
+    public void setForWord(String forWord) {
+        this.forWord = forWord;
+    }
+
+    public String getNatWord() {
+        return natWord;
+    }
+
+    public void setNatWord(String natWord) {
+        this.natWord = natWord;
+    }
+
+    public String getTranscr() {
+        return transcr;
+    }
+
+    public void setTranscr(String transcr) {
+        this.transcr = transcr;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
     }
 }

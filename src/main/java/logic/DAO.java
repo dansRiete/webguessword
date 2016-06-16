@@ -501,14 +501,44 @@ public class DAO {
     public void insertPhrase(Phrase phrase){
         System.out.println("CALL: insertPhrase(Phrase phrase) from DAO");
         try {
-            PreparedStatement ps = inMemDbConn.prepareStatement("INSERT INTO " + table + " (id, for_word, nat_word, transcr, prob_factor, create_date," +
-                    " label, last_accs_date, index_start, index_end, exactmatch) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-//            ps.setInt();
+            PreparedStatement ps = inMemDbConn.prepareStatement("INSERT INTO " + table + " (for_word, nat_word, transcr, prob_factor, create_date," +
+                    " label, last_accs_date, exactmatch) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            ps.setString(1, phrase.forWord);
+            ps.setString(2, phrase.natWord);
+            ps.setString(3, phrase.transcr);
+            ps.setDouble(4, phrase.prob.doubleValue());
+            ps.setTimestamp(5, phrase.createDate);
+            ps.setString(6, phrase.label);
+            ps.setTimestamp(7, phrase.lastAccs);
+            ps.setBoolean(8, phrase.exactMatch);
+            ps.execute();
         } catch (SQLException e) {
             System.out.println("EXCEPTION: in insertPhrase(Phrase phrase) from DAO");
             e.printStackTrace();
             throw new RuntimeException();
         }
+
+        new Thread(){
+            public void run(){
+                try {
+                    PreparedStatement ps = mainDbConn.prepareStatement("INSERT INTO " + table + " (for_word, nat_word, transcr, prob_factor, create_date," +
+                            " label, last_accs_date, exactmatch) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                    ps.setString(1, phrase.forWord);
+                    ps.setString(2, phrase.natWord);
+                    ps.setString(3, phrase.transcr);
+                    ps.setDouble(4, phrase.prob.doubleValue());
+                    ps.setTimestamp(5, phrase.createDate);
+                    ps.setString(6, phrase.label);
+                    ps.setTimestamp(7, phrase.lastAccs);
+                    ps.setBoolean(8, phrase.exactMatch);
+                    ps.execute();
+                } catch (SQLException e) {
+                    System.out.println("EXCEPTION inside new Thread: in insertPhrase(Phrase phrase) from DAO");
+                    e.printStackTrace();
+                    throw new RuntimeException();
+                }
+            }
+        }.run();
     }
 
     public void backupDB(){
