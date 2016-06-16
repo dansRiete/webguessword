@@ -92,9 +92,7 @@ public class DAO {
     public ArrayList<Phrase> returnPhrasesList(){
         System.out.println("CALL: returnPhrasesList() from DAO");
         ArrayList<Phrase> list = new ArrayList<>();
-        try {
-            Statement st = inMemDbConn.createStatement();
-            ResultSet rs = st.executeQuery("SELECT * FROM " + user + " ORDER BY create_date DESC");
+        try (Statement st = inMemDbConn.createStatement(); ResultSet rs = st.executeQuery("SELECT * FROM " + user + " ORDER BY create_date DESC")){
             while (rs.next()){
                 list.add(new Phrase(rs.getInt("id"), rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"), rs.getBigDecimal("prob_factor"),
                         rs.getTimestamp("create_date"), rs.getString("label"), rs.getTimestamp("last_accs_date"), 0, 0, rs.getBoolean("exactmatch"), this));
@@ -111,9 +109,8 @@ public class DAO {
         System.out.println("CALL: returnLabelsList() from DAO");
         ArrayList<String> labelsList = new ArrayList<>();
 //        labelsList.add("");
-        try {
-            Statement st = inMemDbConn.createStatement();
-            ResultSet rs = st.executeQuery("SELECT DISTINCT label FROM " + user);
+        try (Statement st = inMemDbConn.createStatement(); ResultSet rs = st.executeQuery("SELECT DISTINCT label FROM " + user)){
+
             while (rs.next()){
                 if(rs.getString(1)!=null&&!rs.getString(1).equals(""))
                     labelsList.add(rs.getString(1));
