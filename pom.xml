@@ -45,6 +45,13 @@
             <artifactId>primefaces-extensions</artifactId>
             <version>4.0.0</version>
         </dependency>
+        <!-- http://mvnrepository.com/artifact/c3p0/c3p0 -->
+        <dependency>
+            <groupId>c3p0</groupId>
+            <artifactId>c3p0</artifactId>
+            <version>0.9.1.2</version>
+        </dependency>
+
 
 
     </dependencies>
