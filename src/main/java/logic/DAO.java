@@ -107,7 +107,7 @@ public class DAO {
         } catch (PropertyVetoException e) {
             e.printStackTrace();
         }
-        cpds1.setJdbcUrl(localHost);
+        cpds1.setJdbcUrl(remoteHost);
         cpds1.setUser("adminLtuHq9R");
         cpds1.setPassword("d-AUIKakd1Br");
         cpds1.setMinPoolSize(5);
