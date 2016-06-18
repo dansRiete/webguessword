@@ -16,7 +16,9 @@
     <!--<h:form id="addform">
 
     </h:form>-->
+
     <h:form>
+
         <p:panelGrid>
             <p:inputText value="#{editBean.forWord}" pt:placeholder="Foreign Word"> </p:inputText>
             <p:inputText value="#{editBean.natWord}" pt:placeholder="Native Word"> </p:inputText>
@@ -25,21 +27,18 @@
             <p:commandButton type="submit" value="Add new" action="#{editBean.addAction()}" update="@form"> </p:commandButton>
         </p:panelGrid>
 
-
-
-
     <p:dataTable value="#{editBean.myList}" var="v" styleClass="order-table" headerClass="order-table-header"
                  rowClasses="order-table-odd-row,order-table-even-row" paginator="true" rows="#{editBean.rowNumbers()}" editable="true"
-                 editMode="cell" id="table" resizableColumns="true" widgetVar="table" style="font-size: 75%" lazy="true">
+                 editMode="cell" id="table" resizableColumns="true" widgetVar="table" style="font-size: 75%">
 
-        <p:column width="30" headerText="ID" filterBy="#{v.id}" filterMatchMode="contains">
+        <p:column width="30" headerText="ID" filterBy="#{v.id}" sortBy="#{v.id}" filterMatchMode="contains">
             <f:facet name="filter">
                 <p:inputText onkeyup="PF('table').filter()"  style="width: 90%; text-align: center;"> </p:inputText>
             </f:facet>
             <h:outputText value="#{v.id}" > </h:outputText>
         </p:column>
 
-        <p:column width="25%" filterBy="#{v.forWord}" filterMatchMode="contains">
+        <p:column width="25%" filterBy="#{v.forWord}" sortBy="#{v.forWord}" filterMatchMode="contains">
             <f:facet name="header">Foreign word</f:facet>
             <f:facet name="filter">
                 <p:inputText onkeyup="PF('table').filter()"  style="width: 80%; text-align: center;"> </p:inputText>
@@ -54,7 +53,7 @@
             </p:cellEditor>
         </p:column>
 
-        <p:column width="25%" filterBy="#{v.natWord}" filterMatchMode="contains">
+        <p:column width="25%" filterBy="#{v.natWord}" sortBy="#{v.natWord}" filterMatchMode="contains">
             <f:facet name="header">Native word</f:facet>
             <f:facet name="filter">
                 <p:inputText onkeyup="PF('table').filter()"  style="width: 80%; text-align: center;"> </p:inputText>
@@ -81,7 +80,7 @@
             </p:cellEditor>
         </p:column>
 
-        <p:column filterBy="#{v.label}" filterMatchMode="in">
+        <p:column filterBy="#{v.label}" sortBy="#{v.label}" filterMatchMode="in">
             <f:facet name="header">Label</f:facet>
             <f:facet name="filter">
                 <p:selectCheckboxMenu label="Labels" onchange="PF('table').filter()" panelStyle="width:200px" scrollHeight="150">
@@ -98,11 +97,11 @@
             </p:cellEditor>
         </p:column>
 
-        <p:column width="40">
+        <p:column width="40" sortBy="#{v.prob}">
             <f:facet name="header">Prob</f:facet>
             <p:cellEditor>
                 <f:facet name="output">
-                    <h:outputText value="#{v.prob}"/>
+                    <h:outputText value="#{v.prob.setScale(0, 4)}"/>
                 </f:facet>
                 <f:facet name="input">
                     <p:inputText value="#{v.prob}" style="width:96%"/>
@@ -110,12 +109,12 @@
             </p:cellEditor>
         </p:column>
 
-        <p:column>
+        <p:column sortBy="#{v.createDate}">
             <f:facet name="header">Create date</f:facet>
             <h:outputText value="#{v.createDate}"> </h:outputText>
         </p:column>
 
-        <p:column>
+        <p:column sortBy="#{v.lastAccs}">
             <f:facet name="header">Last access date</f:facet>
             <h:outputText value="#{v.lastAccs}"> </h:outputText>
         </p:column>
