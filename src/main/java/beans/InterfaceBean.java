@@ -41,16 +41,16 @@ public class InterfaceBean implements Serializable{
     }
 
     //>>Session statistics
-    private int numOfPhrForSession = 0;
-    private int numOfAnswForSession = 0;
+    private int numOfPhrForSession;
+    private int numOfAnswForSession;
     private int totalNumberOfWords;
     private int totalNumberOfLearnedWords;
-    private String percentOfRightAnswers;
-    private BigDecimal avgTimeOfAccsToDb;
     private int learnedWords;
     private int nonLearnedWords;
     private int totalNumberOfPhrases;
-    private int numberOfLearnedPhrasePerSession = 0;
+    private int numberOfLearnedPhrasePerSession;
+    private String percentOfRightAnswers;
+    private BigDecimal avgTimeOfAccsToDb;
     //<<
 
 
@@ -82,6 +82,7 @@ public class InterfaceBean implements Serializable{
     private ArrayList<String> listOfChooses;
     private String choosedLabel;
     private String resultChoosedLabel;
+    private String previousResultChoosedLabel = "";
     private HashSet<String> hshset = new HashSet<>();
     private int shift = 0;
     private int index;
@@ -119,6 +120,7 @@ public class InterfaceBean implements Serializable{
         resultChoosedLabel = "";
         boolean temp = true;
 
+        //>>Makes a "WHERE LABEL IN" clause string from collection
         for(String str : hshset){
             if(temp){
                 resultChoosedLabel += "'" + str + "'";
@@ -127,12 +129,20 @@ public class InterfaceBean implements Serializable{
                 resultChoosedLabel += ",'" + str + "'";
             }
         }
+        //<<
 
-        if(!resultChoosedLabel.equalsIgnoreCase("")){
-            dao.table = "(SELECT * FROM " + loginBean.getUser() + " WHERE LABEL IN(" + resultChoosedLabel + ")) As custom";
-        }
-        else{
-            resultChoosedLabel = dao.table = loginBean.getUser();
+        //If clause was changed
+        if(!resultChoosedLabel.equals(previousResultChoosedLabel)){
+            if(!resultChoosedLabel.equalsIgnoreCase("")){
+                dao.table = "(SELECT * FROM " + loginBean.getUser() + " WHERE LABEL IN(" + resultChoosedLabel + ")) As custom";
+            }
+            else{
+                dao.table = loginBean.getUser();
+            }
+            previousResultChoosedLabel = resultChoosedLabel;
+            dao.reloadIndices(1);
+            calculateSessionStatistics();
+            reloadPhraseData();
         }
     }
 
@@ -231,7 +241,6 @@ public class InterfaceBean implements Serializable{
     private void newPhrase(){
         System.out.println("CALL: newPhrase() from InterfaceBean");
         long starTime = System.nanoTime();
-//        dao.reloadIndices();
         Phrase phrase = dao.createRandPhrase();
         if(phrase!=null){
             listOfPhrases.add(phrase);
@@ -372,7 +381,7 @@ public class InterfaceBean implements Serializable{
 
 
 
-    //>>Setters an getters
+    //>>Setters and getters
     //*************************************************************************************
     public String getQuestion() {
         return question;
@@ -560,21 +569,21 @@ public class InterfaceBean implements Serializable{
         this.id = id;
     }
 
-    public double getLearnedWords() {
+    public int getLearnedWords() {
         return learnedWords;
     }
     public void setLearnedWords(int learnedWords) {
         this.learnedWords = learnedWords;
     }
 
-    public double getNonLearnedWords() {
+    public int getNonLearnedWords() {
         return nonLearnedWords;
     }
     public void setNonLearnedWords(int nonLearnedWords) {
         this.nonLearnedWords = nonLearnedWords;
     }
 
-    public double getTotalNumberOfPhrases() {
+    public int getTotalNumberOfPhrases() {
         return totalNumberOfPhrases;
     }
     public void setTotalNumberOfPhrases(int totalNumberOfPhrases) {

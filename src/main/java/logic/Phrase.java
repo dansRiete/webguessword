@@ -152,16 +152,6 @@ public class Phrase implements Serializable{
         dao.deletePhrase(this);
     }
 
-    /*public void delete(int id){
-        System.out.println("CALL delete(int id), requested id=" + id);
-        dao.deletePhrase(id);
-    }
-
-    public void delete(Phrase phr){
-        System.out.println("CALL delete(Phrase phr), requested id=" + phr.id);
-        dao.deletePhrase(phr.id);
-    }*/
-
     public void updatePhrase(){
         dao.updatePhrase(this);
     }

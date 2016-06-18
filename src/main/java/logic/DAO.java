@@ -24,8 +24,6 @@ public class DAO {
     private String remoteHost = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     private String localHost = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     public String table;
-    //Working table before changes, uses to execute (if need) reloading indices
-    public String prevTable = "";
     private String user;
     private String password;
     public ArrayList<String> labels = new ArrayList<>();
@@ -560,12 +558,6 @@ public class DAO {
     public Phrase createRandPhrase(){
         System.out.println("CALL: createRandPhrase() from DAO");
 
-        //If working table has been changed, indices reload
-        if(!table.equals(prevTable)){
-            System.out.println("--- Table has been changed, starting of reload indices");
-            reloadIndices(1);
-            prevTable = table;
-        }
 
         int index = random.nextInt(1000000000);
         Phrase phrase;

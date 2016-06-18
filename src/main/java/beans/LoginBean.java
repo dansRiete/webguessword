@@ -54,7 +54,6 @@ public class LoginBean implements Serializable {
         //!!! EXC !!!
         boolean userExist = false;
 
-
         //Проверяем или введенный пользователь присутствует в базе данных
         for(User user : usersList){
             if(this.user.equalsIgnoreCase(user.login)){
@@ -63,46 +62,26 @@ public class LoginBean implements Serializable {
                 break;
             }
         }
-
-            //Если пользователь существует и пароль совпадает то dispatch("learn.xhtml")
-            //в противном случае sendRedirect("error.xhtml")
-            if ((userExist)&&(password.equalsIgnoreCase(currentUser.password))) {
-                dao.setLoginBean(this);
-                try {
-                    FacesContext.getCurrentInstance().getExternalContext().dispatch("learn.xhtml");
-                } catch (IOException e) {
-                    System.out.println("EXCEPTION#1: in checkUser() from LoginBean");
-                    e.printStackTrace();
-                }
-
-                /*FacesContext context = FacesContext.getCurrentInstance();
-                HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
-                HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getResponse();
-                try {
-                    request.getRequestDispatcher("learn.xhtml").forward(request, response);
-                } catch (ServletException e) {
-                    System.out.println("--- Servlet exception during request.getRequestDispatcher(\"learn.xhtml\").forward(request, response);");
-                    logger.error("Log4G error!", e);
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    System.out.println("--- IOException during request.getRequestDispatcher(\"learn.xhtml\").forward(request, response);");
-                    e.printStackTrace();
-                }*/
-            } else {
-                /*try { //>>STACK OVERFLOW! WHY?
-                    FacesContext.getCurrentInstance().getExternalContext().dispatch("error.xhtml");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }*/   //<<
-                FacesContext context = FacesContext.getCurrentInstance();
-                HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getResponse();
-                try {
-                    response.sendRedirect("error.xhtml");
-                } catch (IOException e) {
-                    System.out.println("EXCEPTION#2: in checkUser() from LoginBean");
-                    e.printStackTrace();
-                }
+        //Если пользователь существует и пароль совпадает то dispatch("learn.xhtml")
+        //в противном случае sendRedirect("error.xhtml")
+        if ((userExist)&&(password.equalsIgnoreCase(currentUser.password))) {
+            dao.setLoginBean(this);
+            try {
+                FacesContext.getCurrentInstance().getExternalContext().dispatch("learn.xhtml");
+            } catch (IOException e) {
+                System.out.println("EXCEPTION#1: in checkUser() from LoginBean");
+                e.printStackTrace();
             }
+        } else {
+            FacesContext context = FacesContext.getCurrentInstance();
+            HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getResponse();
+            try {
+                response.sendRedirect("error.xhtml");
+            } catch (IOException e) {
+                System.out.println("EXCEPTION#2: in checkUser() from LoginBean");
+                e.printStackTrace();
+            }
+        }
     }
 
     public DAO returnDAO(){
