@@ -1,5 +1,6 @@
 package logic;
 
+import Exceptions.DataBaseConnectionException;
 import beans.LoginBean;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
@@ -23,6 +24,8 @@ public class DAO {
     private String remoteHost = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     private String localHost = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     public String table;
+    //Working table before changes, uses to execute (if need) reloading indices
+    public String prevTable = "";
     private String user;
     private String password;
     public ArrayList<String> labels = new ArrayList<>();
@@ -35,7 +38,9 @@ public class DAO {
     private static final String DB_USER = "";
     private static final String DB_PASSWORD = "";
     private Id[] idsArr;
-    ComboPooledDataSource cpds1 = new ComboPooledDataSource();
+//    ComboPooledDataSource cpds1 = new ComboPooledDataSource();
+    public Connection mainDbConn;
+    public Connection inMemDbConn;
 //    ComboPooledDataSource cpds2 = new ComboPooledDataSource();
 
     private String createTableSql() {
@@ -74,7 +79,7 @@ public class DAO {
 
     public DAO(String user){
         System.out.println("CALL: DAO constructor");
-        /*this.user = user;
+        this.user = user;
         try{
             mainDbConn = DriverManager.getConnection(remoteHost, "adminLtuHq9R", "d-AUIKakd1Br");
             System.out.println("--- Remote DB was connected");
@@ -88,21 +93,9 @@ public class DAO {
                 throw new DataBaseConnectionException();
             }
         }
-        try {
-            cpds.setDriverClass( "com.mysql.jdbc.Driver" );
-            cpds.setJdbcUrl( "jdbc:mysql://localhost/test" );
-            cpds.setUser("root");
-            cpds.setPassword("111");
-            cpds.setMinPoolSize(5);
-            cpds.setAcquireIncrement(5);
-            cpds.setMaxPoolSize(20);
-            cpds1.getConnection();
-        } catch (PropertyVetoException e) {
-            e.printStackTrace();
-        }
 
-        inMemDbConn = getDBConnection();*///
-        try {
+        inMemDbConn = getDBConnection();//
+        /*try {
             cpds1.setDriverClass( "com.mysql.jdbc.Driver" );
         } catch (PropertyVetoException e) {
             e.printStackTrace();
@@ -113,7 +106,7 @@ public class DAO {
         cpds1.setMinPoolSize(5);
         cpds1.setAcquireIncrement(5);
         cpds1.setMaxPoolSize(20);
-
+*/
         /*try {
             cpds2.setDriverClass( "org.h2.Driver" );
         } catch (PropertyVetoException e) {
@@ -131,7 +124,7 @@ public class DAO {
     public ArrayList<Phrase> returnPhrasesList(){
         System.out.println("CALL: returnPhrasesList() from DAO");
         ArrayList<Phrase> list = new ArrayList<>();
-        try (Statement st = getDBConnection().createStatement(); ResultSet rs = st.executeQuery("SELECT * FROM " + user + " ORDER BY create_date DESC")){
+        try (Statement st = inMemDbConn.createStatement(); ResultSet rs = st.executeQuery("SELECT * FROM " + user + " ORDER BY create_date DESC")){
             while (rs.next()){
                 list.add(new Phrase(rs.getInt("id"), rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"), rs.getBigDecimal("prob_factor"),
                         rs.getTimestamp("create_date"), rs.getString("label"), rs.getTimestamp("last_accs_date"), 0, 0, rs.getBoolean("exactmatch"), this));
@@ -148,7 +141,7 @@ public class DAO {
         System.out.println("CALL: returnLabelsList() from DAO");
         ArrayList<String> labelsList = new ArrayList<>();
 //        labelsList.add("");
-        try (Statement st = getDBConnection().createStatement(); ResultSet rs = st.executeQuery("SELECT DISTINCT label FROM " + user)){
+        try (Statement st = inMemDbConn.createStatement(); ResultSet rs = st.executeQuery("SELECT DISTINCT label FROM " + user)){
 
             while (rs.next()){
                 if(rs.getString(1)!=null&&!rs.getString(1).equals(""))
@@ -168,14 +161,14 @@ public class DAO {
         System.out.println("CALL: copyDb() from DAO");
 
         //If in-memory db is not empty, then to empty it.
-        try (Statement inMemSt = getDBConnection().createStatement()){
+        try (Statement inMemSt = inMemDbConn.createStatement()){
             inMemSt.execute("DROP TABLE " + user);
         } catch (SQLException e) {
             //Table doesn't exist - do nothing.
         }
 
         //Creating table in in-memory DB
-        try(Statement inMemSt = getDBConnection().createStatement()){
+        try(Statement inMemSt = inMemDbConn.createStatement()){
             inMemSt.execute(createTableSql());
         }catch (SQLException e){
             e.printStackTrace();
@@ -189,7 +182,7 @@ public class DAO {
                 "index_start, index_end, exactmatch) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
 
         int counter;
-        try(Statement mainSt = cpds1.getConnection().createStatement(); ResultSet rs2 = mainSt.executeQuery("SELECT COUNT(*) FROM " + user)){
+        try(Statement mainSt = mainDbConn.createStatement(); ResultSet rs2 = mainSt.executeQuery("SELECT COUNT(*) FROM " + user)){
             rs2.next();
             counter = rs2.getInt(1);
         }catch (SQLException e) {
@@ -198,9 +191,9 @@ public class DAO {
             throw new RuntimeException();
         }
 
-        try (Statement mainSt = cpds1.getConnection().createStatement();
+        try (Statement mainSt = mainDbConn.createStatement();
              ResultSet rs1 = mainSt.executeQuery("SELECT * FROM " + user);
-               PreparedStatement ps = getDBConnection().prepareStatement(insertSql)){
+               PreparedStatement ps = inMemDbConn.prepareStatement(insertSql)){
 
 
             idsArr = new Id[counter];
@@ -256,7 +249,7 @@ public class DAO {
         System.out.println("CALL: updateProb(Phrase phrase) with id=" + phrase.id +" from DAO");
 //        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         String dateTime = ZonedDateTime.now(ZoneId.of("Europe/Kiev")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
-        try (Statement inMemDbPrepStat = getDBConnection().createStatement()){
+        try (Statement inMemDbPrepStat = inMemDbConn.createStatement()){
 //            System.out.println("--- updateProb() SQL UPDATE " + user + " SET prob_factor=" + phrase.prob + ", last_accs_date='"+timestamp+"' WHERE id="+phrase.id);
             inMemDbPrepStat.executeUpdate("UPDATE " + user + " SET prob_factor=" + phrase.prob + ", last_accs_date='" + dateTime + "' WHERE id=" + phrase.id);
         } catch (SQLException e) {
@@ -266,7 +259,7 @@ public class DAO {
         }
         new Thread(){
             public void run(){
-                try (Statement st = cpds1.getConnection().createStatement()){
+                try (Statement st = mainDbConn.createStatement()){
                     st.execute("UPDATE " + user + " SET prob_factor=" + phrase.prob + ", last_accs_date='" + dateTime + "' WHERE id=" + phrase.id);
                 } catch (SQLException e) {
                     System.out.println("EXCEPTION#2: in updateProb(Phrase phrase) from DAO");
@@ -284,7 +277,7 @@ public class DAO {
         String updateSql = "UPDATE " + user + " SET for_word=?, nat_word=?, transcr=?, last_accs_date=?, " +
                 "exactmatch=?, label=?, prob_factor=?  WHERE id =" + phrase.id;
 
-        try (PreparedStatement inMemDbPrepStat = getDBConnection().prepareStatement(updateSql)){
+        try (PreparedStatement inMemDbPrepStat = inMemDbConn.prepareStatement(updateSql)){
 
             inMemDbPrepStat.setString(1, phrase.forWord);
             inMemDbPrepStat.setString(2, phrase.natWord);
@@ -309,7 +302,7 @@ public class DAO {
         }
         new Thread(){
             public void run(){
-                try (PreparedStatement mainDbPrepStat = cpds1.getConnection().prepareStatement(updateSql)){
+                try (PreparedStatement mainDbPrepStat = mainDbConn.prepareStatement(updateSql)){
 
                     mainDbPrepStat.setString(1, phrase.forWord);
                     mainDbPrepStat.setString(2, phrase.natWord);
@@ -340,7 +333,7 @@ public class DAO {
     public void deletePhrase(Phrase phr){
         System.out.println("CALL: deletePhrase(int id) from DAO");
         String deleteSql = "DELETE FROM " + user + " WHERE ID=" + phr.id;
-        try (Statement st = getDBConnection().createStatement()){
+        try (Statement st = inMemDbConn.createStatement()){
 
             st.execute(deleteSql);
         } catch (SQLException e) {
@@ -350,7 +343,7 @@ public class DAO {
         }
         new Thread(){
             public void run(){
-                try (Statement st = cpds1.getConnection().createStatement()) {
+                try (Statement st = mainDbConn.createStatement()) {
                     st.execute(deleteSql);
                 } catch (SQLException e) {
                     System.out.println("EXCEPTION#2: in deletePhrase(int id) from DAO");
@@ -376,13 +369,7 @@ public class DAO {
     }
 
     public Connection getConnection(){
-        Connection conn = null;
-        try {
-            conn = cpds1.getConnection();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return conn;
+        return mainDbConn;
     }
 
     public void reloadLabelsList(){
@@ -390,7 +377,7 @@ public class DAO {
         labels.clear();
         labels.add("All");
         String temp = null;
-        try (Statement st = getDBConnection().createStatement();
+        try (Statement st = inMemDbConn.createStatement();
              ResultSet rs = st.executeQuery("SELECT DISTINCT (LABEL) FROM " + user + " ORDER BY LABEL")){
 
             while (rs.next()){
@@ -428,7 +415,6 @@ public class DAO {
     }
 
     public long[] reloadIndices(int id){
-        System.out.println("CALL: reloadIndices() from DAO");
         long start = System.currentTimeMillis();
         double temp = 0;
 
@@ -441,7 +427,7 @@ public class DAO {
         long[] indexes = new long[2];
 
         //Заполняем idArr айдишниками
-        try (Statement statement = getDBConnection().createStatement()){
+        try (Statement statement = inMemDbConn.createStatement()){
 
             rs = statement.executeQuery("SELECT id FROM " + table);
             while(rs.next())
@@ -490,7 +476,12 @@ public class DAO {
         }
         int countOfModIndices=0;
         int test = 0;
-        try (Statement statement = getDBConnection().createStatement()){
+
+        //Clears indexes before reloading
+        for(Id id2 : idsArr)
+            id2.index_start = id2.index_end = 0;
+
+        try (Statement statement = inMemDbConn.createStatement()){
             for (int i : idArr) { //Устанавилвает индексы для неизученных слов
 
                 long indexStart;
@@ -562,20 +553,26 @@ public class DAO {
                 e.printStackTrace();
             }
         }
-        System.out.println("Indexes have been changed="+countOfModIndices);
-        System.out.println("Time of performing reloadIndices method is " + (System.currentTimeMillis()-start) + "ms");
+        System.out.println("CALL: reloadIndices() from DAO" + "Indexes changed="+countOfModIndices + " Time taken " + (System.currentTimeMillis()-start) + "ms");
         return indexes;
     }
 
     public Phrase createRandPhrase(){
         System.out.println("CALL: createRandPhrase() from DAO");
 
+        //If working table has been changed, indices reload
+        if(!table.equals(prevTable)){
+            System.out.println("--- Table has been changed, starting of reload indices");
+            reloadIndices(1);
+            prevTable = table;
+        }
+
         int index = random.nextInt(1000000000);
         Phrase phrase;
 //        String sql = "SELECT * FROM " + table + " WHERE index_start<=" + id + " AND index_end>=" + id;
         String sql = "SELECT * FROM " + table + " WHERE id=" + getIdByIndex(index);
 
-        try (Statement st = getDBConnection().createStatement(); ResultSet rs = st.executeQuery(sql)){
+        try (Statement st = inMemDbConn.createStatement(); ResultSet rs = st.executeQuery(sql)){
 
             rs.next();
             phrase = new Phrase(rs.getInt("id"), rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"), new BigDecimal(rs.getDouble("prob_factor")),
@@ -593,7 +590,7 @@ public class DAO {
         System.out.println("CALL: insertPhrase(Phrase phrase) from DAO");
         String insertSql = "INSERT INTO " + table + " (for_word, nat_word, transcr, prob_factor, create_date," +
                 " label, last_accs_date, exactmatch) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = getDBConnection().prepareStatement(insertSql);) {
+        try (PreparedStatement ps = inMemDbConn.prepareStatement(insertSql)) {
 
             ps.setString(1, phrase.forWord);
             ps.setString(2, phrase.natWord);
@@ -612,7 +609,7 @@ public class DAO {
 
         new Thread(){
             public void run(){
-                try (PreparedStatement ps = cpds1.getConnection().prepareStatement(insertSql)){
+                try (PreparedStatement ps = mainDbConn.prepareStatement(insertSql)){
                     ps.setString(1, phrase.forWord);
                     ps.setString(2, phrase.natWord);
                     ps.setString(3, phrase.transcr);
@@ -638,9 +635,9 @@ public class DAO {
         long start = System.currentTimeMillis();
         Statement st = null;
         try {
-            st = getDBConnection().createStatement();
+            st = inMemDbConn.createStatement();
             ResultSet rs = st.executeQuery("SELECT * FROM " + table);
-            PreparedStatement ps = cpds1.getConnection().prepareStatement("INSERT INTO res" + table +
+            PreparedStatement ps = mainDbConn.prepareStatement("INSERT INTO res" + table +
                     " (date, id, for_word, nat_word, transcr, prob_factor, create_date, label, last_accs_date, " +
                     "index_start, index_end, exactmatch) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
 

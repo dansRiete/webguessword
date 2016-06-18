@@ -130,11 +130,9 @@ public class InterfaceBean implements Serializable{
 
         if(!resultChoosedLabel.equalsIgnoreCase("")){
             dao.table = "(SELECT * FROM " + loginBean.getUser() + " WHERE LABEL IN(" + resultChoosedLabel + ")) As custom";
-            dao.reloadIndices(1);
         }
         else{
             resultChoosedLabel = dao.table = loginBean.getUser();
-            dao.reloadIndices(1);
         }
     }
 
@@ -194,7 +192,6 @@ public class InterfaceBean implements Serializable{
         reloadPhraseData();
         StringBuilder str = new StringBuilder();
         int countOfLearnedPhrases = 0;
-//        int currPos = listOfPhrases.size() - 1 - shift; //is never used
         for(int i = listOfPhrases.size()-1; i>=0; i--){
             //If the phrase has been learnt and had not been learnt before then increase the counter of learnt phrases per current session
             if(listOfPhrases.get(i).isLearnt()&&!listOfPhrases.get(i).returnUnmodified().isLearnt()){
@@ -249,10 +246,8 @@ public class InterfaceBean implements Serializable{
         try {
             index = listOfPhrases.size() - 1 - shift;
             currPhrase = listOfPhrases.get(index);
-//            currPhrase.howWasAnswered = true;
             currPhrase.rightAnswer(answer);
-            /*if (shift == 0)
-                */nextQuestion();
+            nextQuestion();
             resultProcessing();
         }catch (NullPointerException e){
             System.out.println("EXCEPTION: in rightAnswer() from InterfaceBean");
@@ -267,10 +262,8 @@ public class InterfaceBean implements Serializable{
         try{
             index = listOfPhrases.size() - 1 - shift;
             currPhrase = listOfPhrases.get(index);
-//            currPhrase.howWasAnswered = false;
             currPhrase.wrongAnswer(answer);
-            /*if(shift==0)
-                */nextQuestion();
+            nextQuestion();
             resultProcessing();
         }catch (NullPointerException e){
             System.out.println("EXCEPTION: in wrongAnswer() from InterfaceBean");
@@ -532,7 +525,6 @@ public class InterfaceBean implements Serializable{
     }
 
     public String getCurrPhrForWord() {
-        System.out.println("--- inside getCurrPhrForWord() currPhrForWord is " + currPhrForWord);
         return currPhrForWord;
     }
     public void setCurrPhrForWord(String currPhrForWord) {
