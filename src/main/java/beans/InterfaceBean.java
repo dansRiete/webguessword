@@ -120,7 +120,7 @@ public class InterfaceBean implements Serializable{
         resultChoosedLabel = "";
         boolean temp = true;
 
-        //>>Makes a "WHERE LABEL IN" clause string from collection
+        //>>Makes a "WHERE LABEL IN" clause string from collectionv
         for(String str : hshset){
             if(temp){
                 resultChoosedLabel += "'" + str + "'";
