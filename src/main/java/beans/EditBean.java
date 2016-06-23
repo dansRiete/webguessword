@@ -7,6 +7,8 @@ import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
+import javax.faces.bean.ViewScoped;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,7 +16,7 @@ import java.util.List;
  * Created by Aleks on 31.05.2016.
  */
 @ManagedBean
-@SessionScoped
+@ViewScoped
 public class EditBean {
 
     @ManagedProperty(value="#{login}")
@@ -25,6 +27,7 @@ public class EditBean {
 
     private DAO dao;
     private ArrayList<Phrase> myList;
+    private ArrayList<Phrase> currList;
     private List<String> labelsList;
     private String forWord;
     private String natWord;
@@ -38,6 +41,7 @@ public class EditBean {
         if(loginBean!=null)
             dao = loginBean.returnDAO();
         if(dao!=null){
+            currList = dao.getCurrList();
             myList = dao.returnPhrasesList();
             labelsList = dao.returnLabelsList();
         }
@@ -129,5 +133,13 @@ public class EditBean {
 
     public void setLabel(String label) {
         this.label = label;
+    }
+
+    public ArrayList<Phrase> getCurrList() {
+        return currList;
+    }
+
+    public void setCurrList(ArrayList currList) {
+        this.currList = currList;
     }
 }

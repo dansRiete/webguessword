@@ -24,6 +24,8 @@ public class Phrase implements Serializable{
     public Timestamp createDate;
     public Timestamp lastAccs;
     public boolean exactMatch;
+    private long index_start;
+    private long index_end;
 
 
 
@@ -42,6 +44,7 @@ public class Phrase implements Serializable{
 
 
     public Phrase(){}
+
     public Phrase(int id, String forWord, String natWord, String transcr, BigDecimal prob, Timestamp createDate,
                   String label, Timestamp lastAccs, double indexStart, double indexEnd, boolean exactMatch, DAO dao){
         this.dao = dao;
@@ -58,6 +61,8 @@ public class Phrase implements Serializable{
         this.exactMatch = exactMatch;
         this.unmofifiedPhrase = new Phrase(forWord, natWord, transcr, prob, createDate, label, lastAccs, indexStart, indexEnd, exactMatch);
     }
+
+
 
     public Phrase(String forWord, String natWord, String transcr, BigDecimal prob, Timestamp createDate,
                   String label, Timestamp lastAccs, double indexStart, double indexEnd, boolean exactMatch){
@@ -109,6 +114,7 @@ public class Phrase implements Serializable{
                 dao.setProbById(id, prob.doubleValue());
 //                prob=3*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d);
             }
+
 
             howWasAnswered = true;
             indexes =  dao.updateProb(this);
@@ -239,4 +245,19 @@ public class Phrase implements Serializable{
     }
 
 
+    public int getIndex_start() {
+        return (int) index_start;
+    }
+
+    public void setIndex_start(long index_start) {
+        this.index_start = index_start;
+    }
+
+    public int getIndex_end() {
+        return (int) index_end;
+    }
+
+    public void setIndex_end(long index_end) {
+        this.index_end = index_end;
+    }
 }

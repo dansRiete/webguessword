@@ -2,9 +2,7 @@ package logic;
 
 import Exceptions.DataBaseConnectionException;
 import beans.LoginBean;
-import com.mchange.v2.c3p0.ComboPooledDataSource;
 
-import java.beans.PropertyVetoException;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.time.ZoneId;
@@ -152,6 +150,28 @@ public class DAO {
         }
         return labelsList;
 
+    }
+
+    public ArrayList<Phrase> getCurrList(){
+        ArrayList<Phrase> phrases = new ArrayList<>();
+        try(Statement inMemSt = inMemDbConn.createStatement(); ResultSet rs = inMemSt.executeQuery("SELECT * FROM " + user)){
+            while (rs.next()){
+                int id = rs.getInt("id");
+                System.out.println("Id is" + id);
+                Id currID = getIDById(id);
+                System.out.println("currID.index_start" + currID.index_start);
+                Phrase phrase = new Phrase(id, rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"), new BigDecimal(rs.getDouble("prob_factor")),
+                        rs.getTimestamp("create_date"), rs.getString("label"), rs.getTimestamp("last_accs_date"),
+                        currID.index_start, currID.index_end, rs.getBoolean("exactmatch"), this);
+                System.out.println("phrase.indexStart="+phrase.indexStart);
+                phrases.add(phrase);
+            }
+
+        }catch (SQLException e){
+            System.out.println("Exception in ResultSet getCurrList() from DAO");
+            e.printStackTrace();
+        }
+        return phrases;
     }
 
     private void copyDb(){
@@ -390,7 +410,7 @@ public class DAO {
         }
     }
 
-    private Id getPhrById(int id){
+    private Id getIDById(int id){
         for(Id id1 : idsArr){
             if(id1.id==id){
                 return id1;
@@ -399,17 +419,17 @@ public class DAO {
         return null;
     }
 
-    private int getIdByIndex(long randIndex){
+    private Id getIDByIndex(long randIndex){
         for(Id id : idsArr){
             if(randIndex>=id.index_start&&randIndex<=id.index_end){
-                return id.id;
+                return id;
             }
         }
-        return 0;
+        return null;
     }
 
     public void setProbById(int id, double prob){
-        getPhrById(id).prob = prob;
+        getIDById(id).prob = prob;
     }
 
     public long[] reloadIndices(int id){
@@ -491,7 +511,7 @@ public class DAO {
                 double prob;
 //                rs.next();
 //                prob = rs.getFloat(1);
-                prob = getPhrById(i).prob;
+                prob = getIDById(i).prob;
                 //            System.out.println("prob=" + prob);
 
 
@@ -499,37 +519,37 @@ public class DAO {
                 if (nonLearnedWords == 0) {
                     indexStart = Math.round(temp * 1000000000);
 //                    statement.execute("UPDATE " + user + " SET index_start=" + indexStart + " WHERE id=" + i);
-                    getPhrById(i).index_start = indexStart;
+                    getIDById(i).index_start = indexStart;
                     temp += chanceOfLearnedWords / learnedWords;
                     indexEnd = Math.round((temp * 1000000000) - 1);
 //                    statement.execute("UPDATE " + user + " SET index_end=" + indexEnd + " WHERE id=" + i);
-                    getPhrById(i).index_end = indexEnd;
+                    getIDById(i).index_end = indexEnd;
 //                    System.out.println("index_start="+indexStart + " index_end="+indexEnd);
                 } else { //Если нет, то индексы ставяться по алгоритму
                     if (prob > 3) {
                         //                    System.out.println("UPDATE ALEKS SET INDEX1=" + Math.round(temp*1000000000) + " WHERE ID=" + i);
                         indexStart = Math.round(temp * 1000000000);
 //                        statement.execute("UPDATE " + user + " SET index_start=" + indexStart + " WHERE id=" + i);
-                        getPhrById(i).index_start = indexStart;
+                        getIDById(i).index_start = indexStart;
 //                        double i1 = temp;
                         temp += scaleOf1prob * prob;
                         //                    System.out.println("UPDATE ALEKS SET INDEX2=" + Math.round((temp *1000000000)-1) + " WHERE ID=" + i);
                         //                    System.out.println("%=" + (temp - MINFLOAT-i1));
                         indexEnd = Math.round((temp * 1000000000) - 1);
 //                        statement.execute("UPDATE " + user + " SET index_end=" + indexEnd + " WHERE id=" + i);
-                        getPhrById(i).index_end = indexEnd;
+                        getIDById(i).index_end = indexEnd;
 //                        System.out.println("index_start="+indexStart + " index_end="+indexEnd);
                     } else {
                         //                    System.out.println("Index1LW для ID=" + i + "=" + temp);
                         indexStart = Math.round(temp * 1000000000);
 //                        statement.execute("UPDATE " + user + " SET index_start=" + indexStart + " WHERE id=" + i);
-                        getPhrById(i).index_start = indexStart;
+                        getIDById(i).index_start = indexStart;
                         temp += indOfLW;
                         //                    System.out.println("temp "+temp + "= temp "+temp+"+indOfLW "+indOfLW);
                         //                    System.out.println("Index2LW для ID=" + i + "=" + (temp - 1));
                         indexEnd = Math.round((temp * 1000000000) - 1);
 //                        statement.execute("UPDATE " + user + " SET index_end=" + indexEnd + " WHERE id=" + i);
-                        getPhrById(i).index_end = indexEnd;
+                        getIDById(i).index_end = indexEnd;
 //                        System.out.println("index_start="+indexStart + " index_end="+indexEnd);
                     }
                 }
@@ -557,19 +577,17 @@ public class DAO {
 
     public Phrase createRandPhrase(){
         System.out.println("CALL: createRandPhrase() from DAO");
-
-
         int index = random.nextInt(1000000000);
         Phrase phrase;
 //        String sql = "SELECT * FROM " + table + " WHERE index_start<=" + id + " AND index_end>=" + id;
-        String sql = "SELECT * FROM " + table + " WHERE id=" + getIdByIndex(index);
+        Id currId = getIDByIndex(index);
+        String sql = "SELECT * FROM " + table + " WHERE id=" + currId.id;
 
         try (Statement st = inMemDbConn.createStatement(); ResultSet rs = st.executeQuery(sql)){
-
             rs.next();
-            phrase = new Phrase(rs.getInt("id"), rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"), new BigDecimal(rs.getDouble("prob_factor")),
+            phrase = new Phrase(currId.id, rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"), new BigDecimal(rs.getDouble("prob_factor")),
                     rs.getTimestamp("create_date"), rs.getString("label"), rs.getTimestamp("last_accs_date"),
-                    rs.getDouble("index_start"), rs.getDouble("index_end"), rs.getBoolean("exactmatch"), this);
+                    currId.index_start, currId.index_end, rs.getBoolean("exactmatch"), this);
         } catch (SQLException e) {
             System.out.println("EXCEPTION: in createRandPhrase() from DAO SQL was " + sql);
             e.printStackTrace();
