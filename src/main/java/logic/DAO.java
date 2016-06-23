@@ -30,7 +30,7 @@ public class DAO {
     public double totalWords;
     final double chanceOfLearnedWords = 1d/15d;
     private boolean isCopyDbExecuted;
-    private static final String DB_CONNECTION = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
+    private static final String DB_CONNECTION = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";//
     private static final String DB_USER = "";
     private static final String DB_PASSWORD = "";
     private Id[] idsArr;

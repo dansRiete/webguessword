@@ -151,7 +151,7 @@ public class InterfaceBean implements Serializable{
         int numOfNonAnswForSession = 0;
         int numOfRightAnswForSession = 0;
         id = currPhrase.id;
-        if(currPhrase.howWasAnswered ==null)
+        if(currPhrase.howWasAnswered == null)
             pDpercentOfAppearance = new BigDecimal(currPhrase.indexEnd-currPhrase.indexStart).divide(new BigDecimal(1.0e+7)).setScale(5, RoundingMode.HALF_UP) + "%";
         else {
             BigDecimal percentOfAppear = new BigDecimal(currPhrase.indexEnd-currPhrase.indexStart).divide(new BigDecimal(1.0e+7)).setScale(5, RoundingMode.HALF_UP);
