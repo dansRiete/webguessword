@@ -40,7 +40,7 @@ public class InterfaceBean implements Serializable{
         this.loginBean = loginBean;
     }
 
-    //>>Session statistics
+    //>>Session statisticss
     private int numOfPhrForSession;
     private int numOfAnswForSession;
     private int totalNumberOfWords;
