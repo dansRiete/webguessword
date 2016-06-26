@@ -70,7 +70,7 @@ public class EditBean {
                 /*myList = dao.returnPhrasesList();
                 labelsList = dao.returnLabelsList();*/
             }
-        }.run();
+        }.start();
 
     }
 

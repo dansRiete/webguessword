@@ -285,7 +285,7 @@ public class DAO {
                     throw new RuntimeException();
                 }
             }
-        }.run();
+        }.start();
         return reloadIndices(phrase.id);
     }
 
@@ -345,7 +345,7 @@ public class DAO {
                     throw new RuntimeException();
                 }
             }
-        }.run();
+        }.start();
     }
 
     public void deletePhrase(Phrase phr){
@@ -369,7 +369,7 @@ public class DAO {
                     throw new RuntimeException();
                 }
             }
-        }.run();
+        }.start();
     }
 
     public void setLoginBean(LoginBean loginBean){
@@ -635,7 +635,7 @@ public class DAO {
                     throw new RuntimeException();
                 }
             }
-        }.run();
+        }.start();
     }
 
     public void backupDB(){
