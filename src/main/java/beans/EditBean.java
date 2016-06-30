@@ -56,21 +56,14 @@ public class EditBean {
         this.forWord = this.natWord = this.transcr = "";
         Phrase phrase = new Phrase(forWord, natWord, transcr, label);
         myList.add(0, phrase);
-        new Thread(){
-            public void run(){
-
-                dao.insertPhrase(phrase);
-                /*myList.clear();
-                labelsList.clear();
-                if(dao!=null){
-                    myList = dao.returnPhrasesList();
-                    labelsList = dao.returnLabelsList();
-                }*/
-
-                /*myList = dao.returnPhrasesList();
-                labelsList = dao.returnLabelsList();*/
+        if(forWord!=null&&natWord!=null)
+            if(forWord.equalsIgnoreCase("")&&natWord.equalsIgnoreCase("")){
+                new Thread(){
+                    public void run(){
+                        dao.insertPhrase(phrase);
+                    }
+                }.start();
             }
-        }.start();
 
     }
 
