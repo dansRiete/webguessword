@@ -34,6 +34,8 @@ public class DAO {
     private static final String DB_USER = "";
     private static final String DB_PASSWORD = "";
     private Id[] idsArr;
+    private Id[] lastPhrasesStack;
+    private int stackNum;
 //    ComboPooledDataSource cpds1 = new ComboPooledDataSource();
     public Connection mainDbConn;
     public Connection inMemDbConn;
@@ -575,19 +577,56 @@ public class DAO {
         return indexes;
     }
 
+    /**
+     * Помещает данный в качестве параметра Id фразы в стек
+     * @param id добавляемая фраза
+     * @return true если фраза присутствует в стеке, false если отсутствует
+     */
+    private boolean pushIntoStack(Id id){
+        //Если массив не инстантиирован или количество фраз стало меньше чем размер массива-стека заново создаём его с
+        // нужным размером и обнуляем положение стека
+        boolean result = false;
+        if(lastPhrasesStack==null||lastPhrasesStack.length>totalWords){
+            if(totalWords>=7){
+                lastPhrasesStack = new Id[7];
+                stackNum = 0;
+            }else {
+                lastPhrasesStack = new Id[(int) totalWords];
+                stackNum = 0;
+            }
+        }
+        //Проверяем или стек не содержит айдишник данной в качестве параметра фразы
+        for(Id id1 : lastPhrasesStack){
+            if(id1 != null && id1.id == id.id){
+                result = true;
+                break;
+            }
+        }
+        if(!result){
+            lastPhrasesStack[stackNum>lastPhrasesStack.length-1?stackNum=0:stackNum] = id;
+            stackNum++;
+        }
+        return result;
+    }
+
     public Phrase createRandPhrase(){
         System.out.println("CALL: createRandPhrase() from DAO");
-        int index = random.nextInt(1000000000);
         Phrase phrase;
-//        String sql = "SELECT * FROM " + table + " WHERE index_start<=" + id + " AND index_end>=" + id;
-        Id currId = getIDByIndex(index);
+        Id currId = null;
+
+        //Новая фраза создаётся пока не подтвердится, что она отсутствует в стеке(последние 7 фраз)
+        do {
+            int index = random.nextInt(1000000000);
+            currId = getIDByIndex(index);
+        }while (pushIntoStack(currId));
+
         String sql = "SELECT * FROM " + table + " WHERE id=" + currId.id;
 
         try (Statement st = inMemDbConn.createStatement(); ResultSet rs = st.executeQuery(sql)){
             rs.next();
-            phrase = new Phrase(currId.id, rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"), new BigDecimal(rs.getDouble("prob_factor")),
-                    rs.getTimestamp("create_date"), rs.getString("label"), rs.getTimestamp("last_accs_date"),
-                    currId.index_start, currId.index_end, rs.getBoolean("exactmatch"), this);
+            phrase = new Phrase(currId.id, rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"),
+                    new BigDecimal(rs.getDouble("prob_factor")), rs.getTimestamp("create_date"), rs.getString("label"),
+                    rs.getTimestamp("last_accs_date"),  currId.index_start, currId.index_end, rs.getBoolean("exactmatch"), this);
         } catch (SQLException e) {
             System.out.println("EXCEPTION: in createRandPhrase() from DAO SQL was " + sql);
             e.printStackTrace();

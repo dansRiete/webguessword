@@ -42,6 +42,9 @@ public class Hints {
                 }else if(temp==','){
                     newHintAr[i]=',';
                     i++;
+                }else if(temp=='’'){
+                    newHintAr[i]='’';
+                    i++;
                 }else{
                     newHintAr[i]='*';
                     i++;
