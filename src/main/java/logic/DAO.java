@@ -36,10 +36,8 @@ public class DAO {
     private Id[] idsArr;
     private Id[] lastPhrasesStack;
     private int stackNum;
-//    ComboPooledDataSource cpds1 = new ComboPooledDataSource();
     public Connection mainDbConn;
     public Connection inMemDbConn;
-//    ComboPooledDataSource cpds2 = new ComboPooledDataSource();
 
     private String createTableSql() {
      return "CREATE TABLE " + user + "\n" +
@@ -119,6 +117,26 @@ public class DAO {
 
     }
 
+    public void copyIndicesToMainDb(){
+        System.out.println("CALL copyIndicesToMainDb() ");
+        int count = 0;
+        try(Statement st = inMemDbConn.createStatement(); PreparedStatement ps =
+                mainDbConn.prepareStatement("UPDATE " + user + " SET index_start=?,index_end=? where id=?")){
+            ResultSet rs = st.executeQuery("SELECT id, index_start, index_end FROM " + user);
+            while (rs.next()){
+                count++;
+                ps.setDouble(1, rs.getDouble("index_start"));
+                ps.setDouble(2, rs.getDouble("index_end"));
+                ps.setInt(3, rs.getInt("id"));
+                ps.execute();
+            }
+
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+        System.out.print("copied " + count + " records");
+    }
+
     public ArrayList<Phrase> returnPhrasesList(){
         System.out.println("CALL: returnPhrasesList() from DAO");
         ArrayList<Phrase> list = new ArrayList<>();
@@ -135,22 +153,25 @@ public class DAO {
         return list;
     }
 
-    public List<String> returnLabelsList(){
-        System.out.println("CALL: returnLabelsList() from DAO");
-        ArrayList<String> labelsList = new ArrayList<>();
-//        labelsList.add("");
-        try (Statement st = inMemDbConn.createStatement(); ResultSet rs = st.executeQuery("SELECT DISTINCT label FROM " + user)){
+    public List<String> reloadLabelsList(){
+        System.out.println("CALL: reloadLabelsList() from DAO");
+        labels.clear();
+        labels.add("All");
+        String temp = null;
+        try (Statement st = inMemDbConn.createStatement();
+             ResultSet rs = st.executeQuery("SELECT DISTINCT (LABEL) FROM " + user + " ORDER BY LABEL")){
 
             while (rs.next()){
-                if(rs.getString(1)!=null&&!rs.getString(1).equals(""))
-                    labelsList.add(rs.getString(1));
+                temp = rs.getString("LABEL");
+                labels.add(temp== null ? "null":temp);
             }
+
         } catch (SQLException e) {
-            System.out.println("EXCEPTION: in returnLabelsList() in DAO");
+            System.out.println("EXCEPTION: in reloadLabelsList() from DAO");
             e.printStackTrace();
             throw new RuntimeException();
         }
-        return labelsList;
+        return labels;
 
     }
 
@@ -160,12 +181,12 @@ public class DAO {
             while (rs.next()){
                 int id = rs.getInt("id");
                 System.out.println("Id is" + id);
-                Id currID = getIDById(id);
-                System.out.println("currID.index_start" + currID.index_start);
+                Id currID = getIdById(id);
+//                System.out.println("currID.index_start" + currID.index_start);
                 Phrase phrase = new Phrase(id, rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"), new BigDecimal(rs.getDouble("prob_factor")),
                         rs.getTimestamp("create_date"), rs.getString("label"), rs.getTimestamp("last_accs_date"),
                         currID.index_start, currID.index_end, rs.getBoolean("exactmatch"), this);
-                System.out.println("phrase.indexStart="+phrase.indexStart);
+//                System.out.println("phrase.indexStart="+phrase.indexStart);
                 phrases.add(phrase);
             }
 
@@ -176,9 +197,9 @@ public class DAO {
         return phrases;
     }
 
-    private void copyDb(){
+    private void reloadInMemoryDb(){
 
-        System.out.println("CALL: copyDb() from DAO");
+        System.out.println("CALL: reloadInMemoryDb() from DAO");
 
         //If in-memory db is not empty, then to empty it.
         try (Statement inMemSt = inMemDbConn.createStatement()){
@@ -206,7 +227,7 @@ public class DAO {
             rs2.next();
             counter = rs2.getInt(1);
         }catch (SQLException e) {
-            System.out.println("EXCEPTION#1: in copyDb() from DAO");
+            System.out.println("EXCEPTION#1: in reloadInMemoryDb() from DAO");
             e.printStackTrace();
             throw new RuntimeException();
         }
@@ -221,6 +242,8 @@ public class DAO {
             while (rs1.next()) {
                 int id;
                 double prob;
+                double index_start;
+                double index_end;
                 id = rs1.getInt("id");
                 ps.setInt(1, id);
                 ps.setString(2, rs1.getString("for_word"));
@@ -231,10 +254,12 @@ public class DAO {
                 ps.setTimestamp(6, rs1.getTimestamp("create_date"));
                 ps.setString(7, (rs1.getString("label") == null ? null : rs1.getString("label")));
                 ps.setTimestamp(8, (rs1.getTimestamp("last_accs_date") == null ? null : rs1.getTimestamp("last_accs_date")));
-                ps.setDouble(9, rs1.getDouble("index_start"));
-                ps.setDouble(10, rs1.getDouble("index_end"));
+                index_start = rs1.getDouble("index_start");
+                index_end = rs1.getDouble("index_end");
+                ps.setDouble(9, index_start);
+                ps.setDouble(10, index_end);
                 ps.setBoolean(11, rs1.getBoolean("exactmatch"));
-                idsArr[counter++] = new Id(id, prob, 0, 0);
+                idsArr[counter++] = new Id(id, prob, index_start, index_end);
                 ps.execute();
             }
 
@@ -242,7 +267,7 @@ public class DAO {
 
 
         } catch (SQLException e) {
-            System.out.println("EXCEPTION#1: in copyDb() from DAO");
+            System.out.println("EXCEPTION#1: in reloadInMemoryDb() from DAO");
             e.printStackTrace();
             throw new RuntimeException();
         }
@@ -267,16 +292,16 @@ public class DAO {
 
     public long[] updateProb(Phrase phrase){
         System.out.println("CALL: updateProb(Phrase phrase) with id=" + phrase.id +" from DAO");
-//        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         String dateTime = ZonedDateTime.now(ZoneId.of("Europe/Kiev")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+
         try (Statement inMemDbPrepStat = inMemDbConn.createStatement()){
-//            System.out.println("--- updateProb() SQL UPDATE " + user + " SET prob_factor=" + phrase.prob + ", last_accs_date='"+timestamp+"' WHERE id="+phrase.id);
             inMemDbPrepStat.executeUpdate("UPDATE " + user + " SET prob_factor=" + phrase.prob + ", last_accs_date='" + dateTime + "' WHERE id=" + phrase.id);
         } catch (SQLException e) {
             System.out.println("EXCEPTION#1: in updateProb(Phrase phrase) from DAO");
             e.printStackTrace();
             throw new RuntimeException();
         }
+
         new Thread(){
             public void run(){
                 try (Statement st = mainDbConn.createStatement()){
@@ -381,7 +406,7 @@ public class DAO {
         table = user;
         System.out.println("setLoginBean() in DAO user is " + user);
         if(!isCopyDbExecuted){
-            copyDb();
+            reloadInMemoryDb();
             isCopyDbExecuted = true;
         }
         reloadLabelsList();
@@ -392,27 +417,7 @@ public class DAO {
         return mainDbConn;
     }
 
-    public void reloadLabelsList(){
-        System.out.println("CALL: reloadLabelsList() from DAO");
-        labels.clear();
-        labels.add("All");
-        String temp = null;
-        try (Statement st = inMemDbConn.createStatement();
-             ResultSet rs = st.executeQuery("SELECT DISTINCT (LABEL) FROM " + user + " ORDER BY LABEL")){
-
-            while (rs.next()){
-                temp = rs.getString("LABEL");
-                labels.add(temp== null ? "null":temp);
-            }
-
-        } catch (SQLException e) {
-            System.out.println("EXCEPTION: in reloadLabelsList() from DAO");
-            e.printStackTrace();
-            throw new RuntimeException();
-        }
-    }
-
-    private Id getIDById(int id){
+    private Id getIdById(int id){
         for(Id id1 : idsArr){
             if(id1.id==id){
                 return id1;
@@ -421,7 +426,7 @@ public class DAO {
         return null;
     }
 
-    private Id getIDByIndex(long randIndex){
+    private Id getIdByIndex(long randIndex){
         for(Id id : idsArr){
             if(randIndex>=id.index_start&&randIndex<=id.index_end){
                 return id;
@@ -431,13 +436,13 @@ public class DAO {
     }
 
     public void setProbById(int id, double prob){
-        getIDById(id).prob = prob;
+        getIdById(id).prob = prob;
     }
 
     public long[] reloadIndices(int id){
+
         long start = System.currentTimeMillis();
         double temp = 0;
-
         double indOfLW;     //Индекс выпадения изученных
         double rangeOfNLW;  //Диапазон индексов неизученных слов
         double scaleOf1prob;    //rangeOfNLW/summProbOfNLW  цена одного prob
@@ -456,7 +461,6 @@ public class DAO {
             rs = statement.executeQuery("SELECT COUNT(prob_factor) FROM " + table + " WHERE prob_factor>3");
             rs.next();
             nonLearnedWords = rs.getInt(1);
-//            System.out.println("nonLearnedWords: " + nonLearnedWords);
 
             rs = statement.executeQuery("SELECT COUNT(*) FROM " + user);
             rs.next();
@@ -465,14 +469,11 @@ public class DAO {
             rs = statement.executeQuery("SELECT SUM(prob_factor) FROM " + table + " WHERE prob_factor>3");
             rs.next();
             summProbOfNLW = rs.getInt(1);
-//            System.out.println("summProbOfNLW: " + summProbOfNLW);
 
             rs = statement.executeQuery("SELECT COUNT(prob_factor) FROM " + table + " WHERE prob_factor<=3");
             rs.next();
             learnedWords = rs.getInt(1);
 
-//            statement.execute("UPDATE " + user + " SET index_start = NULL ");
-//            statement.execute("UPDATE " + user + " SET index_end = NULL ");
         } catch (SQLException e) {
             System.out.println("EXCEPTION#1: in reloadIndices() from DAO");
             e.printStackTrace();
@@ -486,85 +487,64 @@ public class DAO {
             }
         }
 
-
         indOfLW = chanceOfLearnedWords/learnedWords;
         rangeOfNLW = learnedWords>0?1-chanceOfLearnedWords:1;
-//        System.out.println("rangeOfNLW " + rangeOfNLW);
         scaleOf1prob = rangeOfNLW/summProbOfNLW;
         if(nonLearnedWords==0){
             System.out.println("Все слова выучены!");
         }
-        int countOfModIndices=0;
-        int test = 0;
+        int countOfModIndices = 0;
 
         //Clears indexes before reloading
         for(Id id2 : idsArr)
             id2.index_start = id2.index_end = 0;
 
-        try (Statement statement = inMemDbConn.createStatement()){
-            for (int i : idArr) { //Устанавилвает индексы для неизученных слов
+        try {
+                for (int i : idArr) { //Устанавилвает индексы длянеизученных слов
 
-                long indexStart;
-                long indexEnd;
-//                System.out.println("--- for(" + i + ": idArr)");
+                    long indexStart;
+                    long indexEnd;
 
-                //Переменной prob присваивается prob фразы с currentPhraseId = i;
-//                rs = statement.executeQuery("SELECT prob_factor FROM " + user + " WHERE id=" + i);
-                double prob;
-//                rs.next();
-//                prob = rs.getFloat(1);
-                prob = getIDById(i).prob;
-                //            System.out.println("prob=" + prob);
+                    //Переменной prob присваивается prob фразы с currentPhraseId = i;
+                    double prob;
+                    prob = getIdById(i).prob;
 
+                    //Если nonLearnedWords == 0, то есть, все слова выучены устанавливаются равные для всех индексы
+                    if (nonLearnedWords == 0) {
 
-                //Если nonLearnedWords == 0, то есть, все слова выучены устанавливаются равные для всех индексы
-                if (nonLearnedWords == 0) {
-                    indexStart = Math.round(temp * 1000000000);
-//                    statement.execute("UPDATE " + user + " SET index_start=" + indexStart + " WHERE id=" + i);
-                    getIDById(i).index_start = indexStart;
-                    temp += chanceOfLearnedWords / learnedWords;
-                    indexEnd = Math.round((temp * 1000000000) - 1);
-//                    statement.execute("UPDATE " + user + " SET index_end=" + indexEnd + " WHERE id=" + i);
-                    getIDById(i).index_end = indexEnd;
-//                    System.out.println("index_start="+indexStart + " index_end="+indexEnd);
-                } else { //Если нет, то индексы ставяться по алгоритму
-                    if (prob > 3) {
-                        //                    System.out.println("UPDATE ALEKS SET INDEX1=" + Math.round(temp*1000000000) + " WHERE ID=" + i);
                         indexStart = Math.round(temp * 1000000000);
-//                        statement.execute("UPDATE " + user + " SET index_start=" + indexStart + " WHERE id=" + i);
-                        getIDById(i).index_start = indexStart;
-//                        double i1 = temp;
-                        temp += scaleOf1prob * prob;
-                        //                    System.out.println("UPDATE ALEKS SET INDEX2=" + Math.round((temp *1000000000)-1) + " WHERE ID=" + i);
-                        //                    System.out.println("%=" + (temp - MINFLOAT-i1));
+                        getIdById(i).index_start = indexStart;
+                        temp += chanceOfLearnedWords / learnedWords;
                         indexEnd = Math.round((temp * 1000000000) - 1);
-//                        statement.execute("UPDATE " + user + " SET index_end=" + indexEnd + " WHERE id=" + i);
-                        getIDById(i).index_end = indexEnd;
-//                        System.out.println("index_start="+indexStart + " index_end="+indexEnd);
-                    } else {
-                        //                    System.out.println("Index1LW для ID=" + i + "=" + temp);
-                        indexStart = Math.round(temp * 1000000000);
-//                        statement.execute("UPDATE " + user + " SET index_start=" + indexStart + " WHERE id=" + i);
-                        getIDById(i).index_start = indexStart;
-                        temp += indOfLW;
-                        //                    System.out.println("temp "+temp + "= temp "+temp+"+indOfLW "+indOfLW);
-                        //                    System.out.println("Index2LW для ID=" + i + "=" + (temp - 1));
-                        indexEnd = Math.round((temp * 1000000000) - 1);
-//                        statement.execute("UPDATE " + user + " SET index_end=" + indexEnd + " WHERE id=" + i);
-                        getIDById(i).index_end = indexEnd;
-//                        System.out.println("index_start="+indexStart + " index_end="+indexEnd);
+                        getIdById(i).index_end = indexEnd;
+
+                    } else { //Если нет, то индексы ставяться по алгоритму
+
+                        if (prob > 3) {
+
+                            indexStart = Math.round(temp * 1000000000);
+                            getIdById(i).index_start = indexStart;
+                            temp += scaleOf1prob * prob;
+                            indexEnd = Math.round((temp * 1000000000) - 1);
+                            getIdById(i).index_end = indexEnd;
+
+                        } else {
+
+                            indexStart = Math.round(temp * 1000000000);
+                            getIdById(i).index_start = indexStart;
+                            temp += indOfLW;
+                            indexEnd = Math.round((temp * 1000000000) - 1);
+                            getIdById(i).index_end = indexEnd;
+
+                        }
                     }
-                }
-                countOfModIndices++;
-                if(i==id){
-                    indexes[0]=indexStart;
-                    indexes[1]=indexEnd;
-                }
+
+                    countOfModIndices++;
+                    if(i==id){
+                        indexes[0]=indexStart;
+                        indexes[1]=indexEnd;
+                    }
             }
-        }catch (SQLException e){
-            System.out.println("EXCEPTION#2: in reloadIndices() from DAO");
-            e.printStackTrace();
-            throw new RuntimeException();
         }finally {
             try {
                 if(rs!=null)
@@ -617,7 +597,7 @@ public class DAO {
         //Новая фраза создаётся пока не подтвердится, что она отсутствует в стеке(последние 7 фраз)
         do {
             int index = random.nextInt(1000000000);
-            currId = getIDByIndex(index);
+            currId = getIdByIndex(index);
         }while (pushIntoStack(currId));
 
         String sql = "SELECT * FROM " + table + " WHERE id=" + currId.id;
@@ -650,6 +630,7 @@ public class DAO {
             ps.setTimestamp(7, phrase.lastAccs);
             ps.setBoolean(8, phrase.exactMatch);
             ps.execute();
+
         } catch (SQLException e) {
             System.out.println("EXCEPTION: in insertPhrase(Phrase phrase) from DAO");
             e.printStackTrace();

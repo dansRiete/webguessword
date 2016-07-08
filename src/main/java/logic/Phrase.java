@@ -4,6 +4,7 @@ import javax.enterprise.context.Dependent;
 import javax.faces.bean.ManagedBean;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Timestamp;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -24,8 +25,8 @@ public class Phrase implements Serializable{
     public Timestamp createDate;
     public Timestamp lastAccs;
     public boolean exactMatch;
-    private long index_start;
-    private long index_end;
+    private double index_start;
+    private double index_end;
 
 
 
@@ -52,7 +53,7 @@ public class Phrase implements Serializable{
         this.forWord = forWord;
         this.natWord = natWord;
         this.transcr = transcr;
-        this.prob = prob;
+        this.prob = prob.setScale(1, RoundingMode.HALF_UP);
         this.createDate = createDate;
         this.label = label;
         this.lastAccs = lastAccs;

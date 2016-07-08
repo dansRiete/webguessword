@@ -2,7 +2,9 @@ package logic;
 
 /**
  * Created by Aleks on 21.05.2016.
+ * Класс содержит один метод retDiffInTime(long l) который возвращает относительную разницу даты
  */
+
 public class RetDiff {
     private static final long oneMinute = 1000 * 60;
     private static final long oneHour = oneMinute * 60;

@@ -65,95 +65,96 @@
     <div>
 
         <h:panelGroup>
-        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="previous" value="Previous"
-                         action="#{interfaceBean.previousQuestion()}">
-            <f:ajax render="@all"> </f:ajax>
-        </h:commandButton>
+            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="previous" value="Previous"
+                             action="#{interfaceBean.previousQuestion()}">
+                <f:ajax render="@all"> </f:ajax>
+            </h:commandButton>
 
-        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="next" value="Next"
-                         action="#{interfaceBean.nextQuestion()}">
+            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="next" value="Next"
+                             action="#{interfaceBean.nextQuestion()}">
 
-            <f:ajax render="@all"> </f:ajax>
-        </h:commandButton>
+                <f:ajax render="@all"> </f:ajax>
+            </h:commandButton>
 
-        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="know" value="I know it"
-                         action="#{interfaceBean.rightAnswer(null)}">
-            <f:ajax render="@all"> </f:ajax>
-        </h:commandButton>
+            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="know" value="I know it"
+                             action="#{interfaceBean.rightAnswer(null)}">
+                <f:ajax render="@all"> </f:ajax>
+            </h:commandButton>
 
-        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="donotknow" value="I don't know it"
-                         action="#{interfaceBean.wrongAnswer(null)}">
-            <f:ajax render="@all"> </f:ajax>
-        </h:commandButton>
+            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="donotknow" value="I don't know it"
+                             action="#{interfaceBean.wrongAnswer(null)}">
+                <f:ajax render="@all"> </f:ajax>
+            </h:commandButton>
 
-        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevWrong" value="Prev.Wrong"
-                         action="#{interfaceBean.previousWrong()}">
-            <f:ajax render="@all"> </f:ajax>
-        </h:commandButton>
-        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevRight" value="Prev.Right"
-                         action="#{interfaceBean.previousRight()}">
-            <f:ajax render="@all"> </f:ajax>
-        </h:commandButton>
+            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevWrong" value="Prev.Wrong"
+                             action="#{interfaceBean.previousWrong()}">
+                <f:ajax render="@all"> </f:ajax>
+            </h:commandButton>
+            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevRight" value="Prev.Right"
+                             action="#{interfaceBean.previousRight()}">
+                <f:ajax render="@all"> </f:ajax>
+            </h:commandButton>
 
-        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="dialogButton" value="Modificate"
-                         onclick="PF('wdialog').show();">
-        </h:commandButton>
+            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="dialogButton" value="Modificate"
+                             onclick="PF('wdialog').show();">
+            </h:commandButton>
 
-        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="deleteButton" value="Delete"
-                         onclick="PF('deleteDialog').show();">
-        </h:commandButton>
-
-        <h:form style="display: inline-block">
-        <h:commandButton style="margin-right: 3px; margin-top: 3px" type="submit" id="content" value="Show All"
-                         action="content">
-        </h:commandButton>
-        </h:form>
+            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="deleteButton" value="Delete"
+                             onclick="PF('deleteDialog').show();">
+            </h:commandButton>
 
             <h:form style="display: inline-block">
-                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="submit" id="currcontent" value="Show All"
+                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="submit" id="content" value="Show All"
+                                 action="content">
+                </h:commandButton>
+            </h:form>
+
+            <h:form style="display: inline-block">
+                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="submit" id="currcontent" value="Show All with indices"
                                  action="currcontent">
                 </h:commandButton>
             </h:form>
 
-        <h:form style="display: inline-block">
-        <h:commandButton id="exit" type="submit" value="Exit" action="#{interfaceBean.exit()}"> </h:commandButton>
-        </h:form>
 
-        <p:dialog id="dialog" widgetVar="wdialog" modal="true" resizable="false" header="Edit the current phrase">
-            <h:form id="red">
-                <h:panelGrid columns="2" layout="grid">
-                    <p:outputLabel value="Native word"/>
-                    <p:inputText size="40" value="#{interfaceBean.currPhrNatWord}" title="Native word"
-                                 label="Native word"> </p:inputText>
-
-                    <p:outputLabel value="Foreign word"/>
-                    <p:inputText size="40" value="#{interfaceBean.currPhrForWord}" title="Foreign word"
-                                 label="Foreign word"> </p:inputText>
-
-                    <p:outputLabel value="Transcription"/>
-                    <p:inputText size="40" value="#{interfaceBean.currPhrTransc}" title="Transcription"
-                                 label="Transcription"> </p:inputText>
-
-                    <p:outputLabel value="Label"/>
-                    <p:inputText size="40" value="#{interfaceBean.currPhrLabel}" title="Label"
-                                 label="Label"> </p:inputText>
-                </h:panelGrid>
-                <p:commandButton type="submit" value="Submit" action="#{interfaceBean.resultProcessing()}"
-                                 actionListener="#{messagesView.info}">
-                </p:commandButton>
-                <p:messages id="messages" showDetail="true" autoUpdate="true" closable="true"/>
+            <h:form style="display: inline-block">
+            <h:commandButton id="exit" type="submit" value="Exit" action="#{interfaceBean.exit()}"> </h:commandButton>
             </h:form>
-        </p:dialog>
 
-        <p:dialog id="deleteDialog" widgetVar="deleteDialog" hideEffect="highlight" modal="true" resizable="false" header="Delete the current phrase">
-            <p:commandButton type="submit" value="Yes" action="#{interfaceBean.delete()}" oncomplete="PF('deleteDialog').hide();">
+            <p:dialog id="dialog" widgetVar="wdialog" modal="true" resizable="false" header="Edit the current phrase">
+                <h:form id="red">
+                    <h:panelGrid columns="2" layout="grid">
+                        <p:outputLabel value="Native word"/>
+                        <p:inputText size="40" value="#{interfaceBean.currPhrNatWord}" title="Native word"
+                                     label="Native word"> </p:inputText>
 
-            </p:commandButton>
-            <p:commandButton type="button" value="No" onclick="PF('deleteDialog').hide();">
+                        <p:outputLabel value="Foreign word"/>
+                        <p:inputText size="40" value="#{interfaceBean.currPhrForWord}" title="Foreign word"
+                                     label="Foreign word"> </p:inputText>
 
-            </p:commandButton>
+                        <p:outputLabel value="Transcription"/>
+                        <p:inputText size="40" value="#{interfaceBean.currPhrTransc}" title="Transcription"
+                                     label="Transcription"> </p:inputText>
 
-        </p:dialog>
+                        <p:outputLabel value="Label"/>
+                        <p:inputText size="40" value="#{interfaceBean.currPhrLabel}" title="Label"
+                                     label="Label"> </p:inputText>
+                    </h:panelGrid>
+                    <p:commandButton type="submit" value="Submit" action="#{interfaceBean.resultProcessing()}"
+                                     actionListener="#{messagesView.info}">
+                    </p:commandButton>
+                    <p:messages id="messages" showDetail="true" autoUpdate="true" closable="true"/>
+                </h:form>
+            </p:dialog>
+
+            <p:dialog id="deleteDialog" widgetVar="deleteDialog" hideEffect="highlight" modal="true" resizable="false" header="Delete the current phrase">
+                <p:commandButton type="submit" value="Yes" action="#{interfaceBean.delete()}" oncomplete="PF('deleteDialog').hide();">
+
+                </p:commandButton>
+                <p:commandButton type="button" value="No" onclick="PF('deleteDialog').hide();">
+
+                </p:commandButton>
+
+            </p:dialog>
         </h:panelGroup>
 
     </div>
@@ -178,34 +179,34 @@
             </tr>
             </thead>
             <tbody>
-            <tr>
-                <td>Number of answers</td>
-                <td>#{interfaceBean.numOfAnswForSession}</td>
-            </tr>
-            <tr>
-                <td>Percent of right answers</td>
-                <td>#{interfaceBean.percentOfRightAnswers}</td>
-            </tr>
-            <tr>
-                <td>Words've been learnt</td>
-                <td>#{interfaceBean.numberOfLearnedPhrasePerSession}</td>
-            </tr>
-            <tr>
-                <td>Number of learned phrases</td>
-                <td>#{interfaceBean.learnedWords}</td>
-            </tr>
-            <tr>
-                <td>Number of unlearned phrases</td>
-                <td>#{interfaceBean.nonLearnedWords}</td>
-            </tr>
-            <tr>
-                <td>Total number of phrases</td>
-                <td>#{interfaceBean.totalNumberOfPhrases}</td>
-            </tr>
-            <tr>
-                <td>Time to access to the DB</td>
-                <td>#{interfaceBean.avgTimeOfAccsToDb}ms.</td>
-            </tr>
+                <tr>
+                    <td>Number of answers</td>
+                    <td>#{interfaceBean.numOfAnswForSession}</td>
+                </tr>
+                <tr>
+                    <td>Percent of right answers</td>
+                    <td>#{interfaceBean.percentOfRightAnswers}</td>
+                </tr>
+                <tr>
+                    <td>Words've been learnt</td>
+                    <td>#{interfaceBean.numberOfLearnedPhrasePerSession}</td>
+                </tr>
+                <tr>
+                    <td>Number of learned phrases</td>
+                    <td>#{interfaceBean.learnedWords}</td>
+                </tr>
+                <tr>
+                    <td>Number of unlearned phrases</td>
+                    <td>#{interfaceBean.nonLearnedWords}</td>
+                </tr>
+                <tr>
+                    <td>Total number of phrases</td>
+                    <td>#{interfaceBean.totalNumberOfPhrases}</td>
+                </tr>
+                <tr>
+                    <td>Time to access to the DB</td>
+                    <td>#{interfaceBean.avgTimeOfAccsToDb}ms.</td>
+                </tr>
             </tbody>
             <thead>
             <tr>
@@ -216,27 +217,27 @@
             <tbody>
             <tr>
                 <td>Chance of occurrence (points)</td>
-                <td>#{interfaceBean.pDprob}</td>
+                <td>#{interfaceBean.currPhrProb}</td>
             </tr>
             <tr>
                 <td>Chance of occurrence (percents)</td>
-                <td>#{interfaceBean.pDpercentOfAppearance}</td>
+                <td>#{interfaceBean.currPhrPercentOfAppearance}</td>
             </tr>
             <tr>
-                <td>ID of current phrase</td>
+                <td>Id of current phrase</td>
                 <td>#{interfaceBean.id}</td>
             </tr>
             <tr>
                 <td>Last access date</td>
-                <td>#{interfaceBean.pdLastAccs}<br></br>~#{interfaceBean.strLastAccs}</td>
+                <td>#{interfaceBean.currPhrAbsLastAccsDate}<br/>~#{interfaceBean.currPhrRelLastAccsDate}</td>
             </tr>
             <tr>
                 <td>Create date</td>
-                <td>#{interfaceBean.pdCreateDate}<br></br>~#{interfaceBean.strCreateDate}</td>
+                <td>#{interfaceBean.currPhrAbsCreateDate}<br/>~#{interfaceBean.currPhrRelCreateDate}</td>
             </tr>
             <tr>
                 <td>Label</td>
-                <td>#{interfaceBean.label}</td>
+                <td>#{interfaceBean.currPhrLabel}</td>
             </tr>
             <tr>
                 <td>Choosed phrase
