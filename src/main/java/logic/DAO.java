@@ -318,6 +318,7 @@ public class DAO {
             e.printStackTrace();
             throw new RuntimeException();
         }
+        copyDb();
         new Thread(){
             public void run(){
                 try (PreparedStatement mainDbPrepStat = mainDbConn.prepareStatement(updateSql)){
@@ -352,13 +353,13 @@ public class DAO {
         System.out.println("CALL: deletePhrase(int id) from DAO");
         String deleteSql = "DELETE FROM " + user + " WHERE ID=" + phr.id;
         try (Statement st = inMemDbConn.createStatement()){
-
             st.execute(deleteSql);
         } catch (SQLException e) {
             System.out.println("EXCEPTION#1: in deletePhrase(int id) from DAO");
             e.printStackTrace();
             throw new RuntimeException();
         }
+        copyDb();
         new Thread(){
             public void run(){
                 try (Statement st = mainDbConn.createStatement()) {
