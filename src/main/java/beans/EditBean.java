@@ -6,9 +6,7 @@ import logic.Phrase;
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.SessionScoped;
 import javax.faces.bean.ViewScoped;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,7 +42,7 @@ public class EditBean {
         if(dao!=null){
             currList = dao.getCurrList();
             myList = dao.returnPhrasesList();
-            labelsList = dao.returnLabelsList();
+            labelsList = dao.reloadLabelsList();
         }
     }
 
@@ -71,7 +69,7 @@ public class EditBean {
     public void deleteById(Phrase phr){
         dao.deletePhrase(phr);
         myList = dao.returnPhrasesList();
-        labelsList = dao.returnLabelsList();
+        labelsList = dao.reloadLabelsList();
     }
 
     public int rowNumbers(){

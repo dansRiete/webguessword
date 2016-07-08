@@ -59,14 +59,13 @@ public class InterfaceBean implements Serializable{
     private String currPhrForWord;
     private String currPhrTransc;
     private String currPhrLabel;
-    private String pDpercentOfAppearance;
-    private String pDprob;
-    private String pdLastAccs;
-    private String pdCreateDate;
-    private String label;
-    private String strLastAccs;
-    private String strCreateDate;
-    private int id;
+    private String currPhrPercentOfAppearance;
+    private String currPhrProb;
+    private String currPhrAbsLastAccsDate;
+    private String currPhrAbsCreateDate;
+    private String currPhrRelLastAccsDate;
+    private String currPhrRelCreateDate;
+    private int currPhrId;
     //<<
 
     private RetDiff retDiff = new RetDiff();
@@ -141,23 +140,67 @@ public class InterfaceBean implements Serializable{
             }
             previousResultChoosedLabel = resultChoosedLabel;
             dao.reloadIndices(1);
-            calculateSessionStatistics();
-            reloadPhraseData();
+//            calculateSessionStatistics();
+            reloadStatTableData();
         }
     }
 
-    private void calculateSessionStatistics(){
+    /*private void calculateSessionStatistics(){
         System.out.println("CALL: calculateSessionStatistics() from InterfaceBean");
+
+    }*/
+
+    private void reloadStatTableData(){
+        System.out.println("CALL: reloadStatTableData() from InterfaceBean");
+
+        //After the answer creates String like this - "40.2 ➩ 37.3"
+        if(currPhrase.howWasAnswered == null)
+
+            currPhrProb = currPhrase.prob.setScale(1, RoundingMode.HALF_UP).toString();
+        else
+
+            currPhrProb = currPhrase.returnUnmodified().prob.setScale(1, RoundingMode.HALF_UP) + "➩"
+                    + currPhrase.prob.setScale(1, RoundingMode.HALF_UP);
+
+        //After the answer creates String like this - "0.06116% ➩ 0.07294%"
+        if(currPhrase.howWasAnswered == null)
+
+            currPhrPercentOfAppearance = new BigDecimal(currPhrase.indexEnd-currPhrase.indexStart).divide(new BigDecimal(1.0e+7))
+                    .setScale(5, RoundingMode.HALF_UP) + "%";
+        else {
+
+            BigDecimal percentOfAppear = new BigDecimal(currPhrase.indexEnd-currPhrase.indexStart).divide(new BigDecimal(1.0e+7))
+                    .setScale(5, RoundingMode.HALF_UP);
+
+            BigDecimal previousPercentOfAppear = new BigDecimal(currPhrase.returnUnmodified().indexEnd-currPhrase.returnUnmodified().indexStart)
+                    .divide(new BigDecimal(1.0e+7)).setScale(5, RoundingMode.HALF_UP);
+
+            currPhrPercentOfAppearance = previousPercentOfAppear + "% ➩ " + percentOfAppear + "%";
+        }
+
+        if(currPhrase.lastAccs!=null){
+
+            currPhrAbsLastAccsDate = LocalDateTime.ofInstant(currPhrase.lastAccs.toInstant(),
+                    ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
+
+            currPhrRelLastAccsDate = retDiff.retDiffInTime(System.currentTimeMillis() - currPhrase.lastAccs.getTime());
+        }
+
+        if(currPhrase.createDate!=null){
+
+            currPhrAbsCreateDate = LocalDateTime.ofInstant(currPhrase.createDate.toInstant(),
+                    ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
+
+            currPhrRelCreateDate = retDiff.retDiffInTime(System.currentTimeMillis() - currPhrase.createDate.getTime());
+        }
+
+        currPhrLabel = currPhrase.label;
+
+        //>>Calculate seesion statistic
         int numOfNonAnswForSession = 0;
         int numOfRightAnswForSession = 0;
-        id = currPhrase.id;
-        if(currPhrase.howWasAnswered == null)
-            pDpercentOfAppearance = new BigDecimal(currPhrase.indexEnd-currPhrase.indexStart).divide(new BigDecimal(1.0e+7)).setScale(5, RoundingMode.HALF_UP) + "%";
-        else {
-            BigDecimal percentOfAppear = new BigDecimal(currPhrase.indexEnd-currPhrase.indexStart).divide(new BigDecimal(1.0e+7)).setScale(5, RoundingMode.HALF_UP);
-            BigDecimal residual = percentOfAppear.subtract(new BigDecimal(currPhrase.returnUnmodified().indexEnd - currPhrase.returnUnmodified().indexStart).divide(new BigDecimal(1.0e+7)).setScale(5, RoundingMode.HALF_UP));
-            pDpercentOfAppearance = percentOfAppear.toString() + "% (" + (residual.doubleValue()>0?"+":"") + residual + "%)";
-        }
+        currPhrId = currPhrase.id;
+
         numOfPhrForSession = listOfPhrases.size();
         for(Phrase phrs : listOfPhrases){
             if(phrs.howWasAnswered ==null)
@@ -171,35 +214,17 @@ public class InterfaceBean implements Serializable{
         learnedWords = (int) dao.learnedWords;
         nonLearnedWords = (int) dao.nonLearnedWords;
         totalNumberOfPhrases = learnedWords+nonLearnedWords;
-    }
-
-    private void reloadPhraseData(){
-        System.out.println("CALL: reloadPhraseData() from InterfaceBean");
-        if(currPhrase.howWasAnswered == null)
-            pDprob = currPhrase.prob.setScale(1, RoundingMode.HALF_UP).toString();
-        else
-            pDprob = currPhrase.returnUnmodified().prob.setScale(1, RoundingMode.HALF_UP) + "➩"
-                    + currPhrase.prob.setScale(1, RoundingMode.HALF_UP);
-        if(currPhrase.lastAccs!=null){
-            pdLastAccs = LocalDateTime.ofInstant(currPhrase.lastAccs.toInstant(),
-                    ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
-            strLastAccs = retDiff.retDiffInTime(System.currentTimeMillis() - currPhrase.lastAccs.getTime());
-        }
-        if(currPhrase.createDate!=null){
-            pdCreateDate = LocalDateTime.ofInstant(currPhrase.createDate.toInstant(),
-                    ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
-            strCreateDate = retDiff.retDiffInTime(System.currentTimeMillis() - currPhrase.createDate.getTime());
-        }
-        label = listOfPhrases.get(index).label;
-//        System.out.println("--- Curr. phrase is " + currPhrase);
-
+        //<<
 
     }
 
     public void resultProcessing(){
         System.out.println("CALL: resultProcessing() from InterfaceBean");
-        calculateSessionStatistics();
-        reloadPhraseData();
+
+//        calculateSessionStatistics();
+
+        reloadStatTableData();
+
         StringBuilder str = new StringBuilder();
         int countOfLearnedPhrases = 0;
         for(int i = listOfPhrases.size()-1; i>=0; i--){
@@ -329,6 +354,10 @@ public class InterfaceBean implements Serializable{
         }
     }
 
+    public void copyIndicesToMainDb(){
+        dao.copyIndicesToMainDb();
+    }
+
     public void nextQuestion(){
         System.out.println("CALL: nextQuestion() from InterfaceBean");
         if(shift==0) {
@@ -439,40 +468,44 @@ public class InterfaceBean implements Serializable{
         this.numOfAnswForSession = numOfAnswForSession;
     }
 
-    public String getpDpercentOfAppearance() {
-        return pDpercentOfAppearance;
+    public String getCurrPhrPercentOfAppearance() {
+        return currPhrPercentOfAppearance;
     }
-    public void setpDpercentOfAppearance(String pDpercentOfAppearance) {
-        this.pDpercentOfAppearance = pDpercentOfAppearance;
-    }
-
-    public String getpDprob() {
-        return pDprob;
-    }
-    public void setpDprob(String pDprob) {
-        this.pDprob = pDprob;
+    public void setCurrPhrPercentOfAppearance(String pDpercentOfAppearance) {
+        this.currPhrPercentOfAppearance = pDpercentOfAppearance;
     }
 
-    public String getPdLastAccs() {
-        return pdLastAccs;
+    public String getCurrPhrProb() {
+        return currPhrProb;
     }
-    public void setPdLastAccs(String pdLastAccs) {
-        this.pdLastAccs = pdLastAccs;
+    public void setCurrPhrProb(String pDprob) {
+        this.currPhrProb = pDprob;
+    }
+
+    public String getCurrPhrAbsLastAccsDate() {
+        return currPhrAbsLastAccsDate;
+    }
+    public void setCurrPhrAbsLastAccsDate(String pdLastAccs) {
+        this.currPhrAbsLastAccsDate = pdLastAccs;
+    }
+
+    public DAO getDao(){
+        return dao;
     }
 
     public String getPdCreateDate() {
-        return pdCreateDate;
+        return currPhrAbsCreateDate;
     }
     public void setPdCreateDate(String pdCreateDate) {
-        this.pdCreateDate = pdCreateDate;
+        this.currPhrAbsCreateDate = pdCreateDate;
     }
 
-    public String getLabel() {
+    /*public String getLabel() {
         return label;
     }
     public void setLabel(String label) {
         this.label = label;
-    }
+    }*/
 
     public BigDecimal getAvgTimeOfAccsToDb() {
         return avgTimeOfAccsToDb;
@@ -481,18 +514,18 @@ public class InterfaceBean implements Serializable{
         this.avgTimeOfAccsToDb = avgTimeOfAccsToDb;
     }
 
-    public String getStrLastAccs() {
+    /*public String getStrLastAccs() {
         return strLastAccs;
     }
     public void setStrLastAccs(String strLastAccs) {
         this.strLastAccs = strLastAccs;
-    }
+    }*/
 
-    public String getStrCreateDate() {
-        return strCreateDate;
+    public String getCurrPhrAbsCreateDate() {
+        return currPhrAbsCreateDate;
     }
-    public void setStrCreateDate(String strCreateDate) {
-        this.strCreateDate = strCreateDate;
+    public void setCurrPhrAbsCreateDate(String strCreateDate) {
+        this.currPhrAbsCreateDate = strCreateDate;
     }
 
     public ArrayList<Phrase> getListOfPhrases(){
@@ -563,10 +596,10 @@ public class InterfaceBean implements Serializable{
     }
 
     public int getId() {
-        return id;
+        return currPhrId;
     }
     public void setId(int id) {
-        this.id = id;
+        this.currPhrId = id;
     }
 
     public int getLearnedWords() {
@@ -595,6 +628,26 @@ public class InterfaceBean implements Serializable{
     }
     public void setNumberOfLearnedPhrasePerSession(int numberOfLearnedPhrasePerSession) {
         this.numberOfLearnedPhrasePerSession = numberOfLearnedPhrasePerSession;
+    }
+
+    public Phrase getCurrPhrase(){
+        return currPhrase;
+    }
+
+    public String getCurrPhrRelLastAccsDate() {
+        return currPhrRelLastAccsDate;
+    }
+
+    public void setCurrPhrRelLastAccsDate(String currPhrRelLastAccsDate) {
+        this.currPhrRelLastAccsDate = currPhrRelLastAccsDate;
+    }
+
+    public String getCurrPhrRelCreateDate() {
+        return currPhrRelCreateDate;
+    }
+
+    public void setCurrPhrRelCreateDate(String currPhrRelCreateDate) {
+        this.currPhrRelCreateDate = currPhrRelCreateDate;
     }
 }
 

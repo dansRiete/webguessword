@@ -6,10 +6,10 @@ package logic;
 public class Id {
     int id;
     double prob;
-    long index_start;
-    long index_end;
+    double index_start;
+    double index_end;
 
-    Id(int id, double prob, long index_start, long index_end){
+    Id(int id, double prob, double index_start, double index_end){
         this.id = id;
         this.prob = prob;
         this.index_start = index_start;
