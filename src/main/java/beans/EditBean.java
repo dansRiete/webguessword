@@ -38,7 +38,7 @@ public class EditBean {
     @PostConstruct
     private void init(){
         if(loginBean!=null)
-            dao = loginBean.returnDAO();
+            dao = loginBean.getDao();
         if(dao!=null){
             currList = dao.getCurrList();
             myList = dao.returnPhrasesList();

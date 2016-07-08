@@ -96,7 +96,7 @@
             </h:commandButton>
 
             <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="dialogButton" value="Modificate"
-                             onclick="PF('wdialog').show();">
+                             onclick="PF('modDialog').show();">
             </h:commandButton>
 
             <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="deleteButton" value="Delete"
@@ -120,7 +120,7 @@
             <h:commandButton id="exit" type="submit" value="Exit" action="#{interfaceBean.exit()}"> </h:commandButton>
             </h:form>
 
-            <p:dialog id="dialog" widgetVar="wdialog" modal="true" resizable="false" header="Edit the current phrase">
+            <p:dialog id="modDialog" widgetVar="modDialog" modal="true" resizable="false" position="center top" header="Edit the current phrase">
                 <h:form id="red">
                     <h:panelGrid columns="2" layout="grid">
                         <p:outputLabel value="Native word"/>

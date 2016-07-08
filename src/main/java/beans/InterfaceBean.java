@@ -97,7 +97,7 @@ public class InterfaceBean implements Serializable{
     private void init(){
         System.out.println("CALL: init() from InterfaceBean");
         if(loginBean!=null)
-            dao = loginBean.returnDAO();
+            dao = loginBean.getDao();
         if(dao!=null){
             listOfChooses = dao.labels;
             nextQuestion();
@@ -354,9 +354,6 @@ public class InterfaceBean implements Serializable{
         }
     }
 
-    public void copyIndicesToMainDb(){
-        dao.copyIndicesToMainDb();
-    }
 
     public void nextQuestion(){
         System.out.println("CALL: nextQuestion() from InterfaceBean");

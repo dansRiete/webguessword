@@ -21,7 +21,7 @@
                 <h:outputText value="Пароль"/>
                 <h:inputSecret value="#{login.password}"/>
             </h:panelGrid>
-            <h:commandButton id="submit" value="submit" action="#{login.checkUser()}"/>
+            <h:commandButton id="submit" value="submit" action="#{login.checkUserAndPassword()}"/>
         </h:panelGroup>
         <h4 style="color:orangered">Неверная комбинация логин-пароль.</h4>
     </h:form>

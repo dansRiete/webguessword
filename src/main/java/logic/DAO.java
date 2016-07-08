@@ -16,48 +16,48 @@ import java.util.Random;
  * Created by Aleks on 11.05.2016.
  */
 public class DAO {
+    private static final String DB_CONNECTION = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";//
+    private static final String DB_USER = "";
+    private static final String DB_PASSWORD = "";
 
     private Random random = new Random();
-    public String timezone = "Europe/Kiev";
+    private String timezone = "Europe/Kiev";
     private String remoteHost = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     private String localHost = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     public String table;
-    private String user;
-    private String password;
     public ArrayList<String> labels = new ArrayList<>();
     public double learnedWords;
     public double nonLearnedWords;
     public double totalWords;
     final double chanceOfLearnedWords = 1d/15d;
-    private boolean isCopyDbExecuted;
-    private static final String DB_CONNECTION = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";//
-    private static final String DB_USER = "";
-    private static final String DB_PASSWORD = "";
+
     private Id[] idsArr;
     private Id[] lastPhrasesStack;
     private int stackNum;
     public Connection mainDbConn;
     public Connection inMemDbConn;
+    private LoginBean loginBean;
 
-    private String createTableSql() {
-     return "CREATE TABLE " + user + "\n" +
-            "(\n" +
-            "    id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,\n" +
-            "    for_word VARCHAR(250) NOT NULL,\n" +
-            "    nat_word VARCHAR(250) NOT NULL,\n" +
-            "    transcr VARCHAR(100),\n" +
-            "    prob_factor DOUBLE,\n" +
-            "    create_date DATETIME,\n" +
-            "    label VARCHAR(50),\n" +
-            "    last_accs_date DATETIME,\n" +
-            "    exactmatch BOOLEAN,\n" +
-            "    index_start DOUBLE,\n" +
-            "    index_end DOUBLE\n" +
-            ")";
-        //"ALTER TABLE " + user + " ADD CONSTRAINT unique_id UNIQUE (id);";
+    private String getCreateTableSqlString() {
+
+         return "CREATE TABLE " + loginBean.getUser() + "\n" +
+                "(\n" +
+                "    id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,\n" +
+                "    for_word VARCHAR(250) NOT NULL,\n" +
+                "    nat_word VARCHAR(250) NOT NULL,\n" +
+                "    transcr VARCHAR(100),\n" +
+                "    prob_factor DOUBLE,\n" +
+                "    create_date DATETIME,\n" +
+                "    label VARCHAR(50),\n" +
+                "    last_accs_date DATETIME,\n" +
+                "    exactmatch BOOLEAN,\n" +
+                "    index_start DOUBLE,\n" +
+                "    index_end DOUBLE\n" +
+                ")";
+            //"ALTER TABLE " + user + " ADD CONSTRAINT unique_id UNIQUE (id);";
 
     }
-    private String createNewTable = "CREATE TABLE guessword.aleks\n" +
+    /*private String createNewTable = "CREATE TABLE guessword.aleks\n" +
             "(\n" +
             "  id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,\n" +
             "  for_word VARCHAR(250) NOT NULL,\n" +
@@ -71,11 +71,14 @@ public class DAO {
             "  index_start DOUBLE,\n" +
             "  index_end DOUBLE\n" +
             ");\n" +
-            "ALTER TABLE guessword.aleks ADD CONSTRAINT unique_id UNIQUE (id);";
+            "ALTER TABLE guessword.aleks ADD CONSTRAINT unique_id UNIQUE (id);";*/
 
-    public DAO(String user){
+    public DAO(LoginBean loginBean){
         System.out.println("CALL: DAO constructor");
-        this.user = user;
+        this.loginBean = loginBean;
+        table = loginBean.getUser();
+
+        //>>>Получаем подключение к основной БД, в случае ошибки пробуем подключиться через локальнй хост (только для режима тестирования)
         try{
             mainDbConn = DriverManager.getConnection(remoteHost, "adminLtuHq9R", "d-AUIKakd1Br");
             System.out.println("--- Remote DB was connected");
@@ -89,40 +92,28 @@ public class DAO {
                 throw new DataBaseConnectionException();
             }
         }
+        //<<<
 
-        inMemDbConn = getDBConnection();//
-        /*try {
-            cpds1.setDriverClass( "com.mysql.jdbc.Driver" );
-        } catch (PropertyVetoException e) {
+        //>>>Создаём базу данных в оперативной памяти (используется для увеличения производительности)
+        try {
+            inMemDbConn = DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD);
+        } catch (SQLException e) {
+            System.out.println("Exception during creating in-memory database connection");
             e.printStackTrace();
         }
-        cpds1.setJdbcUrl(remoteHost);
-        cpds1.setUser("adminLtuHq9R");
-        cpds1.setPassword("d-AUIKakd1Br");
-        cpds1.setMinPoolSize(5);
-        cpds1.setAcquireIncrement(5);
-        cpds1.setMaxPoolSize(20);
-*/
-        /*try {
-            cpds2.setDriverClass( "org.h2.Driver" );
-        } catch (PropertyVetoException e) {
-            e.printStackTrace();
-        }
-        cpds2.setJdbcUrl(DB_CONNECTION);
-        cpds2.setUser(DB_USER);
-        cpds2.setPassword(DB_PASSWORD);
-        cpds2.setMinPoolSize(5);
-        cpds2.setAcquireIncrement(5);
-        cpds2.setMaxPoolSize(20);*/
+        //<<<
+
+        reloadInMemoryDb();
+        reloadLabelsList();
 
     }
 
-    public void copyIndicesToMainDb(){
+    /*public void copyIndicesToMainDb(){
         System.out.println("CALL copyIndicesToMainDb() ");
         int count = 0;
         try(Statement st = inMemDbConn.createStatement(); PreparedStatement ps =
-                mainDbConn.prepareStatement("UPDATE " + user + " SET index_start=?,index_end=? where id=?")){
-            ResultSet rs = st.executeQuery("SELECT id, index_start, index_end FROM " + user);
+                mainDbConn.prepareStatement("UPDATE " + loginBean.getUser() + " SET index_start=?,index_end=? where id=?")){
+            ResultSet rs = st.executeQuery("SELECT id, index_start, index_end FROM " + loginBean.getUser());
             while (rs.next()){
                 count++;
                 ps.setDouble(1, rs.getDouble("index_start"));
@@ -135,12 +126,12 @@ public class DAO {
             e.printStackTrace();
         }
         System.out.print("copied " + count + " records");
-    }
+    }*/
 
     public ArrayList<Phrase> returnPhrasesList(){
         System.out.println("CALL: returnPhrasesList() from DAO");
         ArrayList<Phrase> list = new ArrayList<>();
-        try (Statement st = inMemDbConn.createStatement(); ResultSet rs = st.executeQuery("SELECT * FROM " + user + " ORDER BY create_date DESC, id DESC")){
+        try (Statement st = inMemDbConn.createStatement(); ResultSet rs = st.executeQuery("SELECT * FROM " + loginBean.getUser() + " ORDER BY create_date DESC, id DESC")){
             while (rs.next()){
                 list.add(new Phrase(rs.getInt("id"), rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"), rs.getBigDecimal("prob_factor"),
                         rs.getTimestamp("create_date"), rs.getString("label"), rs.getTimestamp("last_accs_date"), 0, 0, rs.getBoolean("exactmatch"), this));
@@ -159,7 +150,7 @@ public class DAO {
         labels.add("All");
         String temp = null;
         try (Statement st = inMemDbConn.createStatement();
-             ResultSet rs = st.executeQuery("SELECT DISTINCT (LABEL) FROM " + user + " ORDER BY LABEL")){
+             ResultSet rs = st.executeQuery("SELECT DISTINCT (LABEL) FROM " + loginBean.getUser() + " ORDER BY LABEL")){
 
             while (rs.next()){
                 temp = rs.getString("LABEL");
@@ -177,7 +168,7 @@ public class DAO {
 
     public ArrayList<Phrase> getCurrList(){
         ArrayList<Phrase> phrases = new ArrayList<>();
-        try(Statement inMemSt = inMemDbConn.createStatement(); ResultSet rs = inMemSt.executeQuery("SELECT * FROM " + user)){
+        try(Statement inMemSt = inMemDbConn.createStatement(); ResultSet rs = inMemSt.executeQuery("SELECT * FROM " + loginBean.getUser())){
             while (rs.next()){
                 int id = rs.getInt("id");
                 System.out.println("Id is" + id);
@@ -199,18 +190,16 @@ public class DAO {
 
     private void reloadInMemoryDb(){
 
-        System.out.println("CALL: reloadInMemoryDb() from DAO");
-
         //If in-memory db is not empty, then to empty it.
         try (Statement inMemSt = inMemDbConn.createStatement()){
-            inMemSt.execute("DROP TABLE " + user);
+            inMemSt.execute("DROP TABLE " + loginBean.getUser());
         } catch (SQLException e) {
             //Table doesn't exist - do nothing.
         }
 
         //Creating table in in-memory DB
         try(Statement inMemSt = inMemDbConn.createStatement()){
-            inMemSt.execute(createTableSql());
+            inMemSt.execute(getCreateTableSqlString());
         }catch (SQLException e){
             e.printStackTrace();
             throw new RuntimeException();
@@ -218,12 +207,12 @@ public class DAO {
 
         //Populating in-memory DB by values from main DB
 
-        String insertSql = "INSERT INTO " + user +
+        String insertSql = "INSERT INTO " + loginBean.getUser() +
                 "(id, for_word, nat_word, transcr, prob_factor, create_date, label, last_accs_date, " +
                 "index_start, index_end, exactmatch) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
 
         int counter;
-        try(Statement mainSt = mainDbConn.createStatement(); ResultSet rs2 = mainSt.executeQuery("SELECT COUNT(*) FROM " + user)){
+        try(Statement mainSt = mainDbConn.createStatement(); ResultSet rs2 = mainSt.executeQuery("SELECT COUNT(*) FROM " + loginBean.getUser())){
             rs2.next();
             counter = rs2.getInt(1);
         }catch (SQLException e) {
@@ -233,7 +222,7 @@ public class DAO {
         }
 
         try (Statement mainSt = mainDbConn.createStatement();
-             ResultSet rs1 = mainSt.executeQuery("SELECT * FROM " + user);
+             ResultSet rs1 = mainSt.executeQuery("SELECT * FROM " + loginBean.getUser());
                PreparedStatement ps = inMemDbConn.prepareStatement(insertSql)){
 
 
@@ -263,7 +252,7 @@ public class DAO {
                 ps.execute();
             }
 
-            System.out.println("--- Added " + counter + " elements into in-memoryDb");
+
 
 
         } catch (SQLException e) {
@@ -273,29 +262,16 @@ public class DAO {
         }
 
         reloadIndices(1);
+        System.out.println("CALL: reloadInMemoryDb() from DAO " + counter + " elements were added");
     }
 
-    private Connection getDBConnection() {
-        System.out.println("CALL: getDBConnection() from DAO");
-        Connection dbConnection;
-
-        try {
-            dbConnection = DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD);
-        } catch (SQLException e) {
-            System.out.println("EXCEPTION: in getDBConnection() from DAO");
-            e.printStackTrace();
-            throw new RuntimeException();
-        }
-
-        return dbConnection;
-    }
 
     public long[] updateProb(Phrase phrase){
         System.out.println("CALL: updateProb(Phrase phrase) with id=" + phrase.id +" from DAO");
         String dateTime = ZonedDateTime.now(ZoneId.of("Europe/Kiev")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
 
         try (Statement inMemDbPrepStat = inMemDbConn.createStatement()){
-            inMemDbPrepStat.executeUpdate("UPDATE " + user + " SET prob_factor=" + phrase.prob + ", last_accs_date='" + dateTime + "' WHERE id=" + phrase.id);
+            inMemDbPrepStat.executeUpdate("UPDATE " + loginBean.getUser() + " SET prob_factor=" + phrase.prob + ", last_accs_date='" + dateTime + "' WHERE id=" + phrase.id);
         } catch (SQLException e) {
             System.out.println("EXCEPTION#1: in updateProb(Phrase phrase) from DAO");
             e.printStackTrace();
@@ -305,7 +281,7 @@ public class DAO {
         new Thread(){
             public void run(){
                 try (Statement st = mainDbConn.createStatement()){
-                    st.execute("UPDATE " + user + " SET prob_factor=" + phrase.prob + ", last_accs_date='" + dateTime + "' WHERE id=" + phrase.id);
+                    st.execute("UPDATE " + loginBean.getUser() + " SET prob_factor=" + phrase.prob + ", last_accs_date='" + dateTime + "' WHERE id=" + phrase.id);
                 } catch (SQLException e) {
                     System.out.println("EXCEPTION#2: in updateProb(Phrase phrase) from DAO");
                     e.printStackTrace();
@@ -319,7 +295,7 @@ public class DAO {
     public void updatePhrase(Phrase phrase){
         System.out.println("CALL: updatePhrase(Phrase phrase) from DAO with id=" + phrase.id);
         String dateTime = ZonedDateTime.now(ZoneId.of("Europe/Kiev")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
-        String updateSql = "UPDATE " + user + " SET for_word=?, nat_word=?, transcr=?, last_accs_date=?, " +
+        String updateSql = "UPDATE " + loginBean.getUser() + " SET for_word=?, nat_word=?, transcr=?, last_accs_date=?, " +
                 "exactmatch=?, label=?, prob_factor=?  WHERE id =" + phrase.id;
 
         try (PreparedStatement inMemDbPrepStat = inMemDbConn.prepareStatement(updateSql)){
@@ -345,7 +321,7 @@ public class DAO {
             e.printStackTrace();
             throw new RuntimeException();
         }
-        copyDb();
+
         new Thread(){
             public void run(){
                 try (PreparedStatement mainDbPrepStat = mainDbConn.prepareStatement(updateSql)){
@@ -378,7 +354,7 @@ public class DAO {
 
     public void deletePhrase(Phrase phr){
         System.out.println("CALL: deletePhrase(int id) from DAO");
-        String deleteSql = "DELETE FROM " + user + " WHERE ID=" + phr.id;
+        String deleteSql = "DELETE FROM " + loginBean.getUser() + " WHERE ID=" + phr.id;
         try (Statement st = inMemDbConn.createStatement()){
             st.execute(deleteSql);
         } catch (SQLException e) {
@@ -386,7 +362,7 @@ public class DAO {
             e.printStackTrace();
             throw new RuntimeException();
         }
-        copyDb();
+
         new Thread(){
             public void run(){
                 try (Statement st = mainDbConn.createStatement()) {
@@ -400,19 +376,20 @@ public class DAO {
         }.start();
     }
 
-    public void setLoginBean(LoginBean loginBean){
+    /*public void setLoginBean(LoginBean loginBean){
         System.out.println("CALL: setLoginBean(LoginBean loginBean) from DAO");
-        user = loginBean.getUser();
-        password = loginBean.getPassword();
-        table = user;
-        System.out.println("setLoginBean() in DAO user is " + user);
-        if(!isCopyDbExecuted){
+        this.loginBean = loginBean;
+//        user = loginBean.getUser();
+//        password = loginBean.getPassword();
+        table = loginBean.getUser();
+
+        *//*if(!isCopyDbExecuted){
             reloadInMemoryDb();
             isCopyDbExecuted = true;
         }
-        reloadLabelsList();
+        reloadLabelsList();*//*
 
-    }
+    }*/
 
     public Connection getConnection(){
         return mainDbConn;
@@ -463,7 +440,7 @@ public class DAO {
             rs.next();
             nonLearnedWords = rs.getInt(1);
 
-            rs = statement.executeQuery("SELECT COUNT(*) FROM " + user);
+            rs = statement.executeQuery("SELECT COUNT(*) FROM " + loginBean.getUser());
             rs.next();
             totalWords = rs.getInt(1);
 
