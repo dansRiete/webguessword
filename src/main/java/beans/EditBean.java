@@ -55,8 +55,8 @@ public class EditBean {
         this.forWord = this.natWord = this.transcr = "";
         Phrase phrase = new Phrase(forWord, natWord, transcr, label);
         myList.add(0, phrase);
-        if(forWord!=null&&natWord!=null)
-            if(forWord.equalsIgnoreCase("")&&natWord.equalsIgnoreCase("")){
+        if(forWord!=null && natWord!=null)
+            if(!forWord.equalsIgnoreCase("") && !natWord.equalsIgnoreCase("")){
                 new Thread(){
                     public void run(){
                         dao.insertPhrase(phrase);

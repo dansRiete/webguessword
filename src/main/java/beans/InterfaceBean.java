@@ -138,6 +138,7 @@ public class InterfaceBean implements Serializable{
             else{
                 dao.table = loginBean.getUser();
             }
+            dao.chosedLabels = hshset;
             previousResultChoosedLabel = resultChoosedLabel;
             dao.reloadIndices(1);
 //            calculateSessionStatistics();

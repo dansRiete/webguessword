@@ -1,15 +1,10 @@
 package beans;
 
 import Exceptions.DataBaseConnectionException;
-import logic.DAO;
-import logic.User;
-import org.apache.log4j.Logger;
-
+import logic.*;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Serializable;
@@ -23,22 +18,25 @@ public class LoginBean implements Serializable {
     private String password;
     User currentUser;
     private DAO dao;
-    final static Logger logger = Logger.getLogger(LoginBean.class);
-    Connection conn;
+//    final static Logger logger = Logger.getLogger(LoginBean.class);
+
     private ArrayList<User> usersList = new ArrayList<>();
     private String remoteHost = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     private String localHost = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
 
     public LoginBean(){
-        System.out.println("CALL: LoginBean() constructor");
+        Connection conn;
+        ResultSet rs = null;
+        String dbConnected = null;
+
 //        dao = new DAO(this);
         try{
             conn = DriverManager.getConnection(remoteHost, "adminLtuHq9R", "d-AUIKakd1Br");
-            System.out.println("--- Remote DB was connected");
+            dbConnected = "- Remote DB was connected";
         }catch (SQLException e){
             try{
                 conn = DriverManager.getConnection(localHost, "adminLtuHq9R", "d-AUIKakd1Br");
-                System.out.println("--- Local DB was connected");
+                dbConnected = "- Local DB was connected" ;
             }catch (SQLException e1){
                 e1.printStackTrace();
                 System.out.println("EXCEPTION: in DAO constructor");
@@ -46,10 +44,12 @@ public class LoginBean implements Serializable {
             }
         }
 
+        System.out.println("CALL: LoginBean() constructor " + dbConnected);
+
         //>>Создаём список юзеров ArrayList<User> usersList
         try {
             Statement st = conn.createStatement();
-            ResultSet rs = st.executeQuery("SELECT * FROM users");
+            rs = st.executeQuery("SELECT * FROM users");
             while (rs.next()){
                 usersList.add(new User(rs.getInt("id"), rs.getString("login"), rs.getString("name"),
                         rs.getString("password"), rs.getString("email")));
@@ -57,13 +57,21 @@ public class LoginBean implements Serializable {
         } catch (SQLException e) {
             System.out.println("EXCEPTION: in LoginBean constructor");
             e.printStackTrace();
+        }finally {
+            try {
+                conn.close();
+                if (rs != null) {
+                    rs.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
         //<<
     }
 
     public void checkUserAndPassword(){
         System.out.println("CALL: checkUserAndPassword() from LoginBean");
-        //!!! EXC !!!
         boolean userExist = false;
 
         //Проверяем или введенный пользователь присутствует в базе данных
@@ -76,7 +84,7 @@ public class LoginBean implements Serializable {
         }
         //Если пользователь существует и пароль совпадает то dispatch("learn.xhtml")
         //в противном случае sendRedirect("error.xhtml")
-        if ((userExist)&&(password.equalsIgnoreCase(currentUser.password))) {
+        if ((userExist)&&(password.equals(currentUser.password))) {
             dao = new DAO(this);
 //            dao.setLoginBean(this);
             try {

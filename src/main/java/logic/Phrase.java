@@ -8,6 +8,7 @@ import java.math.RoundingMode;
 import java.sql.Timestamp;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.HashSet;
 
 /**
  * Created by Aleks on 11.05.2016.
@@ -245,6 +246,20 @@ public class Phrase implements Serializable{
         this.exactMatch = exactMatch;
     }
 
+    public boolean inLabels(HashSet<String> hashSet){
+        if(hashSet!=null){
+            if(hashSet.isEmpty())
+                return true;
+            for(String str : hashSet){
+                if(this.label.equalsIgnoreCase(str))
+                    return true;
+            }
+            return false;
+        }else {
+            System.out.println("Exception in inLabels from Phrase recieved hashset collection == null");
+            throw new RuntimeException();
+        }
+    }
 
     public int getIndex_start() {
         return (int) index_start;
@@ -261,4 +276,6 @@ public class Phrase implements Serializable{
     public void setIndex_end(long index_end) {
         this.index_end = index_end;
     }
+
+
 }
