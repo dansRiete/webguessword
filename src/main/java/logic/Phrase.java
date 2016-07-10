@@ -9,7 +9,6 @@ import java.sql.Timestamp;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
-import java.util.List;
 
 /**
  * Created by Aleks on 11.05.2016.
@@ -97,7 +96,7 @@ public class Phrase implements Serializable{
         this.answer = answer;
         if(howWasAnswered == null){
             if(!isLearnt()){
-                BigDecimal subtr = new BigDecimal(3*Math.sqrt((dao.nonLearnedWords) / dao.totalWords));
+                BigDecimal subtr = new BigDecimal(3*Math.sqrt((dao.nonLearnedWords) / dao.totalPossibleWords));
                 prob = prob.subtract(subtr);
 //                dao.setProbById(id, prob.doubleValue());
             }
@@ -105,7 +104,7 @@ public class Phrase implements Serializable{
             indexes = dao.updateProb(this);
         }else if(!howWasAnswered){
             if(!unmofifiedPhrase.isLearnt()){
-                BigDecimal subtr = new BigDecimal(9*Math.sqrt((dao.nonLearnedWords) / dao.totalWords));
+                BigDecimal subtr = new BigDecimal(9*Math.sqrt((dao.nonLearnedWords) / dao.totalPossibleWords));
                 prob = prob.subtract(subtr);
 //                dao.setProbById(id, prob.doubleValue());
             } else{
@@ -128,18 +127,18 @@ public class Phrase implements Serializable{
         long[] indexes = null;
         this.answer = answer;
         if(howWasAnswered == null){
-            BigDecimal summ = new BigDecimal(6*Math.sqrt((dao.nonLearnedWords) / dao.totalWords));
+            BigDecimal summ = new BigDecimal(6*Math.sqrt((dao.nonLearnedWords) / dao.totalPossibleWords));
             prob = prob.add(summ);
 //            dao.setProbById(id, prob.doubleValue());
             howWasAnswered = false;
             indexes = dao.updateProb(this);
         }else if(howWasAnswered){
             if(!unmofifiedPhrase.isLearnt()) {
-                BigDecimal summ = new BigDecimal(9 * Math.sqrt((dao.nonLearnedWords) / dao.totalWords));
+                BigDecimal summ = new BigDecimal(9 * Math.sqrt((dao.nonLearnedWords) / dao.totalPossibleWords));
                 prob = prob.add(summ);
 //                dao.setProbById(id, prob.doubleValue());
             }else{
-                BigDecimal summ = new BigDecimal(6*Math.sqrt((dao.nonLearnedWords) / dao.totalWords));
+                BigDecimal summ = new BigDecimal(6*Math.sqrt((dao.nonLearnedWords) / dao.totalPossibleWords));
                 prob = prob.add(summ);
 //                dao.setProbById(id, prob.doubleValue());
             }

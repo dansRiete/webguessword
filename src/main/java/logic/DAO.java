@@ -28,7 +28,8 @@ public class DAO {
     public ArrayList<String> possibleLabels = new ArrayList<>();
     public double learnedWords;
     public double nonLearnedWords;
-    public double totalWords;
+    public double totalActiveWords;
+    public double totalPossibleWords;
     final double chanceOfLearnedWords = 1d/15d;
     private Phrase[] lastPhrasesStack;
     private int stackNum;
@@ -293,9 +294,13 @@ public class DAO {
                 Phrase phrase = new Phrase(id, for_word, nat_word, transcr, prob, create_date, label,
                         last_accs_date, index_start, index_end, exactmatch, this);
 
-                //Добавляем в активную коллекцию если метка фразы совпадает с выбранными - "chosedLabels"
-                if(phrase.inLabels(chosedLabels))
+                //Добавляем в активную коллекцию если метка фразы совпадает с выбранными - "chosedLabels" и считаем totalPossibleWords
+                if(phrase.inLabels(chosedLabels)){
                     activeListOfPhrases.add(phrase);
+                    totalPossibleWords++;
+                }else {
+                    totalPossibleWords++;
+                }
 
             }
 
@@ -527,9 +532,9 @@ public class DAO {
             //Считаем общее количество фраз
             /*rs = statement.executeQuery("SELECT COUNT(*) FROM " + loginBean.getUser());
             rs.next();
-            totalWords = rs.getInt(1);*/
-            totalWords = activeListOfPhrases.size();
-            learnedWords = totalWords - nonLearnedWords;
+            totalActiveWords = rs.getInt(1);*/
+            totalActiveWords = activeListOfPhrases.size();
+            learnedWords = totalActiveWords - nonLearnedWords;
 
 
             /*rs = statement.executeQuery("SELECT SUM(prob_factor) FROM " + table + " WHERE prob_factor>3");
@@ -639,23 +644,23 @@ public class DAO {
         //Если массив не инстантиирован или количество фраз стало меньше чем размер массива-стека заново создаём его с
         // нужным размером и обнуляем положение стека
         boolean result = false;
-        if(lastPhrasesStack==null||lastPhrasesStack.length>totalWords){
+        if(lastPhrasesStack==null||lastPhrasesStack.length> totalActiveWords){
             //Если количество фраз больше или равно 7 создаётся стандартный стек на 7 элементов.
-            if(totalWords>=7){
+            if(totalActiveWords >=7){
                 lastPhrasesStack = new Phrase[7];
                 stackNum = 0;
                 msg.append(" создан стек на 7 элементов;");
             }
             //Если количество фраз меньше 3 в стеке нет надобности, метод возвращает false
-            else if(totalWords<3) {
+            else if(totalActiveWords <3) {
                 msg.append(" в стеке нет необходимости - выход из метода (возврат false);");
                 System.out.println(msg);
                 return false;
             }
             //Если кол-во слов меньше 7 но больше трёх создаётся стек на (кол-во слов минус 1) элементов
             else {
-                msg.append(" создан стек на " + ((int) totalWords - 1) + " элементов;");
-                lastPhrasesStack = new Phrase[(int) totalWords - 1];
+                msg.append(" создан стек на " + ((int) totalActiveWords - 1) + " элементов;");
+                lastPhrasesStack = new Phrase[(int) totalActiveWords - 1];
                 stackNum = 0;
             }
         }
