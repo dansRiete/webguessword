@@ -570,34 +570,35 @@ public class DAO {
 
                     //Переменной prob присваивается prob фразы с currentPhraseId = i;
                     double prob;
-                    prob = getPhraseById(i).prob.doubleValue();
+                    Phrase phrase = getPhraseById(i);
+                    prob = phrase.prob.doubleValue();
 
                     //Если nonLearnedWords == 0, то есть, все слова выучены устанавливаются равные для всех индексы
                     if (nonLearnedWords == 0) {
 
                         indexStart = Math.round(temp * 1000000000);
-                        getPhraseById(i).index_start = indexStart;
+                        phrase.indexStart = indexStart;
                         temp += chanceOfLearnedWords / learnedWords;
                         indexEnd = Math.round((temp * 1000000000) - 1);
-                        getPhraseById(i).index_end = indexEnd;
+                        phrase.indexEnd = indexEnd;
 
                     } else { //Если нет, то индексы ставяться по алгоритму
 
                         if (prob > 3) {
 
                             indexStart = Math.round(temp * 1000000000);
-                            getPhraseById(i).index_start = indexStart;
+                            phrase.indexStart = indexStart;
                             temp += scaleOf1prob * prob;
                             indexEnd = Math.round((temp * 1000000000) - 1);
-                            getPhraseById(i).index_end = indexEnd;
+                            phrase.indexEnd = indexEnd;
 
                         } else {
 
                             indexStart = Math.round(temp * 1000000000);
-                            getPhraseById(i).index_start = indexStart;
+                            phrase.indexStart = indexStart;
                             temp += indOfLW;
                             indexEnd = Math.round((temp * 1000000000) - 1);
-                            getPhraseById(i).index_end = indexEnd;
+                            phrase.indexEnd = indexEnd;
 
                         }
                     }

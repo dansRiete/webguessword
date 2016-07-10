@@ -26,11 +26,6 @@ public class Phrase implements Serializable{
     public Timestamp createDate;
     public Timestamp lastAccs;
     public boolean exactMatch;
-    public double index_start;
-    public double index_end;
-
-
-
     public ZonedDateTime lt = ZonedDateTime.now(ZoneId.of("Europe/Kiev"));
     public Boolean howWasAnswered;
     public double indexStart;
@@ -256,26 +251,25 @@ public class Phrase implements Serializable{
             }
             return false;
         }else {
-            System.out.println("Exception in inLabels from Phrase recieved hashset collection == null");
-//            throw new RuntimeException();
+            return true;
         }
 
     }
 
-    public int getIndex_start() {
-        return (int) index_start;
+    public int getIndexStart() {
+        return (int) indexStart;
     }
 
-    public void setIndex_start(long index_start) {
-        this.index_start = index_start;
+    public void setIndexStart(long indexStart) {
+        this.indexStart = indexStart;
     }
 
-    public int getIndex_end() {
-        return (int) index_end;
+    public int getIndexEnd() {
+        return (int) indexEnd;
     }
 
-    public void setIndex_end(long index_end) {
-        this.index_end = index_end;
+    public void setIndexEnd(long indexEnd) {
+        this.indexEnd = indexEnd;
     }
 
 
