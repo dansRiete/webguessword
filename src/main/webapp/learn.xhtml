@@ -205,9 +205,14 @@
                 </tr>
                 <tr>
                     <td>Time to access to the DB</td>
-                    <td>#{interfaceBean.avgTimeOfAccsToDb}ms.</td>
+                    <td>#{interfaceBean.timeOfLastAccsToDb}ms.</td>
                 </tr>
             </tbody>
+
+
+            <!--                    Properties of current phrase                         -->
+
+
             <thead>
             <tr>
                 <th scope="col">Properties of current phrase</th>
@@ -228,6 +233,10 @@
                 <td>#{interfaceBean.id}</td>
             </tr>
             <tr>
+                <td>Time of returning phrase from collection</td>
+                <td>#{interfaceBean.currPhrase.timeOfReturningFromList}</td>
+            </tr>
+            <tr>
                 <td>Last access date</td>
                 <td>#{interfaceBean.currPhrAbsLastAccsDate}<br/>~#{interfaceBean.currPhrRelLastAccsDate}</td>
             </tr>
@@ -239,7 +248,7 @@
                 <td>Label</td>
                 <td>#{interfaceBean.currPhrLabel}</td>
             </tr>
-            <!--<tr>
+            <tr>
                 <td>Choosed phrase
                     <h:form>
                     <h:selectOneMenu id="table" value="#{interfaceBean.choosedLabel}">
@@ -249,7 +258,7 @@
                     </h:form>
                 </td>
                 <td>#{interfaceBean.resultChoosedLabel}</td>
-            </tr>-->
+            </tr>
             </tbody>
         </table>
     </div>

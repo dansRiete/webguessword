@@ -50,7 +50,8 @@ public class InterfaceBean implements Serializable{
     private int totalNumberOfPhrases;
     private int numberOfLearnedPhrasePerSession;
     private String percentOfRightAnswers;
-    private BigDecimal avgTimeOfAccsToDb;
+    private BigDecimal timeOfLastAccsToDb;
+    private BigDecimal timeOfReturningPhraseFromCollection;
     //<<
 
 
@@ -99,10 +100,9 @@ public class InterfaceBean implements Serializable{
         if(loginBean!=null)
             dao = loginBean.getDao();
         if(dao!=null){
-            listOfChooses = dao.labels;
+            listOfChooses = dao.possibleLabels;
             nextQuestion();
         }
-        System.out.println("CALL: init() from InterfaceBean" + " listOfChooses " + listOfChooses);
     }
 
     public void setTable() {
@@ -134,12 +134,13 @@ public class InterfaceBean implements Serializable{
         //If clause was changed
         if(!resultChoosedLabel.equals(previousResultChoosedLabel)){
             if(!resultChoosedLabel.equalsIgnoreCase("")){
-                dao.table = "(SELECT * FROM " + loginBean.getUser() + " WHERE LABEL IN(" + resultChoosedLabel + ")) As custom";
+//                dao.table = "(SELECT * FROM " + loginBean.getUser() + " WHERE LABEL IN(" + resultChoosedLabel + ")) As custom";
             }
             else{
-                dao.table = loginBean.getUser();
+//                dao.table = loginBean.getUser();
             }
             dao.chosedLabels = hshset;
+            dao.reloadCollectionOfPhrases();
             previousResultChoosedLabel = resultChoosedLabel;
             dao.reloadIndices(1);
             reloadStatTableData();
@@ -211,9 +212,6 @@ public class InterfaceBean implements Serializable{
         nonLearnedWords = (int) dao.nonLearnedWords;
         totalNumberOfPhrases = learnedWords+nonLearnedWords;
         //<<
-         System.out.println("choosedLabel: " + choosedLabel);
-         System.out.println("listOfChooses: " + listOfChooses);
-         System.out.println("resultChoosedLabel: " + resultChoosedLabel);
 
     }
 
@@ -275,7 +273,7 @@ public class InterfaceBean implements Serializable{
             listOfPhrases.add(phrase);
             currPhrase = phrase;
         }
-        avgTimeOfAccsToDb = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000)).setScale(2, RoundingMode.HALF_UP);
+//        timeOfLastAccsToDb = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000)).setScale(2, RoundingMode.HALF_UP);
     }
 
     public void rightAnswer(String answer){
@@ -291,7 +289,7 @@ public class InterfaceBean implements Serializable{
             System.out.println("EXCEPTION: in rightAnswer() from InterfaceBean");
             e.printStackTrace();
         }
-        avgTimeOfAccsToDb = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000)).setScale(2, RoundingMode.HALF_UP);
+        timeOfLastAccsToDb = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000)).setScale(2, RoundingMode.HALF_UP);
     }
 
     public void wrongAnswer(String answer){
@@ -307,7 +305,7 @@ public class InterfaceBean implements Serializable{
             System.out.println("EXCEPTION: in wrongAnswer() from InterfaceBean");
             e.printStackTrace();
         }
-        avgTimeOfAccsToDb = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000)).setScale(2, RoundingMode.HALF_UP);
+        timeOfLastAccsToDb = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000)).setScale(2, RoundingMode.HALF_UP);
     }
 
     public void previousRight(){
@@ -320,7 +318,7 @@ public class InterfaceBean implements Serializable{
             System.out.println("EXCEPTION: in previousRight() from InterfaceBean");
             e.printStackTrace();
         }
-        avgTimeOfAccsToDb = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000)).setScale(2, RoundingMode.HALF_UP);
+        timeOfLastAccsToDb = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000)).setScale(2, RoundingMode.HALF_UP);
     }
 
     public void previousWrong(){
@@ -333,7 +331,7 @@ public class InterfaceBean implements Serializable{
             System.out.println("EXCEPTION: in previousWrong() from InterfaceBean");
             e.printStackTrace();
         }
-        avgTimeOfAccsToDb = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000)).setScale(2, RoundingMode.HALF_UP);
+        timeOfLastAccsToDb = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000)).setScale(2, RoundingMode.HALF_UP);
     }
 
     public void checkTheAnswer(){
@@ -372,6 +370,7 @@ public class InterfaceBean implements Serializable{
             question = currPhrase.natWord + " " + hint.getSlashHint(currPhrase.forWord);
         }
         resultProcessing();
+
 //        System.out.println("--- nextQuestion() List size="+(listOfPhrases.size()+" Current shift="+shift+" Requested index="+index));
     }
 
@@ -508,11 +507,11 @@ public class InterfaceBean implements Serializable{
         this.label = label;
     }*/
 
-    public BigDecimal getAvgTimeOfAccsToDb() {
-        return avgTimeOfAccsToDb;
+    public BigDecimal getTimeOfLastAccsToDb() {
+        return timeOfLastAccsToDb;
     }
-    public void setAvgTimeOfAccsToDb(BigDecimal avgTimeOfAccsToDb) {
-        this.avgTimeOfAccsToDb = avgTimeOfAccsToDb;
+    public void setTimeOfLastAccsToDb(BigDecimal timeOfLastAccsToDb) {
+        this.timeOfLastAccsToDb = timeOfLastAccsToDb;
     }
 
     /*public String getStrLastAccs() {
@@ -649,6 +648,14 @@ public class InterfaceBean implements Serializable{
 
     public void setCurrPhrRelCreateDate(String currPhrRelCreateDate) {
         this.currPhrRelCreateDate = currPhrRelCreateDate;
+    }
+
+    public BigDecimal getTimeOfReturningPhraseFromCollection() {
+        return timeOfReturningPhraseFromCollection;
+    }
+
+    public void setTimeOfReturningPhraseFromCollection(BigDecimal timeOfReturningPhraseFromCollection) {
+        this.timeOfReturningPhraseFromCollection = timeOfReturningPhraseFromCollection;
     }
 }
 

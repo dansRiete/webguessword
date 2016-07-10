@@ -9,6 +9,7 @@ import java.sql.Timestamp;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
+import java.util.List;
 
 /**
  * Created by Aleks on 11.05.2016.
@@ -33,6 +34,7 @@ public class Phrase implements Serializable{
     private DAO dao;
     public boolean isModified;
     public String answer;
+    public String timeOfReturningFromList;
     /**
      * Saved state of phrase object before changing howWasAnswered to false or true
      */
@@ -242,18 +244,28 @@ public class Phrase implements Serializable{
     }
 
     public boolean inLabels(HashSet<String> hashSet){
+//        System.out.println("CALL: inLabels(HashSet<String> hashSet) hashSet = " + hashSet);
         if(hashSet!=null){
             if(hashSet.isEmpty())
                 return true;
             for(String str : hashSet){
-                if(this.label.equalsIgnoreCase(str))
+                if(this.label!=null&&this.label.equalsIgnoreCase(str))
                     return true;
             }
             return false;
         }else {
+//            throw new RuntimeException("inLabels(HashSet<String> hashSet) hashSet == null");
             return true;
         }
 
+    }
+
+    public void setTimeOfReturningFromList(long time){
+        timeOfReturningFromList = Double.toString((double) time / 1000000d);
+    }
+
+    public String getTimeOfReturningFromList(){
+        return timeOfReturningFromList;
     }
 
     public int getIndexStart() {
