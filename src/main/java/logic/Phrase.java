@@ -26,8 +26,8 @@ public class Phrase implements Serializable{
     public Timestamp createDate;
     public Timestamp lastAccs;
     public boolean exactMatch;
-    private double index_start;
-    private double index_end;
+    public double index_start;
+    public double index_end;
 
 
 
@@ -102,7 +102,7 @@ public class Phrase implements Serializable{
             if(!isLearnt()){
                 BigDecimal subtr = new BigDecimal(3*Math.sqrt((dao.nonLearnedWords) / dao.totalWords));
                 prob = prob.subtract(subtr);
-                dao.setProbById(id, prob.doubleValue());
+//                dao.setProbById(id, prob.doubleValue());
             }
             howWasAnswered = true;
             indexes = dao.updateProb(this);
@@ -110,10 +110,10 @@ public class Phrase implements Serializable{
             if(!unmofifiedPhrase.isLearnt()){
                 BigDecimal subtr = new BigDecimal(9*Math.sqrt((dao.nonLearnedWords) / dao.totalWords));
                 prob = prob.subtract(subtr);
-                dao.setProbById(id, prob.doubleValue());
+//                dao.setProbById(id, prob.doubleValue());
             } else{
-                prob=unmofifiedPhrase.prob;
-                dao.setProbById(id, prob.doubleValue());
+                prob = unmofifiedPhrase.prob;
+//                dao.setProbById(id, prob.doubleValue());
 //                prob=3*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d);
             }
 
@@ -133,18 +133,18 @@ public class Phrase implements Serializable{
         if(howWasAnswered == null){
             BigDecimal summ = new BigDecimal(6*Math.sqrt((dao.nonLearnedWords) / dao.totalWords));
             prob = prob.add(summ);
-            dao.setProbById(id, prob.doubleValue());
+//            dao.setProbById(id, prob.doubleValue());
             howWasAnswered = false;
             indexes = dao.updateProb(this);
         }else if(howWasAnswered){
             if(!unmofifiedPhrase.isLearnt()) {
                 BigDecimal summ = new BigDecimal(9 * Math.sqrt((dao.nonLearnedWords) / dao.totalWords));
                 prob = prob.add(summ);
-                dao.setProbById(id, prob.doubleValue());
+//                dao.setProbById(id, prob.doubleValue());
             }else{
                 BigDecimal summ = new BigDecimal(6*Math.sqrt((dao.nonLearnedWords) / dao.totalWords));
                 prob = prob.add(summ);
-                dao.setProbById(id, prob.doubleValue());
+//                dao.setProbById(id, prob.doubleValue());
             }
             howWasAnswered = false;
             indexes = dao.updateProb(this);
@@ -257,8 +257,9 @@ public class Phrase implements Serializable{
             return false;
         }else {
             System.out.println("Exception in inLabels from Phrase recieved hashset collection == null");
-            throw new RuntimeException();
+//            throw new RuntimeException();
         }
+
     }
 
     public int getIndex_start() {
