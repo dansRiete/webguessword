@@ -121,6 +121,8 @@ public class DAO {
         //<<<
 
         checkTables();
+        reloadCollectionOfPhrases();
+        reloadLabelsList();
 
         //>>>Создаём базу данных в оперативной памяти (используется для увеличения производительности)
         /*try {
@@ -131,8 +133,7 @@ public class DAO {
         }*/
         //<<<
 
-        reloadInMemoryDb();
-        reloadLabelsList();
+
 
     }
 
@@ -250,7 +251,7 @@ public class DAO {
         return listOfPhrases;
     }
 
-    public void reloadInMemoryDb(){
+    public void reloadCollectionOfPhrases(){
 
         //If in-memory db is not empty, then to empty it.
         /*try (Statement inMemSt = inMemDbConn.createStatement()){
@@ -273,19 +274,12 @@ public class DAO {
                 "(id, for_word, nat_word, transcr, prob_factor, create_date, label, last_accs_date, " +
                 "index_start, index_end, exactmatch) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
 
-        int counter;
-        try(Statement mainSt = mainDbConn.createStatement(); ResultSet rs2 = mainSt.executeQuery("SELECT COUNT(*) FROM " + loginBean.getUser())){
-            rs2.next();
-            counter = rs2.getInt(1);
-        }catch (SQLException e) {
-            System.out.println("EXCEPTION#1: in reloadInMemoryDb() from DAO");
-            e.printStackTrace();
-            throw new RuntimeException();
-        }
+
 
         try (Statement mainSt = mainDbConn.createStatement();
              ResultSet rs1 = mainSt.executeQuery("SELECT * FROM " + loginBean.getUser())){
 
+            listOfPhrases.clear();
             while (rs1.next()) {
 
                 int id = rs1.getInt("id");
@@ -308,13 +302,13 @@ public class DAO {
             }
 
         } catch (SQLException e) {
-            System.out.println("EXCEPTION#1: in reloadInMemoryDb() from DAO");
+            System.out.println("EXCEPTION#1: in reloadCollectionOfPhrases() from DAO");
             e.printStackTrace();
             throw new RuntimeException();
         }
 
         reloadIndices(1);
-        System.out.println("CALL: reloadInMemoryDb() from DAO " + counter + " elements were added");
+        System.out.println("CALL: reloadCollectionOfPhrases() from DAO " + listOfPhrases.size() + " elements were added");
     }
 
     private Phrase getPhraseById(int id){
@@ -510,11 +504,11 @@ public class DAO {
             rs.next();
             nonLearnedWords = rs.getInt(1);*/
             nonLearnedWords = 0;
-            learnedWords = 0;
+            summProbOfNLW = 0;
             for(Phrase phr : listOfPhrases){
                 if(phr.prob.doubleValue() > 3 && phr.inLabels(chosedLabels)){
                     nonLearnedWords++;
-                    learnedWords+=phr.prob.doubleValue();
+                    summProbOfNLW+=phr.prob.doubleValue();
                 }
             }
 
@@ -523,6 +517,7 @@ public class DAO {
             rs.next();
             totalWords = rs.getInt(1);*/
             totalWords = listOfPhrases.size();
+            learnedWords = totalWords - nonLearnedWords;
 
 
             /*rs = statement.executeQuery("SELECT SUM(prob_factor) FROM " + table + " WHERE prob_factor>3");
@@ -622,42 +617,65 @@ public class DAO {
     }
 
     /**
-     * Помещает данный в качестве параметра Id фразы в стек
+     * Помещает данный в качестве параметра Id фразы в стек, стек используется для предотвращения повторения фраз
      * @param id добавляемая фраза
      * @return true если фраза присутствует в стеке, false если отсутствует
      */
     private boolean pushIntoStack(Phrase id){
+        StringBuilder msg = new StringBuilder("CALL: pushIntoStack(Phrase id) from DAO;");
+        StringBuilder stackContent = new StringBuilder("Содержимое стека [");
         //Если массив не инстантиирован или количество фраз стало меньше чем размер массива-стека заново создаём его с
         // нужным размером и обнуляем положение стека
         boolean result = false;
         if(lastPhrasesStack==null||lastPhrasesStack.length>totalWords){
+            //Если количество фраз больше или равно 7 создаётся стандартный стек на 7 элементов.
             if(totalWords>=7){
                 lastPhrasesStack = new Phrase[7];
                 stackNum = 0;
-            }else if(totalWords<3)
+                msg.append(" создан стек на 7 элементов;");
+            }
+            //Если количество фраз меньше 3 в стеке нет надобности, метод возвращает false
+            else if(totalWords<3) {
+                msg.append(" в стеке нет необходимости - выход из метода (возврат false);");
+                System.out.println(msg);
                 return false;
-             else {
-                lastPhrasesStack = new Phrase[(int) totalWords];
-                System.out.println("new Id[" + (int) totalWords + "]");
+            }
+            //Если кол-во слов меньше 7 но больше трёх создаётся стек на (кол-во слов минус 1) элементов
+            else {
+                msg.append(" создан стек на " + ((int) totalWords - 1) + " элементов;");
+                lastPhrasesStack = new Phrase[(int) totalWords - 1];
                 stackNum = 0;
             }
         }
         //Проверяем или стек не содержит айдишник данной в качестве параметра фразы
-        for(Phrase id1 : lastPhrasesStack){
-            if(id1 != null && id1.id == id.id){
+        for(Phrase phrase : lastPhrasesStack){
+            if(phrase != null && phrase.id == id.id){
+                msg.append(" в стеке уже есть фраза " + id.forWord + " метод возвращает true;");
                 result = true;
                 break;
             }
         }
         if(!result){
+            msg.append(" в стек помещается фраза \"" + id.natWord + "\";");
             lastPhrasesStack[stackNum>lastPhrasesStack.length-1?stackNum=0:stackNum] = id;
             stackNum++;
         }
+
+        for(Phrase phrase : lastPhrasesStack){
+            if(phrase!=null){
+                stackContent.append(phrase.id + ", ");
+            }else {
+                stackContent.append("null, ");
+            }
+        }
+        stackContent.append("]");
+        System.out.println(msg);
+        System.out.println(stackContent);
         return result;
     }
 
     public Phrase createRandPhrase(){
-        System.out.println("CALL: createRandPhrase() from DAO");
+
 //        Phrase phrase;
         Phrase phrase = null;
 
@@ -679,6 +697,8 @@ public class DAO {
             e.printStackTrace();
             throw new RuntimeException();
         }*/
+        System.out.println("CALL: createRandPhrase() from DAO phrase is " + phrase.natWord + " " +
+                "indexes are: ("+phrase.indexStart + " - " + phrase.indexEnd + ")");
         return phrase;
     }
 
@@ -703,7 +723,7 @@ public class DAO {
             e.printStackTrace();
             throw new RuntimeException();
         }
-        reloadInMemoryDb();
+        reloadCollectionOfPhrases();
         reloadIndices(1);
 
         new Thread(){

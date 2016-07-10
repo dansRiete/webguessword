@@ -226,42 +226,47 @@ public class InterfaceBean implements Serializable{
 
         reloadStatTableData();
 
-        StringBuilder str = new StringBuilder();
-        int countOfLearnedPhrases = 0;
-        for(int i = listOfPhrases.size()-1; i>=0; i--){
-            //If the phrase has been learnt and had not been learnt before then increase the counter of learnt phrases per current session
-            if(listOfPhrases.get(i).isLearnt()&&!listOfPhrases.get(i).returnUnmodified().isLearnt()){
-                countOfLearnedPhrases++;
-            }
-            //If vice-versa --
-            if(!listOfPhrases.get(i).isLearnt()&&listOfPhrases.get(i).returnUnmodified().isLearnt()){
-                countOfLearnedPhrases--;
-            }
-            if(listOfPhrases.get(i).howWasAnswered == null)
-                str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
-                .append(NONANSWERED_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt()?"<font color=\"green\">" : "")
-                        .append(listOfPhrases.get(i).natWord).append(listOfPhrases.get(i).isLearnt()?"</font>":"")
-                .append((i == index ? "</strong>" : "")).append("</br>");
-            else if(listOfPhrases.get(i).howWasAnswered)
-                str.append(i==index?"<strong>":"").append("[").append(listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
-                .append(RIGHT_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt()?"<font color=\"green\">":"")
-                .append(listOfPhrases.get(i).natWord).append(" - ").append(listOfPhrases.get(i).forWord).append(listOfPhrases.get(i).transcr==null?"":(" - " + listOfPhrases.get(i).transcr)).append(listOfPhrases.get(i).isLearnt()?"</font>":"")
-                .append((i == index ? "</strong>" : "")).append("</br>");
-            else if(!listOfPhrases.get(i).howWasAnswered)
-                str.append(i==index?"<strong>":"").append("[").append(listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
-                .append(WRONG_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt()?"<font color=\"green\">":"")
-                .append(listOfPhrases.get(i).natWord).append(" - ").append(listOfPhrases.get(i).forWord).append(listOfPhrases.get(i).transcr==null||listOfPhrases.get(i).transcr.equals("")?"":(" - " + listOfPhrases.get(i).transcr))
-                .append(listOfPhrases.get(i).isLearnt()?"</font>":"").append((i==index?"</strong>":"")).append("</br>");
+        try {
+            StringBuilder str = new StringBuilder();
+            int countOfLearnedPhrases = 0;
+            for (int i = listOfPhrases.size() - 1; i >= 0; i--) {
+                //If the phrase has been learnt and had not been learnt before then increase the counter of learnt phrases per current session
+                if (listOfPhrases.get(i).isLearnt() && !listOfPhrases.get(i).returnUnmodified().isLearnt()) {
+                    countOfLearnedPhrases++;
+                }
+                //If vice-versa --
+                if (!listOfPhrases.get(i).isLearnt() && listOfPhrases.get(i).returnUnmodified().isLearnt()) {
+                    countOfLearnedPhrases--;
+                }
+                if (listOfPhrases.get(i).howWasAnswered == null)
+                    str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
+                            .append(NONANSWERED_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt() ? "<font color=\"green\">" : "")
+                            .append(listOfPhrases.get(i).natWord).append(listOfPhrases.get(i).isLearnt() ? "</font>" : "")
+                            .append((i == index ? "</strong>" : "")).append("</br>");
+                else if (listOfPhrases.get(i).howWasAnswered)
+                    str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
+                            .append(RIGHT_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt() ? "<font color=\"green\">" : "")
+                            .append(listOfPhrases.get(i).natWord).append(" - ").append(listOfPhrases.get(i).forWord).append(listOfPhrases.get(i).transcr == null ? "" : (" - " + listOfPhrases.get(i).transcr)).append(listOfPhrases.get(i).isLearnt() ? "</font>" : "")
+                            .append((i == index ? "</strong>" : "")).append("</br>");
+                else if (!listOfPhrases.get(i).howWasAnswered)
+                    str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
+                            .append(WRONG_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt() ? "<font color=\"green\">" : "")
+                            .append(listOfPhrases.get(i).natWord).append(" - ").append(listOfPhrases.get(i).forWord).append(listOfPhrases.get(i).transcr == null || listOfPhrases.get(i).transcr.equals("") ? "" : (" - " + listOfPhrases.get(i).transcr))
+                            .append(listOfPhrases.get(i).isLearnt() ? "</font>" : "").append((i == index ? "</strong>" : "")).append("</br>");
 
+            }
+            numberOfLearnedPhrasePerSession = countOfLearnedPhrases;
+            result = str.toString();
+            currPhrForWord = listOfPhrases.get(index).forWord;
+            currPhrNatWord = listOfPhrases.get(index).natWord;
+            currPhrTransc = listOfPhrases.get(index).transcr;
+            currPhrLabel = listOfPhrases.get(index).label;
+            if (currPhrase.isModified)
+                currPhrase.updatePhrase();
+        }catch (Exception e){
+            e.printStackTrace();
+            throw new RuntimeException();
         }
-        numberOfLearnedPhrasePerSession = countOfLearnedPhrases;
-        result = str.toString();
-        currPhrForWord = listOfPhrases.get(index).forWord;
-        currPhrNatWord = listOfPhrases.get(index).natWord;
-        currPhrTransc = listOfPhrases.get(index).transcr;
-        currPhrLabel = listOfPhrases.get(index).label;
-        if(currPhrase.isModified)
-            currPhrase.updatePhrase();
     }
 
     private void newPhrase(){
