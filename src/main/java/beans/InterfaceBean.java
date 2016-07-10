@@ -95,19 +95,20 @@ public class InterfaceBean implements Serializable{
 
     @PostConstruct
     private void init(){
-        System.out.println("CALL: init() from InterfaceBean");
+
         if(loginBean!=null)
             dao = loginBean.getDao();
         if(dao!=null){
             listOfChooses = dao.labels;
             nextQuestion();
         }
+        System.out.println("CALL: init() from InterfaceBean" + " listOfChooses " + listOfChooses);
     }
 
     public void setTable() {
         System.out.println("CALL: setTable() from InterfaceBean");
 
-        if (choosedLabel != null &&  (!choosedLabel.equalsIgnoreCase(""))){
+        if (choosedLabel != null && (!choosedLabel.equalsIgnoreCase(""))){
 
             if(!choosedLabel.equalsIgnoreCase("all")){
                 hshset.add(choosedLabel);
@@ -119,7 +120,7 @@ public class InterfaceBean implements Serializable{
         resultChoosedLabel = "";
         boolean temp = true;
 
-        //>>Makes a "WHERE LABEL IN" clause string from collectionv
+        //>>Makes a "WHERE LABEL IN" clause string from collection
         for(String str : hshset){
             if(temp){
                 resultChoosedLabel += "'" + str + "'";
@@ -141,17 +142,11 @@ public class InterfaceBean implements Serializable{
             dao.chosedLabels = hshset;
             previousResultChoosedLabel = resultChoosedLabel;
             dao.reloadIndices(1);
-//            calculateSessionStatistics();
             reloadStatTableData();
         }
     }
 
-    /*private void calculateSessionStatistics(){
-        System.out.println("CALL: calculateSessionStatistics() from InterfaceBean");
-
-    }*/
-
-    private void reloadStatTableData(){
+     private void reloadStatTableData(){
         System.out.println("CALL: reloadStatTableData() from InterfaceBean");
 
         //After the answer creates String like this - "40.2 ➩ 37.3"
@@ -216,6 +211,9 @@ public class InterfaceBean implements Serializable{
         nonLearnedWords = (int) dao.nonLearnedWords;
         totalNumberOfPhrases = learnedWords+nonLearnedWords;
         //<<
+         System.out.println("choosedLabel: " + choosedLabel);
+         System.out.println("listOfChooses: " + listOfChooses);
+         System.out.println("resultChoosedLabel: " + resultChoosedLabel);
 
     }
 
