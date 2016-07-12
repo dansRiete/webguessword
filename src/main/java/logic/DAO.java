@@ -411,6 +411,7 @@ public class DAO {
         phr.exactMatch = phrase.exactMatch;
         phr.label = phrase.label;
         phr.prob = phrase.prob;
+        reloadCollectionOfPhrases();
 
         new Thread(){
             public void run(){
@@ -453,6 +454,7 @@ public class DAO {
             throw new RuntimeException();
         }*/
         activeListOfPhrases.remove(getPhraseById(phr.id));
+        reloadCollectionOfPhrases();
 
         new Thread(){
             public void run(){
@@ -696,10 +698,14 @@ public class DAO {
 //        Phrase phrase;
         Phrase phrase = null;
 
+
         //Новая фраза создаётся пока не подтвердится, что она отсутствует в стеке(последние 7 фраз)
         do {
             int index = random.nextInt(1000000000);
-            phrase = getPhraseByIndex(index);
+            Phrase tempPhrase = getPhraseByIndex(index);
+            phrase = new Phrase(tempPhrase.id, tempPhrase.forWord, tempPhrase.natWord, tempPhrase.transcr, tempPhrase.prob, tempPhrase.createDate,
+                    tempPhrase.label, tempPhrase.lastAccs, tempPhrase.indexStart, tempPhrase.indexEnd, tempPhrase.exactMatch, this);
+            phrase.timeOfReturningFromList = tempPhrase.timeOfReturningFromList;
         }while (pushIntoStack(phrase));
 
         /*String sql = "SELECT * FROM " + table + " WHERE id=" + currId.id;
