@@ -23,19 +23,21 @@ public class DAO {
     private Random random = new Random();
     private String timezone = "Europe/Kiev";
     private String remoteHost = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
-    private String localHost = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
+    private String localHost = "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     public HashSet<String> chosedLabels;
     public ArrayList<String> possibleLabels = new ArrayList<>();
     public double learnedWords;
     public double nonLearnedWords;
     public double totalActiveWords;
     public double totalPossibleWords;
-    final double chanceOfLearnedWords = 1 / 15;
+    private double maxIndex;
+    final double chanceOfLearnedWords = 1d / 15d;
     private Phrase[] lastPhrasesStack;
     private int stackNum;
     public Connection mainDbConn;
     private LoginBean loginBean;
-    private ArrayList<Phrase> activeListOfPhrases = new ArrayList<>();
+    private ArrayList<Phrase> listOfActivePhrases = new ArrayList<>();
+    private ArrayList<Phrase> listOfAllPhrases = new ArrayList<>();
 
     private String getCreateInmemDb_MainTable_SqlString() {
 
@@ -163,7 +165,7 @@ public class DAO {
         System.out.println("CALL: returnPhrasesList() from DAO");
 //        ArrayList<Phrase> list = new ArrayList<>();
 
-        return activeListOfPhrases;
+        return listOfActivePhrases;
     }
 
     /**
@@ -173,8 +175,7 @@ public class DAO {
         System.out.println("CALL: reloadLabelsList() from DAO");
         possibleLabels.clear();
         possibleLabels.add("All");
-        String temp = null;
-        HashSet<String> hsset = new HashSet<>();
+        String temp;
 
         try (Statement st = mainDbConn.createStatement();
              ResultSet rs = st.executeQuery("SELECT DISTINCT (LABEL) FROM " + loginBean.getUser() + " ORDER BY LABEL")) {
@@ -192,11 +193,6 @@ public class DAO {
 
         return possibleLabels;
 
-    }
-
-    public ArrayList<Phrase> getCurrList() {
-
-        return activeListOfPhrases;
     }
 
     public void reloadCollectionOfPhrases() {
@@ -226,7 +222,9 @@ public class DAO {
         try (Statement mainSt = mainDbConn.createStatement();
              ResultSet rs1 = mainSt.executeQuery("SELECT * FROM " + loginBean.getUser())) {
 
-            activeListOfPhrases.clear();
+            System.out.println("CALL: reloadCollectionOfPhrases() from DAO");
+
+            listOfActivePhrases.clear();
             while (rs1.next()) {
 
                 int id = rs1.getInt("id");
@@ -246,9 +244,11 @@ public class DAO {
 
                 //Добавляем в активную коллекцию если метка фразы совпадает с выбранными - "chosedLabels" и считаем totalPossibleWords
                 if (phrase.inLabels(chosedLabels)) {
-                    activeListOfPhrases.add(phrase);
+                    listOfActivePhrases.add(phrase);
+                    listOfAllPhrases.add(phrase);
                     totalPossibleWords++;
                 } else {
+                    listOfAllPhrases.add(phrase);
                     totalPossibleWords++;
                 }
 
@@ -261,7 +261,7 @@ public class DAO {
         }
 
         reloadIndices(1);
-        System.out.println("CALL: reloadCollectionOfPhrases() from DAO " + activeListOfPhrases.size() + " elements were added");
+
     }
 
     /**
@@ -269,11 +269,12 @@ public class DAO {
      * @return Возвращает фразу из коллекции
      */
     private Phrase getPhraseById(int id) {
-        for (Phrase phrase : activeListOfPhrases) {
+
+        for (Phrase phrase : listOfAllPhrases) {
             if (phrase.id == id)
                 return phrase;
         }
-//        return null;
+
         throw new RuntimeException();
     }
 
@@ -283,7 +284,7 @@ public class DAO {
      */
     private Phrase getPhraseByIndex(long index) {
         long startTime = System.nanoTime();
-        for (Phrase phrase : activeListOfPhrases) {
+        for (Phrase phrase : listOfActivePhrases) {
             if (index >= phrase.indexStart && index <= phrase.indexEnd) {
                 //Записываем время доступа в объект фразы
                 phrase.setTimeOfReturningFromList(System.nanoTime() - startTime);
@@ -362,7 +363,7 @@ public class DAO {
     public void deletePhrase(Phrase phr) {
         System.out.println("CALL: deletePhrase(int id) from DAO");
         String deleteSql = "DELETE FROM " + loginBean.getUser() + " WHERE ID=" + phr.id;
-        activeListOfPhrases.remove(getPhraseById(phr.id));
+        listOfActivePhrases.remove(getPhraseById(phr.id));
         reloadCollectionOfPhrases();
 
         new Thread() {
@@ -385,53 +386,39 @@ public class DAO {
         double indOfLW;     //Индекс выпадения изученных
         double rangeOfNLW;  //Диапазон индексов неизученных слов
         double scaleOf1prob;    //rangeOfNLW/summProbOfNLW  цена одного prob
-        ArrayList<Integer> idArr = new ArrayList<>();
-        ResultSet rs = null;
         int summProbOfNLW = 0;
+        int countOfModIndices = 0;
         long[] indexes = new long[2];
+        totalActiveWords = listOfActivePhrases.size(); //Считаем общее количество фраз
 
 
-        for (Phrase phr : activeListOfPhrases) {
-            idArr.add(phr.id);
-        }
 
-        //Считаем неизученные слова
 
+        //Считаем неизученные слова, summProbOfNLW и очищаем индексы
         nonLearnedWords = 0;
         summProbOfNLW = 0;
-        for (Phrase phr : activeListOfPhrases) {
+        for (Phrase phr : listOfActivePhrases) {
+            phr.indexStart = phr.indexEnd = 0;
             if (phr.prob.doubleValue() > 3) {
                 nonLearnedWords++;
                 summProbOfNLW += phr.prob.doubleValue();
             }
         }
 
-        //Считаем общее количество фраз
-
-        totalActiveWords = activeListOfPhrases.size();
+        //Считаем изученные (learnedWords)
         learnedWords = totalActiveWords - nonLearnedWords;
-
-
         indOfLW = chanceOfLearnedWords / learnedWords;
         rangeOfNLW = learnedWords > 0 ? 1 - chanceOfLearnedWords : 1;
         scaleOf1prob = rangeOfNLW / summProbOfNLW;
         if (nonLearnedWords == 0) {
             System.out.println("Все слова выучены!");
         }
-        int countOfModIndices = 0;
 
-        //Clears indexes before reloading
-
-        for (Phrase phr : activeListOfPhrases) {
-            phr.indexStart = phr.indexEnd = 0;
-        }
-
-        for (int i : idArr) { //Устанавилвает индексы для неизученных слов
+        for (Phrase phrase : listOfActivePhrases) { //Устанавилвает индексы для неизученных слов
             long indexStart;
             long indexEnd;
             //Переменной prob присваивается prob фразы с currentPhraseId = i;
             double prob;
-            Phrase phrase = getPhraseById(i);
             prob = phrase.prob.doubleValue();
 
             //Если nonLearnedWords == 0, то есть, все слова выучены устанавливаются равные для всех индексы
@@ -465,7 +452,11 @@ public class DAO {
             }
 
             countOfModIndices++;
-            if (i == id) {
+            if(countOfModIndices==listOfActivePhrases.size()){
+                maxIndex = phrase.indexEnd;
+//                System.out.println("maxIndex is " + maxIndex);
+            }
+            if (phrase.id == id) {
                 indexes[0] = indexStart;
                 indexes[1] = indexEnd;
             }
@@ -629,18 +620,18 @@ public class DAO {
             }
         }
         stackContent.append("]");
-        System.out.println(msg);
-        System.out.println(stackContent);
+        System.out.println(msg + " " + stackContent);
         return result;
     }
 
     public Phrase createRandPhrase() {
+        System.out.println("CALL: createRandPhrase()");
         Phrase phrase = null;
 
 
         //Новая фраза создаётся пока не подтвердится, что она отсутствует в стеке(последние 7 фраз)
         do {
-            int index = random.nextInt(1000000000);
+            int index = random.nextInt( (int) maxIndex);
             Phrase tempPhrase = getPhraseByIndex(index);
             phrase = new Phrase(tempPhrase.id, tempPhrase.forWord, tempPhrase.natWord, tempPhrase.transcr, tempPhrase.prob, tempPhrase.createDate,
                     tempPhrase.label, tempPhrase.lastAccs, tempPhrase.indexStart, tempPhrase.indexEnd, tempPhrase.exactMatch, this);
@@ -648,7 +639,7 @@ public class DAO {
         } while (pushIntoStack(phrase));
 
 
-        System.out.println("CALL: createRandPhrase() from DAO phrase is " + phrase.natWord + " " +
+        System.out.println("Phrase is " + phrase.natWord + " " +
                 "indexes are: (" + phrase.indexStart + " - " + phrase.indexEnd + ")");
         return phrase;
     }
@@ -658,7 +649,7 @@ public class DAO {
         String insertSql = "INSERT INTO " + loginBean.getUser() + " (for_word, nat_word, transcr, prob_factor, create_date," +
                 " label, last_accs_date, exactmatch) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-        activeListOfPhrases.add(phrase);
+        listOfActivePhrases.add(phrase);
         reloadCollectionOfPhrases();
         reloadIndices(1);
 

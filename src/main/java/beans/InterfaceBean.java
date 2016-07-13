@@ -17,6 +17,7 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
+import javax.faces.event.SystemEvent;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
@@ -142,9 +143,9 @@ public class InterfaceBean implements Serializable{
             dao.chosedLabels = hshset;
             dao.reloadCollectionOfPhrases();
             previousResultChoosedLabel = resultChoosedLabel;
-            dao.reloadIndices(1);
             reloadStatTableData();
         }
+        System.out.println("__________________________________________________________");
     }
 
      private void reloadStatTableData(){
@@ -284,7 +285,8 @@ public class InterfaceBean implements Serializable{
             currPhrase = listOfPhrases.get(index);
             currPhrase.rightAnswer(answer);
             nextQuestion();
-            resultProcessing();
+//            System.out.println("!!!Call res processing by rightAnswer(String answer)");
+//            resultProcessing();
         }catch (NullPointerException e){
             System.out.println("EXCEPTION: in rightAnswer() from InterfaceBean");
             e.printStackTrace();
@@ -300,7 +302,8 @@ public class InterfaceBean implements Serializable{
             currPhrase = listOfPhrases.get(index);
             currPhrase.wrongAnswer(answer);
             nextQuestion();
-            resultProcessing();
+//            System.out.println("!!!Call res processing by wrongAnswer(String answer)");
+//            resultProcessing();
         }catch (NullPointerException e){
             System.out.println("EXCEPTION: in wrongAnswer() from InterfaceBean");
             e.printStackTrace();
@@ -313,6 +316,7 @@ public class InterfaceBean implements Serializable{
         long starTime = System.nanoTime();
         try{
             listOfPhrases.get(index-1).rightAnswer(null);
+//            System.out.println("!!!Call res processing by previousRight()");
             resultProcessing();
         }catch (NullPointerException e){
             System.out.println("EXCEPTION: in previousRight() from InterfaceBean");
@@ -326,6 +330,7 @@ public class InterfaceBean implements Serializable{
         long starTime = System.nanoTime();
         try{
             listOfPhrases.get(index -1).wrongAnswer(null);
+//            System.out.println("!!!Call res processing by previousWrong()");
             resultProcessing();
         }catch (NullPointerException e){
             System.out.println("EXCEPTION: in previousWrong() from InterfaceBean");
@@ -369,6 +374,7 @@ public class InterfaceBean implements Serializable{
             currPhrase = listOfPhrases.get(index);
             question = currPhrase.natWord + " " + hint.getSlashHint(currPhrase.forWord);
         }
+//        System.out.println("!!!Call res processing by nextQuestion()");
         resultProcessing();
 
 //        System.out.println("--- nextQuestion() List size="+(listOfPhrases.size()+" Current shift="+shift+" Requested index="+index));
@@ -383,6 +389,7 @@ public class InterfaceBean implements Serializable{
             index = 0;
         currPhrase = listOfPhrases.get(index);
         question = currPhrase.natWord;
+//        System.out.println("!!!Call res processing by previousQuestion()");
         resultProcessing();
 //        System.out.println("--- previousQuestion() List size="+(listOfPhrases.size()+" Current shift="+shift+" Requested index="+index));
     }
