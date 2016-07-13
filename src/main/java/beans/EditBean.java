@@ -26,7 +26,7 @@ public class EditBean {
 
     private DAO dao;
     private ArrayList<Phrase> myList;
-    private ArrayList<Phrase> currList;
+//    private ArrayList<Phrase> currList;
     private List<String> labelsList;
     private String forWord;
     private String natWord;
@@ -40,7 +40,7 @@ public class EditBean {
         if(loginBean!=null)
             dao = loginBean.getDao();
         if(dao!=null){
-            currList = dao.getCurrList();
+//            currList = dao.getCurrList();
             myList = dao.returnPhrasesList();
             labelsList = dao.reloadLabelsList();
         }
@@ -127,11 +127,11 @@ public class EditBean {
         this.label = label;
     }
 
-    public ArrayList<Phrase> getCurrList() {
+    /*public ArrayList<Phrase> getCurrList() {
         return currList;
     }
 
     public void setCurrList(ArrayList currList) {
         this.currList = currList;
-    }
+    }*/
 }

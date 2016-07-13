@@ -119,6 +119,16 @@
             <h:outputText value="#{v.lastAccs}"> </h:outputText>
         </p:column>
 
+        <p:column sortBy="#{v.indexStart}">
+            <f:facet name="header">Index Start</f:facet>
+            <h:outputText value="#{v.indexStart}"> </h:outputText>
+        </p:column>
+
+        <p:column sortBy="#{v.End}">
+            <f:facet name="header">Index End</f:facet>
+            <h:outputText value="#{v.indexEnd}"> </h:outputText>
+        </p:column>
+
         <p:column>
             <f:facet name="header">Action</f:facet>
             <p:commandButton value="Delete" actionListener="#{editBean.deleteById(v)}" update="@form" ajax="true">

@@ -30,7 +30,7 @@ public class DAO {
     public double nonLearnedWords;
     public double totalActiveWords;
     public double totalPossibleWords;
-    final double chanceOfLearnedWords = 1d/15d;
+    final double chanceOfLearnedWords = 1 / 15;
     private Phrase[] lastPhrasesStack;
     private int stackNum;
     public Connection mainDbConn;
@@ -39,7 +39,7 @@ public class DAO {
 
     private String getCreateInmemDb_MainTable_SqlString() {
 
-         return "CREATE TABLE " + loginBean.getUser() + "\n" +
+        return "CREATE TABLE " + loginBean.getUser() + "\n" +
                 "(\n" +
                 "    id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,\n" +
                 "    for_word VARCHAR(250) NOT NULL,\n" +
@@ -53,11 +53,12 @@ public class DAO {
                 "    index_start DOUBLE,\n" +
                 "    index_end DOUBLE\n" +
                 ")";
-            //"ALTER TABLE " + user + " ADD CONSTRAINT unique_id UNIQUE (id);";
+        //"ALTER TABLE " + user + " ADD CONSTRAINT unique_id UNIQUE (id);";
 
     }
+
     private String getCreateMainDb_MainTable_SqlString() {
-            String str =  "CREATE TABLE " + loginBean.getUser() + "\n"  +
+        String str = "CREATE TABLE " + loginBean.getUser() + "\n" +
                 "    (id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,\n" +
                 "    for_word VARCHAR(250) NOT NULL,\n" +
                 "    nat_word VARCHAR(250) NOT NULL,\n" +
@@ -73,6 +74,7 @@ public class DAO {
         return str;
 
     }
+
     private String getCreateMainDb_StatTable_SqlString() {
 
         return "CREATE TABLE " + loginBean.getUser() + "\n" +
@@ -93,21 +95,21 @@ public class DAO {
 
     }
 
-    public DAO(LoginBean loginBean){
+    public DAO(LoginBean loginBean) {
 
         String dbConnected = null;
         this.loginBean = loginBean;
 //        table = loginBean.getUser();
 
         //>>>Получаем подключение к основной БД, в случае ошибки пробуем подключиться через локальнй хост (только для режима тестирования)
-        try{
+        try {
             mainDbConn = DriverManager.getConnection(remoteHost, "adminLtuHq9R", "d-AUIKakd1Br");
             dbConnected = "- Remote DB was connected";
-        }catch (SQLException e){
-            try{
+        } catch (SQLException e) {
+            try {
                 mainDbConn = DriverManager.getConnection(localHost, "adminLtuHq9R", "d-AUIKakd1Br");
-                dbConnected = "- Local DB was connected" ;
-            }catch (SQLException e1){
+                dbConnected = "- Local DB was connected";
+            } catch (SQLException e1) {
                 e1.printStackTrace();
                 System.out.println("EXCEPTION: in DAO constructor");
                 throw new DataBaseConnectionException();
@@ -120,46 +122,36 @@ public class DAO {
         reloadCollectionOfPhrases();
         reloadLabelsList();
 
-        //>>>Создаём базу данных в оперативной памяти (используется для увеличения производительности)
-        /*try {
-            inMemDbConn = DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD);
-        } catch (SQLException e) {
-            System.out.println("Exception during creating in-memory database connection");
-            e.printStackTrace();
-        }*/
-        //<<<
-
-
 
     }
 
     /**
      * Проверяет наличие соответствующих таблиц БД необходимых для работы приложения
      */
-    private void checkTables(){
+    private void checkTables() {
         boolean mainDbExists = false;
         boolean statDbExists = false;
         try (ResultSet rs_tables = mainDbConn.createStatement().executeQuery
-                ("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA='guessword'")){
-            while (rs_tables.next()){
+                ("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA='guessword'")) {
+            while (rs_tables.next()) {
                 //Проверяем или в БД существует основная таблица фраз
-                if(rs_tables.getString("TABLE_NAME").equals(loginBean.getUser()))
+                if (rs_tables.getString("TABLE_NAME").equals(loginBean.getUser()))
                     mainDbExists = true;
                 //Проверяем или в БД существует статистическая таблица
-                if(rs_tables.getString("TABLE_NAME").equals(loginBean.getUser()+"_stat"))
+                if (rs_tables.getString("TABLE_NAME").equals(loginBean.getUser() + "_stat"))
                     statDbExists = true;
             }
-        }catch (SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("EXCEPTION: SQLException in checkTables() from DAO");
         }
 
-        if(!mainDbExists){
-            try(Statement statement = mainDbConn.createStatement()){
+        if (!mainDbExists) {
+            try (Statement statement = mainDbConn.createStatement()) {
                 statement.execute(getCreateMainDb_MainTable_SqlString());
                 statement.execute("INSERT INTO " + loginBean.getUser() + " (for_word, nat_word, prob_factor) VALUES ('The', " +
                         "'The collection is empty, push Show All an add phrases', 30)");
-            }catch (SQLException e){
+            } catch (SQLException e) {
                 e.printStackTrace();
                 System.out.println("EXCEPTION: SQLException in checkTables() from DAO during create main table in main DB");
             }
@@ -167,88 +159,47 @@ public class DAO {
         }
     }
 
-    public ArrayList<Phrase> returnPhrasesList(){
+    public ArrayList<Phrase> returnPhrasesList() {
         System.out.println("CALL: returnPhrasesList() from DAO");
-        ArrayList<Phrase> list = new ArrayList<>();
+//        ArrayList<Phrase> list = new ArrayList<>();
 
-
-        /*try (Statement st = inMemDbConn.createStatement(); ResultSet rs = st.executeQuery("SELECT * FROM " + loginBean.getUser() + " ORDER BY create_date DESC, id DESC")){
-            while (rs.next()){
-                list.add(new Phrase(rs.getInt("id"), rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"), rs.getBigDecimal("prob_factor"),
-                        rs.getTimestamp("create_date"), rs.getString("label"), rs.getTimestamp("last_accs_date"), 0, 0, rs.getBoolean("exactmatch"), this));
-            }
-        } catch (SQLException e) {
-            System.out.println("EXCEPTION: in returnPhrasesList() in DAO");
-            e.printStackTrace();
-            throw new RuntimeException();
-        }*/
-
-
-
-        return list;
+        return activeListOfPhrases;
     }
 
     /**
-     *
      * @return Возвращает список возможных меток для фраз + "All"
      */
-    public List<String> reloadLabelsList(){
+    public List<String> reloadLabelsList() {
         System.out.println("CALL: reloadLabelsList() from DAO");
         possibleLabels.clear();
         possibleLabels.add("All");
         String temp = null;
         HashSet<String> hsset = new HashSet<>();
 
-        /*try (Statement st = inMemDbConn.createStatement();
-             ResultSet rs = st.executeQuery("SELECT DISTINCT (LABEL) FROM " + loginBean.getUser() + " ORDER BY LABEL")){
+        try (Statement st = mainDbConn.createStatement();
+             ResultSet rs = st.executeQuery("SELECT DISTINCT (LABEL) FROM " + loginBean.getUser() + " ORDER BY LABEL")) {
 
-            while (rs.next()){
+            while (rs.next()) {
                 temp = rs.getString("LABEL");
-                possibleLabels.add(temp== null ? "null":temp);
+                possibleLabels.add(temp == null ? "null" : temp);
             }
 
         } catch (SQLException e) {
             System.out.println("EXCEPTION: in reloadLabelsList() from DAO");
             e.printStackTrace();
             throw new RuntimeException();
-        }*/
-
-        for(Phrase phrase : activeListOfPhrases){
-            if(phrase.label!=null)
-                hsset.add(phrase.label);
-        }
-
-        for(String str : hsset){
-            possibleLabels.add(str);
         }
 
         return possibleLabels;
 
     }
 
-    public ArrayList<Phrase> getCurrList(){
-        /*ArrayList<Phrase> phrases = new ArrayList<>();
-        try(Statement inMemSt = inMemDbConn.createStatement(); ResultSet rs = inMemSt.executeQuery("SELECT * FROM " + loginBean.getUser())){
-            while (rs.next()){
-                int id = rs.getInt("id");
-                System.out.println("Id is" + id);
-                Id currID = getIdById(id);
-//                System.out.println("currID.index_start" + currID.index_start);
-                Phrase phrase = new Phrase(id, rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"), new BigDecimal(rs.getDouble("prob_factor")),
-                        rs.getTimestamp("create_date"), rs.getString("label"), rs.getTimestamp("last_accs_date"),
-                        currID.index_start, currID.index_end, rs.getBoolean("exactmatch"), this);
-//                System.out.println("phrase.indexStart="+phrase.indexStart);
-                phrases.add(phrase);
-            }
+    public ArrayList<Phrase> getCurrList() {
 
-        }catch (SQLException e){
-            System.out.println("Exception in ResultSet getCurrList() from DAO");
-            e.printStackTrace();
-        }*/
         return activeListOfPhrases;
     }
 
-    public void reloadCollectionOfPhrases(){
+    public void reloadCollectionOfPhrases() {
 
         //If in-memory db is not empty, then to empty it.
         /*try (Statement inMemSt = inMemDbConn.createStatement()){
@@ -272,9 +223,8 @@ public class DAO {
                 "index_start, index_end, exactmatch) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
 
 
-
         try (Statement mainSt = mainDbConn.createStatement();
-             ResultSet rs1 = mainSt.executeQuery("SELECT * FROM " + loginBean.getUser())){
+             ResultSet rs1 = mainSt.executeQuery("SELECT * FROM " + loginBean.getUser())) {
 
             activeListOfPhrases.clear();
             while (rs1.next()) {
@@ -295,10 +245,10 @@ public class DAO {
                         last_accs_date, index_start, index_end, exactmatch, this);
 
                 //Добавляем в активную коллекцию если метка фразы совпадает с выбранными - "chosedLabels" и считаем totalPossibleWords
-                if(phrase.inLabels(chosedLabels)){
+                if (phrase.inLabels(chosedLabels)) {
                     activeListOfPhrases.add(phrase);
                     totalPossibleWords++;
-                }else {
+                } else {
                     totalPossibleWords++;
                 }
 
@@ -315,13 +265,12 @@ public class DAO {
     }
 
     /**
-     *
      * @param id по данному id
      * @return Возвращает фразу из коллекции
      */
-    private Phrase getPhraseById(int id){
-        for(Phrase phrase : activeListOfPhrases){
-            if(phrase.id == id)
+    private Phrase getPhraseById(int id) {
+        for (Phrase phrase : activeListOfPhrases) {
+            if (phrase.id == id)
                 return phrase;
         }
 //        return null;
@@ -329,14 +278,13 @@ public class DAO {
     }
 
     /**
-     *
      * @param index индекс, как правило, рандомный по которому искать фразу в коллекции
      * @return Возвращает фразу из коллекции
      */
-    private Phrase getPhraseByIndex(long index){
+    private Phrase getPhraseByIndex(long index) {
         long startTime = System.nanoTime();
-        for(Phrase phrase : activeListOfPhrases){
-            if(index>=phrase.indexStart && index<=phrase.indexEnd){
+        for (Phrase phrase : activeListOfPhrases) {
+            if (index >= phrase.indexStart && index <= phrase.indexEnd) {
                 //Записываем время доступа в объект фразы
                 phrase.setTimeOfReturningFromList(System.nanoTime() - startTime);
                 return phrase;
@@ -345,23 +293,15 @@ public class DAO {
         throw new RuntimeException();
     }
 
-    public long[] updateProb(Phrase phrase){
-        System.out.println("CALL: updateProb(Phrase phrase) with id=" + phrase.id +" from DAO");
+    public long[] updateProb(Phrase phrase) {
+        System.out.println("CALL: updateProb(Phrase phrase) with id=" + phrase.id + " from DAO");
         String dateTime = ZonedDateTime.now(ZoneId.of("Europe/Kiev")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
 
-        /*try (Statement inMemDbPrepStat = inMemDbConn.createStatement()){
-            inMemDbPrepStat.executeUpdate("UPDATE " + loginBean.getUser() + " SET prob_factor=" + phrase.prob + ", last_accs_date='" + dateTime +
-                    "' WHERE id=" + phrase.id);
-        } catch (SQLException e) {
-            System.out.println("EXCEPTION#1: in updateProb(Phrase phrase) from DAO");
-            e.printStackTrace();
-            throw new RuntimeException();
-        }*/
-        getPhraseById(phrase.id).prob=phrase.prob;
+        getPhraseById(phrase.id).prob = phrase.prob;
 
-        new Thread(){
-            public void run(){
-                try (Statement st = mainDbConn.createStatement()){
+        new Thread() {
+            public void run() {
+                try (Statement st = mainDbConn.createStatement()) {
                     st.execute("UPDATE " + loginBean.getUser() + " SET prob_factor=" + phrase.prob + ", last_accs_date='" + dateTime +
                             "' WHERE id=" + phrase.id);
                 } catch (SQLException e) {
@@ -374,35 +314,11 @@ public class DAO {
         return reloadIndices(phrase.id);
     }
 
-    public void updatePhrase(Phrase phrase){
+    public void updatePhrase(Phrase phrase) {
         System.out.println("CALL: updatePhrase(Phrase phrase) from DAO with id=" + phrase.id);
         String dateTime = ZonedDateTime.now(ZoneId.of("Europe/Kiev")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
         String updateSql = "UPDATE " + loginBean.getUser() + " SET for_word=?, nat_word=?, transcr=?, last_accs_date=?, " +
                 "exactmatch=?, label=?, prob_factor=?  WHERE id =" + phrase.id;
-
-        /*try (PreparedStatement inMemDbPrepStat = inMemDbConn.prepareStatement(updateSql)){
-
-            inMemDbPrepStat.setString(1, phrase.forWord);
-            inMemDbPrepStat.setString(2, phrase.natWord);
-
-            if(phrase.transcr==null||phrase.transcr.equalsIgnoreCase(""))
-                inMemDbPrepStat.setString(3, null);
-            else
-                inMemDbPrepStat.setString(3, phrase.transcr);
-
-            if(phrase.label==null||phrase.label.equalsIgnoreCase(""))
-                inMemDbPrepStat.setString(6, null);
-            else
-                inMemDbPrepStat.setString(6, phrase.label);
-            inMemDbPrepStat.setDouble(7, phrase.prob.doubleValue());
-
-            inMemDbPrepStat.setString(4, dateTime);
-            inMemDbPrepStat.setBoolean(5, phrase.exactMatch);
-        } catch (SQLException e) {
-            System.out.println("EXCEPTION#1: in updateProb(Phrase phrase) from DAO");
-            e.printStackTrace();
-            throw new RuntimeException();
-        }*/
         Phrase phr = getPhraseById(phrase.id);
         phr.forWord = phrase.forWord;
         phr.natWord = phrase.natWord;
@@ -413,19 +329,19 @@ public class DAO {
         phr.prob = phrase.prob;
         reloadCollectionOfPhrases();
 
-        new Thread(){
-            public void run(){
-                try (PreparedStatement mainDbPrepStat = mainDbConn.prepareStatement(updateSql)){
+        new Thread() {
+            public void run() {
+                try (PreparedStatement mainDbPrepStat = mainDbConn.prepareStatement(updateSql)) {
 
                     mainDbPrepStat.setString(1, phrase.forWord);
                     mainDbPrepStat.setString(2, phrase.natWord);
 
-                    if(phrase.transcr==null||phrase.transcr.equalsIgnoreCase(""))
+                    if (phrase.transcr == null || phrase.transcr.equalsIgnoreCase(""))
                         mainDbPrepStat.setString(3, null);
                     else
                         mainDbPrepStat.setString(3, phrase.transcr);
 
-                    if(phrase.label==null||phrase.label.equalsIgnoreCase(""))
+                    if (phrase.label == null || phrase.label.equalsIgnoreCase(""))
                         mainDbPrepStat.setString(6, null);
                     else
                         mainDbPrepStat.setString(6, phrase.label);
@@ -443,21 +359,14 @@ public class DAO {
         }.start();
     }
 
-    public void deletePhrase(Phrase phr){
+    public void deletePhrase(Phrase phr) {
         System.out.println("CALL: deletePhrase(int id) from DAO");
         String deleteSql = "DELETE FROM " + loginBean.getUser() + " WHERE ID=" + phr.id;
-        /*try (Statement st = inMemDbConn.createStatement()){
-            st.execute(deleteSql);
-        } catch (SQLException e) {
-            System.out.println("EXCEPTION#1: in deletePhrase(int id) from DAO");
-            e.printStackTrace();
-            throw new RuntimeException();
-        }*/
         activeListOfPhrases.remove(getPhraseById(phr.id));
         reloadCollectionOfPhrases();
 
-        new Thread(){
-            public void run(){
+        new Thread() {
+            public void run() {
                 try (Statement st = mainDbConn.createStatement()) {
                     st.execute(deleteSql);
                 } catch (SQLException e) {
@@ -469,33 +378,7 @@ public class DAO {
         }.start();
     }
 
-    public Connection getConnection(){
-        return mainDbConn;
-    }
-
-    /*private Id getIdById(int id){
-        for(Id id1 : idsArr){
-            if(id1.id==id){
-                return id1;
-            }
-        }
-        return null;
-    }
-
-    private Id getIdByIndex(long randIndex){
-        for(Id id : idsArr){
-            if(randIndex>=id.index_start&&randIndex<=id.index_end){
-                return id;
-            }
-        }
-        return null;
-    }
-
-    public void setProbById(int id, double prob){
-        getIdById(id).prob = prob;
-    }*/
-
-    public long[] reloadIndices(int id){
+    public long[] reloadIndices(int id) {
 
         long start = System.currentTimeMillis();
         double temp = 0;
@@ -508,153 +391,211 @@ public class DAO {
         long[] indexes = new long[2];
 
 
-//        try (Statement statement = inMemDbConn.createStatement()){
+        for (Phrase phr : activeListOfPhrases) {
+            idArr.add(phr.id);
+        }
 
-            //Заполняем idArr айдишниками
-            /*rs = statement.executeQuery("SELECT id FROM " + table);
-            while(rs.next())
-                idArr.add(rs.getInt("ID"));*/
-            for(Phrase phr : activeListOfPhrases){
-                idArr.add(phr.id);
+        //Считаем неизученные слова
+
+        nonLearnedWords = 0;
+        summProbOfNLW = 0;
+        for (Phrase phr : activeListOfPhrases) {
+            if (phr.prob.doubleValue() > 3) {
+                nonLearnedWords++;
+                summProbOfNLW += phr.prob.doubleValue();
             }
+        }
 
-            //Считаем неизученные слова
-            /*rs = statement.executeQuery("SELECT COUNT(prob_factor) FROM " + table + " WHERE prob_factor>3");
-            rs.next();
-            nonLearnedWords = rs.getInt(1);*/
-            nonLearnedWords = 0;
-            summProbOfNLW = 0;
-            for(Phrase phr : activeListOfPhrases){
-                if(phr.prob.doubleValue() > 3){
-                    nonLearnedWords++;
-                    summProbOfNLW+=phr.prob.doubleValue();
+        //Считаем общее количество фраз
+
+        totalActiveWords = activeListOfPhrases.size();
+        learnedWords = totalActiveWords - nonLearnedWords;
+
+
+        indOfLW = chanceOfLearnedWords / learnedWords;
+        rangeOfNLW = learnedWords > 0 ? 1 - chanceOfLearnedWords : 1;
+        scaleOf1prob = rangeOfNLW / summProbOfNLW;
+        if (nonLearnedWords == 0) {
+            System.out.println("Все слова выучены!");
+        }
+        int countOfModIndices = 0;
+
+        //Clears indexes before reloading
+
+        for (Phrase phr : activeListOfPhrases) {
+            phr.indexStart = phr.indexEnd = 0;
+        }
+
+        for (int i : idArr) { //Устанавилвает индексы для неизученных слов
+            long indexStart;
+            long indexEnd;
+            //Переменной prob присваивается prob фразы с currentPhraseId = i;
+            double prob;
+            Phrase phrase = getPhraseById(i);
+            prob = phrase.prob.doubleValue();
+
+            //Если nonLearnedWords == 0, то есть, все слова выучены устанавливаются равные для всех индексы
+            if (nonLearnedWords == 0) {
+
+                indexStart = Math.round(temp * 1000000000);
+                phrase.indexStart = indexStart;
+                temp += chanceOfLearnedWords / learnedWords;
+                indexEnd = Math.round((temp * 1000000000) - 1);
+                phrase.indexEnd = indexEnd;
+
+            } else { //Если нет, то индексы ставяться по алгоритму
+
+                if (prob > 3) {
+
+                    indexStart = Math.round(temp * 1000000000);
+                    phrase.indexStart = indexStart;
+                    temp += scaleOf1prob * prob;
+                    indexEnd = Math.round((temp * 1000000000) - 1);
+                    phrase.indexEnd = indexEnd;
+
+                } else {
+
+                    indexStart = Math.round(temp * 1000000000);
+                    phrase.indexStart = indexStart;
+                    temp += indOfLW;
+                    indexEnd = Math.round((temp * 1000000000) - 1);
+                    phrase.indexEnd = indexEnd;
+
                 }
             }
 
-            //Считаем общее количество фраз
-            /*rs = statement.executeQuery("SELECT COUNT(*) FROM " + loginBean.getUser());
-            rs.next();
-            totalActiveWords = rs.getInt(1);*/
-            totalActiveWords = activeListOfPhrases.size();
-            learnedWords = totalActiveWords - nonLearnedWords;
-
-
-            /*rs = statement.executeQuery("SELECT SUM(prob_factor) FROM " + table + " WHERE prob_factor>3");
-            rs.next();
-            summProbOfNLW = rs.getInt(1);*/
-
-
-            /*rs = statement.executeQuery("SELECT COUNT(prob_factor) FROM " + table + " WHERE prob_factor<3");
-            rs.next();
-            learnedWords = rs.getInt(1);*/
-
-        /*} catch (SQLException e) {
-            System.out.println("EXCEPTION#1: in reloadIndices() from DAO");
-            e.printStackTrace();
-            throw new RuntimeException();
-        } finally {
-            try {
-                if(rs!=null)
-                    rs.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
+            countOfModIndices++;
+            if (i == id) {
+                indexes[0] = indexStart;
+                indexes[1] = indexEnd;
             }
-        }*/
+        }
 
-        indOfLW = chanceOfLearnedWords/learnedWords;
-        rangeOfNLW = learnedWords>0?1-chanceOfLearnedWords:1;
-        scaleOf1prob = rangeOfNLW/summProbOfNLW;
+        System.out.println("CALL: reloadIndices() from DAO" + "Indexes changed=" + countOfModIndices + " Time taken " + (System.currentTimeMillis() - start) + "ms");
+        return indexes;
+    }
+
+    /*public long[] reloadIndices(int id){
+
+        long start = System.currentTimeMillis();
+        BigDecimal temp = new BigDecimal(0);
+        BigDecimal indOfLW = new BigDecimal(0);     //Индекс выпадения изученных
+        BigDecimal rangeOfNLW = new BigDecimal(0);  //Диапазон индексов неизученных слов
+        BigDecimal scaleOf1prob = new BigDecimal(0);    //rangeOfNLW/summProbOfNLW  цена одного prob
+        BigDecimal summProbOfNLW = new BigDecimal(0);
+        ArrayList<Integer> idArr = new ArrayList<>();
+        long[] indexes = new long[2];
+
+
+        for(Phrase phr : activeListOfPhrases){
+            idArr.add(phr.id);
+        }
+
+        //Считаем неизученные слова
+        nonLearnedWords = 0;
+        summProbOfNLW = new BigDecimal(0);
+        for(Phrase phr : activeListOfPhrases){
+            if(phr.prob.doubleValue() > 3){
+                nonLearnedWords++;
+                summProbOfNLW = summProbOfNLW.add(new BigDecimal(phr.prob.doubleValue()));
+            }
+        }
+
+        //Считаем общее количество фраз
+
+        totalActiveWords = activeListOfPhrases.size();
+        learnedWords = totalActiveWords - nonLearnedWords;
+        indOfLW = new BigDecimal(chanceOfLearnedWords.divide(new BigDecimal(learnedWords), 15, BigDecimal.ROUND_HALF_UP).doubleValue());
+        rangeOfNLW = new BigDecimal(learnedWords>0?1-chanceOfLearnedWords.doubleValue():1);
+        scaleOf1prob = new BigDecimal(rangeOfNLW.divide(summProbOfNLW, 15, BigDecimal.ROUND_HALF_UP).doubleValue());
         if(nonLearnedWords==0){
             System.out.println("Все слова выучены!");
         }
         int countOfModIndices = 0;
 
         //Clears indexes before reloading
-        /*for(Id id2 : idsArr)
-            id2.index_start = id2.index_end = 0;*/
         for(Phrase phr : activeListOfPhrases){
             phr.indexStart = phr.indexEnd = 0;
         }
 
-        try {
-                for (int i : idArr) { //Устанавилвает индексы для неизученных слов
 
-                    long indexStart;
-                    long indexEnd;
+            for (int i : idArr) { //Устанавилвает индексы для неизученных слов
 
-                    //Переменной prob присваивается prob фразы с currentPhraseId = i;
-                    double prob;
-                    Phrase phrase = getPhraseById(i);
-                    prob = phrase.prob.doubleValue();
+                long indexStart;
+                long indexEnd;
 
-                    //Если nonLearnedWords == 0, то есть, все слова выучены устанавливаются равные для всех индексы
-                    if (nonLearnedWords == 0) {
+                //Переменной prob присваивается prob фразы с currentPhraseId = i;
+                double prob;
+                Phrase phrase = getPhraseById(i);
+                prob = phrase.prob.doubleValue();
 
-                        indexStart = Math.round(temp * 1000000000);
+                //Если nonLearnedWords == 0, то есть, все слова выучены устанавливаются равные для всех индексы
+                if (nonLearnedWords == 0) {
+
+                    indexStart = temp.multiply(new BigDecimal(1000000000)).longValue();
+                    phrase.indexStart = indexStart;
+                    temp = temp.add(chanceOfLearnedWords.divide(new BigDecimal(learnedWords), 15, BigDecimal.ROUND_HALF_UP));
+                    indexEnd = (temp.multiply(new BigDecimal(1000000000))).subtract(new BigDecimal(1)).longValue();
+                    phrase.indexEnd = indexEnd;
+
+                } else { //Если нет, то индексы ставяться по алгоритму
+
+                    if (prob > 3) {
+
+                        indexStart = temp.multiply(new BigDecimal(1000000000)).longValue();
                         phrase.indexStart = indexStart;
-                        temp += chanceOfLearnedWords / learnedWords;
-                        indexEnd = Math.round((temp * 1000000000) - 1);
+                        temp = temp.add(scaleOf1prob.multiply(new BigDecimal(prob)));
+                        indexEnd = (temp.multiply(new BigDecimal(1000000000))).subtract(new BigDecimal(1)).longValue();
                         phrase.indexEnd = indexEnd;
 
-                    } else { //Если нет, то индексы ставяться по алгоритму
+                    } else {
 
-                        if (prob > 3) {
-
-                            indexStart = Math.round(temp * 1000000000);
-                            phrase.indexStart = indexStart;
-                            temp += scaleOf1prob * prob;
-                            indexEnd = Math.round((temp * 1000000000) - 1);
-                            phrase.indexEnd = indexEnd;
-
-                        } else {
-
-                            indexStart = Math.round(temp * 1000000000);
-                            phrase.indexStart = indexStart;
-                            temp += indOfLW;
-                            indexEnd = Math.round((temp * 1000000000) - 1);
-                            phrase.indexEnd = indexEnd;
-
-                        }
+                        indexStart = temp.multiply(new BigDecimal(1000000000)).longValue();
+                        phrase.indexStart = indexStart;
+                        temp = temp.add(indOfLW);
+                        indexEnd = (temp.multiply(new BigDecimal(1000000000))).subtract(new BigDecimal(1)).longValue();
+                        phrase.indexEnd = indexEnd;
                     }
+                }
 
-                    countOfModIndices++;
-                    if(i==id){
-                        indexes[0]=indexStart;
-                        indexes[1]=indexEnd;
-                    }
+                countOfModIndices++;
+
+                if(i==id){
+                    indexes[0]=indexStart;
+                    indexes[1]=indexEnd;
+                }
+
+//                System.out.println("Indexes are " + indexes[0] + " - " + indexes[1]);
             }
-        }finally {
-            try {
-                if(rs!=null)
-                    rs.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-        System.out.println("CALL: reloadIndices() from DAO" + "Indexes changed="+countOfModIndices + " Time taken " + (System.currentTimeMillis()-start) + "ms");
+
+        System.out.println("CALL: reloadIndices() from DAO" + "Indexes changed="+countOfModIndices +
+                " Time taken " + (System.currentTimeMillis()-start) + "ms");
+
         return indexes;
-    }
+
+    }*/
 
     /**
      * Помещает данный в качестве параметра Id фразы в стек, стек используется для предотвращения повторения фраз
+     *
      * @param id добавляемая фраза
      * @return true если фраза присутствует в стеке, false если отсутствует
      */
-    private boolean pushIntoStack(Phrase id){
+    private boolean pushIntoStack(Phrase id) {
         StringBuilder msg = new StringBuilder("CALL: pushIntoStack(Phrase id) from DAO;");
         StringBuilder stackContent = new StringBuilder("Содержимое стека [");
         //Если массив не инстантиирован или количество фраз стало меньше чем размер массива-стека заново создаём его с
         // нужным размером и обнуляем положение стека
         boolean result = false;
-        if(lastPhrasesStack==null||lastPhrasesStack.length> totalActiveWords){
+        if (lastPhrasesStack == null || lastPhrasesStack.length > totalActiveWords) {
             //Если количество фраз больше или равно 7 создаётся стандартный стек на 7 элементов.
-            if(totalActiveWords >=7){
+            if (totalActiveWords >= 7) {
                 lastPhrasesStack = new Phrase[7];
                 stackNum = 0;
                 msg.append(" создан стек на 7 элементов;");
             }
             //Если количество фраз меньше 3 в стеке нет надобности, метод возвращает false
-            else if(totalActiveWords <3) {
+            else if (totalActiveWords < 3) {
                 msg.append(" в стеке нет необходимости - выход из метода (возврат false);");
                 System.out.println(msg);
                 return false;
@@ -667,23 +608,23 @@ public class DAO {
             }
         }
         //Проверяем или стек не содержит айдишник данной в качестве параметра фразы
-        for(Phrase phrase : lastPhrasesStack){
-            if(phrase != null && phrase.id == id.id){
+        for (Phrase phrase : lastPhrasesStack) {
+            if (phrase != null && phrase.id == id.id) {
                 msg.append(" в стеке уже есть фраза " + id.forWord + " метод возвращает true;");
                 result = true;
                 break;
             }
         }
-        if(!result){
+        if (!result) {
             msg.append(" в стек помещается фраза \"" + id.natWord + "\";");
-            lastPhrasesStack[stackNum>lastPhrasesStack.length-1?stackNum=0:stackNum] = id;
+            lastPhrasesStack[stackNum > lastPhrasesStack.length - 1 ? stackNum = 0 : stackNum] = id;
             stackNum++;
         }
 
-        for(Phrase phrase : lastPhrasesStack){
-            if(phrase!=null){
+        for (Phrase phrase : lastPhrasesStack) {
+            if (phrase != null) {
                 stackContent.append(phrase.id + ", ");
-            }else {
+            } else {
                 stackContent.append("null, ");
             }
         }
@@ -693,9 +634,7 @@ public class DAO {
         return result;
     }
 
-    public Phrase createRandPhrase(){
-
-//        Phrase phrase;
+    public Phrase createRandPhrase() {
         Phrase phrase = null;
 
 
@@ -706,52 +645,26 @@ public class DAO {
             phrase = new Phrase(tempPhrase.id, tempPhrase.forWord, tempPhrase.natWord, tempPhrase.transcr, tempPhrase.prob, tempPhrase.createDate,
                     tempPhrase.label, tempPhrase.lastAccs, tempPhrase.indexStart, tempPhrase.indexEnd, tempPhrase.exactMatch, this);
             phrase.timeOfReturningFromList = tempPhrase.timeOfReturningFromList;
-        }while (pushIntoStack(phrase));
+        } while (pushIntoStack(phrase));
 
-        /*String sql = "SELECT * FROM " + table + " WHERE id=" + currId.id;
 
-        try (Statement st = inMemDbConn.createStatement(); ResultSet rs = st.executeQuery(sql)){
-            rs.next();
-            phrase = new Phrase(currId.id, rs.getString("for_word"), rs.getString("nat_word"), rs.getString("transcr"),
-                    new BigDecimal(rs.getDouble("prob_factor")), rs.getTimestamp("create_date"), rs.getString("label"),
-                    rs.getTimestamp("last_accs_date"),  currId.index_start, currId.index_end, rs.getBoolean("exactmatch"), this);
-        } catch (SQLException e) {
-            System.out.println("EXCEPTION: in createRandPhrase() from DAO SQL was " + sql);
-            e.printStackTrace();
-            throw new RuntimeException();
-        }*/
         System.out.println("CALL: createRandPhrase() from DAO phrase is " + phrase.natWord + " " +
                 "indexes are: (" + phrase.indexStart + " - " + phrase.indexEnd + ")");
         return phrase;
     }
 
-    public void insertPhrase(Phrase phrase){
-        /*System.out.println("CALL: insertPhrase(Phrase phrase) from DAO");
-        String insertSql = "INSERT INTO " + table + " (for_word, nat_word, transcr, prob_factor, create_date," +
+    public void insertPhrase(Phrase phrase) {
+        System.out.println("CALL: insertPhrase(Phrase phrase) from DAO");
+        String insertSql = "INSERT INTO " + loginBean.getUser() + " (for_word, nat_word, transcr, prob_factor, create_date," +
                 " label, last_accs_date, exactmatch) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = inMemDbConn.prepareStatement(insertSql)) {
 
-            ps.setString(1, phrase.forWord);
-            ps.setString(2, phrase.natWord);
-            ps.setString(3, phrase.transcr);
-            ps.setDouble(4, phrase.prob.doubleValue());
-            ps.setTimestamp(5, phrase.createDate);
-            ps.setString(6, phrase.label);
-            ps.setTimestamp(7, phrase.lastAccs);
-            ps.setBoolean(8, phrase.exactMatch);
-            ps.execute();
-
-        } catch (SQLException e) {
-            System.out.println("EXCEPTION: in insertPhrase(Phrase phrase) from DAO");
-            e.printStackTrace();
-            throw new RuntimeException();
-        }
+        activeListOfPhrases.add(phrase);
         reloadCollectionOfPhrases();
         reloadIndices(1);
 
-        new Thread(){
-            public void run(){
-                try (PreparedStatement ps = mainDbConn.prepareStatement(insertSql)){
+        new Thread() {
+            public void run() {
+                try (PreparedStatement ps = mainDbConn.prepareStatement(insertSql)) {
                     ps.setString(1, phrase.forWord);
                     ps.setString(2, phrase.natWord);
                     ps.setString(3, phrase.transcr);
@@ -767,7 +680,8 @@ public class DAO {
                     throw new RuntimeException();
                 }
             }
-        }.start();*/
+        }.start();
+
     }
 
     /*public void backupDB(){
@@ -809,5 +723,5 @@ public class DAO {
     }*/
 
 
-
 }
+
