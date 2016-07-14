@@ -18,37 +18,52 @@ public class LoginBean implements Serializable {
     private String password;
     User currentUser;
     private DAO dao;
-//    final static Logger logger = Logger.getLogger(LoginBean.class);
+    Connection mainDbConn;
 
     private ArrayList<User> usersList = new ArrayList<>();
     private String remoteHost = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
-    private String localHost = "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
+    private String localHost3306 = "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
+    private String localHost3307 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
 
-    public LoginBean(){
-        Connection conn;
-        ResultSet rs = null;
-        String dbConnected = null;
+    private void getMainConn(){
 
-//        dao = new DAO(this);
-        try{
-            conn = DriverManager.getConnection(remoteHost, "adminLtuHq9R", "d-AUIKakd1Br");
-            dbConnected = "- Remote DB was connected";
-        }catch (SQLException e){
+        if(mainDbConn==null){
+            System.out.println("CALL: getMainConn() from LoginBean");
+            String dbConnected = null;
             try{
-                conn = DriverManager.getConnection(localHost, "adminLtuHq9R", "d-AUIKakd1Br");
-                dbConnected = "- Local DB was connected" ;
-            }catch (SQLException e1){
-                e1.printStackTrace();
-                System.out.println("EXCEPTION: in DAO constructor");
-                throw new DataBaseConnectionException();
+                mainDbConn = DriverManager.getConnection(remoteHost, "adminLtuHq9R", "d-AUIKakd1Br");
+                dbConnected = "- Remote DB was connected";
+            }catch (SQLException e){
+                try{
+                    mainDbConn = DriverManager.getConnection(localHost3306, "adminLtuHq9R", "d-AUIKakd1Br");
+                    dbConnected = "- Local DB 3306 was connected";
+                }catch (SQLException e1){
+                    try{
+                        mainDbConn = DriverManager.getConnection(localHost3307, "adminLtuHq9R", "d-AUIKakd1Br");
+                        dbConnected = "- Local DB 3307 was connected";
+                    }catch (SQLException e2){
+                        e2.printStackTrace();
+                        System.out.println("EXCEPTION: in DAO constructor");
+                        throw new DataBaseConnectionException();
+                    }
+                }
+            }finally {
+                System.out.println(dbConnected);
             }
         }
+    }
 
-        System.out.println("CALL: LoginBean() constructor " + dbConnected);
+    public Connection returnConnection(){
+        return mainDbConn;
+    }
+
+    public LoginBean(){
+        getMainConn();
+        ResultSet rs = null;
 
         //>>Создаём список юзеров ArrayList<User> usersList
         try {
-            Statement st = conn.createStatement();
+            Statement st = mainDbConn.createStatement();
             rs = st.executeQuery("SELECT * FROM users");
             while (rs.next()){
                 usersList.add(new User(rs.getInt("id"), rs.getString("login"), rs.getString("name"),
@@ -57,15 +72,6 @@ public class LoginBean implements Serializable {
         } catch (SQLException e) {
             System.out.println("EXCEPTION: in LoginBean constructor");
             e.printStackTrace();
-        }finally {
-            try {
-                conn.close();
-                if (rs != null) {
-                    rs.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
         //<<
     }

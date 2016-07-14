@@ -6,6 +6,7 @@ import logic.Phrase;
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
+import javax.faces.bean.RequestScoped;
 import javax.faces.bean.ViewScoped;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.List;
  */
 
 @ManagedBean
-@ViewScoped
+@RequestScoped
 public class EditBean {
 
     @ManagedProperty(value="#{login}")
@@ -37,6 +38,7 @@ public class EditBean {
     }
     @PostConstruct
     private void init(){
+        System.out.println("EDITBEAN CALL init()");
         if(loginBean!=null)
             dao = loginBean.getDao();
         if(dao!=null){
@@ -47,7 +49,7 @@ public class EditBean {
     }
 
     public void addAction(){
-        System.out.println("CALL addAction() from editBean mylist.size=" + myList.size());
+        System.out.println("EDITBEAN CALL1 addAction() from editBean mylist.size=" + myList.size());
         String forWord = this.forWord;
         String natWord = this.natWord;
         String transcr = this.transcr;
@@ -55,18 +57,16 @@ public class EditBean {
         this.forWord = this.natWord = this.transcr = "";
         Phrase phrase = new Phrase(forWord, natWord, transcr, label);
         myList.add(0, phrase);
+        System.out.println("EDITBEAN CALL2 addAction() from editBean mylist.size=" + myList.size());
         if(forWord!=null && natWord!=null)
             if(!forWord.equalsIgnoreCase("") && !natWord.equalsIgnoreCase("")){
-                new Thread(){
-                    public void run(){
-                        dao.insertPhrase(phrase);
-                    }
-                }.start();
+                dao.insertPhrase(phrase);
             }
 
     }
 
     public void deleteById(Phrase phr){
+        System.out.println("EDITBEAN CALL deleteById(Phrase phr)");
         dao.deletePhrase(phr);
         myList = dao.returnPhrasesList();
         labelsList = dao.reloadLabelsList();
@@ -80,6 +80,9 @@ public class EditBean {
     }
 
     public ArrayList<Phrase> getMyList() {
+        System.out.println("EDITBEAN CALL getMyList() myList.size() = " + myList.size());
+//        dao.reloadCollectionOfPhrases();
+//        myList = dao.returnPhrasesList();
         return myList;
     }
 

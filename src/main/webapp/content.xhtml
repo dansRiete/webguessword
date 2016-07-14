@@ -24,7 +24,7 @@
             <p:inputText value="#{editBean.natWord}" pt:placeholder="Native Word"> </p:inputText>
             <p:inputText value="#{editBean.transcr}" pt:placeholder="Transcription"> </p:inputText>
             <p:inputText value="#{editBean.label}" pt:placeholder="Label"> </p:inputText>
-            <p:commandButton type="submit" value="Add new" action="#{editBean.addAction()}" update="@form"> </p:commandButton>
+            <p:commandButton type="submit" value="Add new" actionListener="#{editBean.addAction()}" update="@form" ajax="true"> </p:commandButton>
         </p:panelGrid>
 
     <p:dataTable value="#{editBean.myList}" var="v" styleClass="order-table" headerClass="order-table-header"
@@ -124,7 +124,7 @@
             <h:outputText value="#{v.indexStart}"> </h:outputText>
         </p:column>
 
-        <p:column sortBy="#{v.End}">
+        <p:column sortBy="#{v.indexEnd}">
             <f:facet name="header">Index End</f:facet>
             <h:outputText value="#{v.indexEnd}"> </h:outputText>
         </p:column>

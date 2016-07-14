@@ -22,8 +22,9 @@ public class DAO {
     private static final String DB_PASSWORD = "";
     private Random random = new Random();
     private String timezone = "Europe/Kiev";
-    private String remoteHost = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
-    private String localHost = "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
+    public static final String remoteHost = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
+    public static final String localHost3306 = "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
+    public static final String localHost3307 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     public HashSet<String> chosedLabels;
     public ArrayList<String> possibleLabels = new ArrayList<>();
     public double learnedWords;
@@ -97,14 +98,15 @@ public class DAO {
 
     }
 
+
+
     public DAO(LoginBean loginBean) {
 
-        String dbConnected = null;
         this.loginBean = loginBean;
 //        table = loginBean.getUser();
 
         //>>>Получаем подключение к основной БД, в случае ошибки пробуем подключиться через локальнй хост (только для режима тестирования)
-        try {
+        /*try {
             mainDbConn = DriverManager.getConnection(remoteHost, "adminLtuHq9R", "d-AUIKakd1Br");
             dbConnected = "- Remote DB was connected";
         } catch (SQLException e) {
@@ -116,8 +118,8 @@ public class DAO {
                 System.out.println("EXCEPTION: in DAO constructor");
                 throw new DataBaseConnectionException();
             }
-        }
-        System.out.println("CALL: DAO constructor " + dbConnected);
+        }*/
+        mainDbConn = loginBean.returnConnection();
         //<<<
 
         checkTables();
@@ -162,7 +164,7 @@ public class DAO {
     }
 
     public ArrayList<Phrase> returnPhrasesList() {
-        System.out.println("CALL: returnPhrasesList() from DAO");
+//        System.out.println("CALL: returnPhrasesList() from DAO");
 //        ArrayList<Phrase> list = new ArrayList<>();
 
         return listOfActivePhrases;
@@ -220,7 +222,7 @@ public class DAO {
 
 
         try (Statement mainSt = mainDbConn.createStatement();
-             ResultSet rs1 = mainSt.executeQuery("SELECT * FROM " + loginBean.getUser())) {
+             ResultSet rs1 = mainSt.executeQuery("SELECT * FROM " + loginBean.getUser() + " ORDER BY create_date DESC, id DESC")) {
 
             System.out.println("CALL: reloadCollectionOfPhrases() from DAO");
 
