@@ -131,17 +131,16 @@
 
         <p:column>
             <f:facet name="header">Action</f:facet>
+
             <p:commandButton value="Delete" actionListener="#{editBean.deleteById(v)}" update="@form" ajax="true">
 
-                <p:confirm header="Confirmation" message="Are you sure you want to delete phrase #{v.forWord} - #{v.natWord}?">
+                <p:confirm header="Confirmation" message="Are you sure you want to delete phrase #{v.forWord} - #{v.natWord}?" />
 
-                </p:confirm>
                 <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
-                    <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check">
-
-                    </p:commandButton>
+                    <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
                     <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
                 </p:confirmDialog>
+
             </p:commandButton>
 
         </p:column>

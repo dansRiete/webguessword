@@ -49,27 +49,31 @@ public class EditBean {
     }
 
     public void addAction(){
-        System.out.println("EDITBEAN CALL1 addAction() from editBean mylist.size=" + myList.size());
-        String forWord = this.forWord;
-        String natWord = this.natWord;
-        String transcr = this.transcr;
-        String label = this.label;
-        this.forWord = this.natWord = this.transcr = "";
-        Phrase phrase = new Phrase(forWord, natWord, transcr, label);
-        myList.add(0, phrase);
-        System.out.println("EDITBEAN CALL2 addAction() from editBean mylist.size=" + myList.size());
-        if(forWord!=null && natWord!=null)
-            if(!forWord.equalsIgnoreCase("") && !natWord.equalsIgnoreCase("")){
-                dao.insertPhrase(phrase);
-            }
+        System.out.println("EDITBEAN CALL START addAction() from editBean mylist.size=" + myList.size());
+
+        if((this.forWord!=null && this.natWord!=null) && (!this.forWord.equalsIgnoreCase("") && !this.natWord.equalsIgnoreCase(""))){
+            String forWord = this.forWord;
+            String natWord = this.natWord;
+            String transcr = this.transcr;
+            String label = this.label;
+            this.forWord = this.natWord = this.transcr = "";
+            Phrase phrase = new Phrase(forWord, natWord, transcr, label);
+            System.out.println("EDITBEAN added phrase is " + phrase.forWord);
+            myList.add(0, phrase);
+            dao.insertPhrase(phrase);
+        }
+
+        System.out.println("EDITBEAN CALL END addAction() from editBean mylist.size=" + myList.size());
 
     }
 
     public void deleteById(Phrase phr){
-        System.out.println("EDITBEAN CALL deleteById(Phrase phr)");
+        System.out.println("EDITBEAN CALL START deleteById(Phrase phr)  mylist.size=" + myList.size());
         dao.deletePhrase(phr);
+        System.out.println("EDITBEAN CALL deleted phrase is " + phr.forWord);
         myList = dao.returnPhrasesList();
         labelsList = dao.reloadLabelsList();
+        System.out.println("EDITBEAN CALL END deleteById(Phrase phr)  mylist.size=" + myList.size());
     }
 
     public int rowNumbers(){

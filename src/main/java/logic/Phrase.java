@@ -37,7 +37,7 @@ public class Phrase implements Serializable{
     /**
      * Saved state of phrase object before changing howWasAnswered to false or true
      */
-    private Phrase unmofifiedPhrase;
+    private Phrase unmodifiedPhrase;
 
 
 
@@ -57,7 +57,7 @@ public class Phrase implements Serializable{
         this.indexStart = indexStart;
         this.indexEnd = indexEnd;
         this.exactMatch = exactMatch;
-        this.unmofifiedPhrase = new Phrase(forWord, natWord, transcr, prob, createDate, label, lastAccs, indexStart, indexEnd, exactMatch);
+        this.unmodifiedPhrase = new Phrase(forWord, natWord, transcr, prob, createDate, label, lastAccs, indexStart, indexEnd, exactMatch);
     }
 
 
@@ -74,7 +74,7 @@ public class Phrase implements Serializable{
         this.indexStart = indexStart;
         this.indexEnd = indexEnd;
         this.exactMatch = exactMatch;
-        this.unmofifiedPhrase = null;
+        this.unmodifiedPhrase = null;
     }
     public Phrase(String forWord, String natWord, String transcr, String label){
         this.forWord = forWord;
@@ -88,7 +88,7 @@ public class Phrase implements Serializable{
 
 
     public Phrase returnUnmodified(){
-        return unmofifiedPhrase;
+        return unmodifiedPhrase;
     }
 
     public void rightAnswer(String answer){
@@ -103,12 +103,12 @@ public class Phrase implements Serializable{
             howWasAnswered = true;
             indexes = dao.updateProb(this);
         }else if(!howWasAnswered){
-            if(!unmofifiedPhrase.isLearnt()){
+            if(!unmodifiedPhrase.isLearnt()){
                 BigDecimal subtr = new BigDecimal(9*Math.sqrt((dao.nonLearnedWords) / dao.totalPossibleWords));
                 prob = prob.subtract(subtr);
 //                dao.setProbById(id, prob.doubleValue());
             } else{
-                prob = unmofifiedPhrase.prob;
+                prob = unmodifiedPhrase.prob;
 //                dao.setProbById(id, prob.doubleValue());
 //                prob=3*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d);
             }
@@ -133,7 +133,7 @@ public class Phrase implements Serializable{
             howWasAnswered = false;
             indexes = dao.updateProb(this);
         }else if(howWasAnswered){
-            if(!unmofifiedPhrase.isLearnt()) {
+            if(!unmodifiedPhrase.isLearnt()) {
                 BigDecimal summ = new BigDecimal(9 * Math.sqrt((dao.nonLearnedWords) / dao.totalPossibleWords));
                 prob = prob.add(summ);
 //                dao.setProbById(id, prob.doubleValue());
