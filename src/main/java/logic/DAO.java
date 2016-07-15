@@ -371,9 +371,6 @@ public class DAO {
         long[] indexes = new long[2];
         totalActiveWords = listOfActivePhrases.size(); //Считаем общее количество фраз
 
-
-
-
         //Считаем неизученные слова, summProbOfNLW и очищаем индексы
         nonLearnedWords = 0;
         summProbOfNLW = 0;
