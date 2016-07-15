@@ -24,7 +24,7 @@
             <p:inputText value="#{editBean.natWord}" pt:placeholder="Native Word"> </p:inputText>
             <p:inputText value="#{editBean.transcr}" pt:placeholder="Transcription"> </p:inputText>
             <p:inputText value="#{editBean.label}" pt:placeholder="Label"> </p:inputText>
-            <p:commandButton type="submit" value="Add new" actionListener="#{editBean.addAction()}" update="@form" ajax="true"> </p:commandButton>
+            <p:commandButton type="submit" value="Add new" actionListener="#{editBean.addAction()}" update="@form" ajax="false"> </p:commandButton>
         </p:panelGrid>
 
     <p:dataTable value="#{editBean.myList}" var="v" styleClass="order-table" headerClass="order-table-header"
@@ -132,7 +132,7 @@
         <p:column>
             <f:facet name="header">Action</f:facet>
 
-            <p:commandButton value="Delete" actionListener="#{editBean.deleteById(v)}" update="@form" ajax="true">
+            <p:commandButton value="Delete" actionListener="#{editBean.deleteById(v)}" update="@form" ajax="true" oncomplete="table.filter();">
 
                 <p:confirm header="Confirmation" message="Are you sure you want to delete phrase #{v.forWord} - #{v.natWord}?" />
 

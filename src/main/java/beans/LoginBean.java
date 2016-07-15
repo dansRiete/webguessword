@@ -29,7 +29,7 @@ public class LoginBean implements Serializable {
 
         if(mainDbConn==null){
             System.out.println("CALL: getMainConn() from LoginBean");
-            String dbConnected = null;
+            String dbConnected = "EXCEPTION: in getMainConn() from LoginBean";
             try{
                 mainDbConn = DriverManager.getConnection(remoteHost, "adminLtuHq9R", "d-AUIKakd1Br");
                 dbConnected = "- Remote DB was connected";
@@ -43,7 +43,7 @@ public class LoginBean implements Serializable {
                         dbConnected = "- Local DB 3307 was connected";
                     }catch (SQLException e2){
                         e2.printStackTrace();
-                        System.out.println("EXCEPTION: in DAO constructor");
+                        System.out.println("EXCEPTION: in getMainConn() from LoginBean");
                         throw new DataBaseConnectionException();
                     }
                 }

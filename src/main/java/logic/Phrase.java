@@ -49,10 +49,10 @@ public class Phrase implements Serializable{
         this.id = id;
         this.forWord = forWord;
         this.natWord = natWord;
-        this.transcr = transcr;
+        this.transcr = transcr==null?"":transcr;
         this.prob = prob.setScale(1, RoundingMode.HALF_UP);
         this.createDate = createDate;
-        this.label = label;
+        this.label = label==null?"":label;
         this.lastAccs = lastAccs;
         this.indexStart = indexStart;
         this.indexEnd = indexEnd;
@@ -60,29 +60,28 @@ public class Phrase implements Serializable{
         this.unmodifiedPhrase = new Phrase(forWord, natWord, transcr, prob, createDate, label, lastAccs, indexStart, indexEnd, exactMatch);
     }
 
-
-
     public Phrase(String forWord, String natWord, String transcr, BigDecimal prob, Timestamp createDate,
                   String label, Timestamp lastAccs, double indexStart, double indexEnd, boolean exactMatch){
         this.forWord = forWord;
         this.natWord = natWord;
-        this.transcr = transcr;
+        this.transcr = transcr==null?"":transcr;
         this.prob = prob;
         this.createDate = createDate;
-        this.label = label;
+        this.label = label==null?"":label;
         this.lastAccs = lastAccs;
         this.indexStart = indexStart;
         this.indexEnd = indexEnd;
         this.exactMatch = exactMatch;
         this.unmodifiedPhrase = null;
     }
+
     public Phrase(String forWord, String natWord, String transcr, String label){
         this.forWord = forWord;
         this.natWord = natWord;
-        this.transcr = transcr.equals("")||transcr==null?null:transcr;
+        this.transcr = transcr==null?"":transcr;
         this.prob = new BigDecimal(30);
         this.createDate = new Timestamp(System.currentTimeMillis());
-        this.label = label.equals("")||label==null?null:label;
+        this.label = label==null?"":label;
         this.exactMatch = false;
     }
 

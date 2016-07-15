@@ -199,22 +199,6 @@ public class DAO {
 
     public void reloadCollectionOfPhrases() {
 
-        //If in-memory db is not empty, then to empty it.
-        /*try (Statement inMemSt = inMemDbConn.createStatement()){
-            inMemSt.execute("DROP TABLE " + loginBean.getUser());
-        } catch (SQLException e) {
-            //Table doesn't exist - do nothing.
-        }*/
-
-        //Creating table in in-memory DB
-        /*try(Statement inMemSt = inMemDbConn.createStatement()){
-            inMemSt.execute(getCreateInmemDb_MainTable_SqlString());
-        }catch (SQLException e){
-            e.printStackTrace();
-            throw new RuntimeException();
-        }*/
-
-        //Populating in-memory DB by values from main DB
 
         String insertSql = "INSERT INTO " + loginBean.getUser() +
                 "(id, for_word, nat_word, transcr, prob_factor, create_date, label, last_accs_date, " +
@@ -222,24 +206,24 @@ public class DAO {
 
 
         try (Statement mainSt = mainDbConn.createStatement();
-             ResultSet rs1 = mainSt.executeQuery("SELECT * FROM " + loginBean.getUser() + " ORDER BY create_date DESC, id DESC")) {
+             ResultSet rs = mainSt.executeQuery("SELECT * FROM " + loginBean.getUser() + " ORDER BY create_date DESC, id DESC")) {
 
             System.out.println("CALL: reloadCollectionOfPhrases() from DAO");
 
             listOfActivePhrases.clear();
-            while (rs1.next()) {
+            while (rs.next()) {
 
-                int id = rs1.getInt("id");
-                String for_word = rs1.getString("for_word");
-                String nat_word = rs1.getString("nat_word");
-                String transcr = rs1.getString("transcr");
-                BigDecimal prob = new BigDecimal(rs1.getDouble("prob_factor"));
-                Timestamp create_date = rs1.getTimestamp("create_date");
-                String label = rs1.getString("label");
-                Timestamp last_accs_date = rs1.getTimestamp("last_accs_date");
-                double index_start = rs1.getDouble("index_start");
-                double index_end = rs1.getDouble("index_end");
-                boolean exactmatch = rs1.getBoolean("exactmatch");
+                int id = rs.getInt("id");
+                String for_word = rs.getString("for_word");
+                String nat_word = rs.getString("nat_word");
+                String transcr = rs.getString("transcr");
+                BigDecimal prob = new BigDecimal(rs.getDouble("prob_factor"));
+                Timestamp create_date = rs.getTimestamp("create_date");
+                String label = rs.getString("label");
+                Timestamp last_accs_date = rs.getTimestamp("last_accs_date");
+                double index_start = rs.getDouble("index_start");
+                double index_end = rs.getDouble("index_end");
+                boolean exactmatch = rs.getBoolean("exactmatch");
 
                 Phrase phrase = new Phrase(id, for_word, nat_word, transcr, prob, create_date, label,
                         last_accs_date, index_start, index_end, exactmatch, this);
@@ -253,6 +237,9 @@ public class DAO {
                     listOfAllPhrases.add(phrase);
                     totalPossibleWords++;
                 }
+                /*listOfActivePhrases.add(phrase);
+                listOfAllPhrases.add(phrase);
+                totalPossibleWords++;*/
 
             }
 
@@ -302,18 +289,16 @@ public class DAO {
 
         getPhraseById(phrase.id).prob = phrase.prob;
 
-        new Thread() {
-            public void run() {
-                try (Statement st = mainDbConn.createStatement()) {
-                    st.execute("UPDATE " + loginBean.getUser() + " SET prob_factor=" + phrase.prob + ", last_accs_date='" + dateTime +
-                            "' WHERE id=" + phrase.id);
-                } catch (SQLException e) {
-                    System.out.println("EXCEPTION#2: in updateProb(Phrase phrase) from DAO");
-                    e.printStackTrace();
-                    throw new RuntimeException();
-                }
-            }
-        }.start();
+        try (Statement st = mainDbConn.createStatement()) {
+            st.execute("UPDATE " + loginBean.getUser() + " SET prob_factor=" + phrase.prob + ", last_accs_date='" + dateTime +
+                    "' WHERE id=" + phrase.id);
+        } catch (SQLException e) {
+            System.out.println("EXCEPTION#2: in updateProb(Phrase phrase) from DAO");
+            e.printStackTrace();
+            throw new RuntimeException();
+        }
+
+
         return reloadIndices(phrase.id);
     }
 
@@ -330,55 +315,48 @@ public class DAO {
         phr.exactMatch = phrase.exactMatch;
         phr.label = phrase.label;
         phr.prob = phrase.prob;
+
+        try (PreparedStatement mainDbPrepStat = mainDbConn.prepareStatement(updateSql)) {
+
+            mainDbPrepStat.setString(1, phrase.forWord);
+            mainDbPrepStat.setString(2, phrase.natWord);
+
+            if (phrase.transcr == null || phrase.transcr.equalsIgnoreCase(""))
+                mainDbPrepStat.setString(3, null);
+            else
+                mainDbPrepStat.setString(3, phrase.transcr);
+
+            if (phrase.label == null || phrase.label.equalsIgnoreCase(""))
+                mainDbPrepStat.setString(6, null);
+            else
+                mainDbPrepStat.setString(6, phrase.label);
+
+            mainDbPrepStat.setString(4, dateTime);
+            mainDbPrepStat.setBoolean(5, phrase.exactMatch);
+            mainDbPrepStat.setDouble(7, phrase.prob.doubleValue());
+            mainDbPrepStat.execute();
+        } catch (SQLException e) {
+            System.out.println("EXCEPTION#2: in updateProb(Phrase phrase) from DAO");
+            e.printStackTrace();
+            throw new RuntimeException();
+        }
+
         reloadCollectionOfPhrases();
 
-        new Thread() {
-            public void run() {
-                try (PreparedStatement mainDbPrepStat = mainDbConn.prepareStatement(updateSql)) {
-
-                    mainDbPrepStat.setString(1, phrase.forWord);
-                    mainDbPrepStat.setString(2, phrase.natWord);
-
-                    if (phrase.transcr == null || phrase.transcr.equalsIgnoreCase(""))
-                        mainDbPrepStat.setString(3, null);
-                    else
-                        mainDbPrepStat.setString(3, phrase.transcr);
-
-                    if (phrase.label == null || phrase.label.equalsIgnoreCase(""))
-                        mainDbPrepStat.setString(6, null);
-                    else
-                        mainDbPrepStat.setString(6, phrase.label);
-
-                    mainDbPrepStat.setString(4, dateTime);
-                    mainDbPrepStat.setBoolean(5, phrase.exactMatch);
-                    mainDbPrepStat.setDouble(7, phrase.prob.doubleValue());
-                    mainDbPrepStat.execute();
-                } catch (SQLException e) {
-                    System.out.println("EXCEPTION#2: in updateProb(Phrase phrase) from DAO");
-                    e.printStackTrace();
-                    throw new RuntimeException();
-                }
-            }
-        }.start();
     }
 
     public void deletePhrase(Phrase phr) {
         System.out.println("CALL: deletePhrase(int id) from DAO");
         String deleteSql = "DELETE FROM " + loginBean.getUser() + " WHERE ID=" + phr.id;
-        listOfActivePhrases.remove(getPhraseById(phr.id));
+        try (Statement st = mainDbConn.createStatement()) {
+            st.execute(deleteSql);
+        } catch (SQLException e) {
+            System.out.println("EXCEPTION#2: in deletePhrase(int id) from DAO");
+            e.printStackTrace();
+            throw new RuntimeException();
+        }
         reloadCollectionOfPhrases();
 
-        new Thread() {
-            public void run() {
-                try (Statement st = mainDbConn.createStatement()) {
-                    st.execute(deleteSql);
-                } catch (SQLException e) {
-                    System.out.println("EXCEPTION#2: in deletePhrase(int id) from DAO");
-                    e.printStackTrace();
-                    throw new RuntimeException();
-                }
-            }
-        }.start();
     }
 
     public long[] reloadIndices(int id) {
@@ -651,29 +629,23 @@ public class DAO {
         String insertSql = "INSERT INTO " + loginBean.getUser() + " (for_word, nat_word, transcr, prob_factor, create_date," +
                 " label, last_accs_date, exactmatch) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-        listOfActivePhrases.add(phrase);
+        try (PreparedStatement ps = mainDbConn.prepareStatement(insertSql)) {
+            ps.setString(1, phrase.forWord);
+            ps.setString(2, phrase.natWord);
+            ps.setString(3, phrase.transcr);
+            ps.setDouble(4, phrase.prob.doubleValue());
+            ps.setTimestamp(5, phrase.createDate);
+            ps.setString(6, phrase.label);
+            ps.setTimestamp(7, phrase.lastAccs);
+            ps.setBoolean(8, phrase.exactMatch);
+            ps.execute();
+        } catch (SQLException e) {
+            System.out.println("EXCEPTION inside: in insertPhrase(Phrase phrase) from DAO");
+            e.printStackTrace();
+            throw new RuntimeException();
+        }
+//        listOfActivePhrases.add(phrase);
         reloadCollectionOfPhrases();
-        reloadIndices(1);
-
-        new Thread() {
-            public void run() {
-                try (PreparedStatement ps = mainDbConn.prepareStatement(insertSql)) {
-                    ps.setString(1, phrase.forWord);
-                    ps.setString(2, phrase.natWord);
-                    ps.setString(3, phrase.transcr);
-                    ps.setDouble(4, phrase.prob.doubleValue());
-                    ps.setTimestamp(5, phrase.createDate);
-                    ps.setString(6, phrase.label);
-                    ps.setTimestamp(7, phrase.lastAccs);
-                    ps.setBoolean(8, phrase.exactMatch);
-                    ps.execute();
-                } catch (SQLException e) {
-                    System.out.println("EXCEPTION inside new Thread: in insertPhrase(Phrase phrase) from DAO");
-                    e.printStackTrace();
-                    throw new RuntimeException();
-                }
-            }
-        }.start();
 
     }
 
