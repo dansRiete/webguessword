@@ -102,46 +102,49 @@
                     <p:commandButton style="margin-right: 3px; margin-top: 4vh;margin-bottom: 1vh; width: 120px" id="exit" type="submit" value="Exit" action="#{interfaceBean.exit()}"> </p:commandButton>
 
 
-                    <p:dialog id="modDialog" widgetVar="modDialog" modal="true" resizable="false" position="center top" header="Edit the current phrase">
-                        <h:form id="red">
-                            <h:panelGrid columns="2" layout="grid">
-                                <p:outputLabel value="Native word"/>
-                                <p:inputText size="40" value="#{interfaceBean.currPhrNatWord}" title="Native word"
-                                             label="Native word"> </p:inputText>
 
-                                <p:outputLabel value="Foreign word"/>
-                                <p:inputText size="40" value="#{interfaceBean.currPhrForWord}" title="Foreign word"
-                                             label="Foreign word"> </p:inputText>
 
-                                <p:outputLabel value="Transcription"/>
-                                <p:inputText size="40" value="#{interfaceBean.currPhrTransc}" title="Transcription"
-                                             label="Transcription"> </p:inputText>
 
-                                <p:outputLabel value="Label"/>
-                                <p:inputText size="40" value="#{interfaceBean.currPhrLabel}" title="Label"
-                                             label="Label"> </p:inputText>
-                            </h:panelGrid>
-                            <p:commandButton type="submit" value="Submit" action="#{interfaceBean.resultProcessing()}"
-                                             actionListener="#{messagesView.info}">
-                            </p:commandButton>
-                            <p:messages id="messages" showDetail="true" autoUpdate="true" closable="true"/>
-                        </h:form>
-                    </p:dialog>
-
-                    <p:dialog id="deleteDialog" widgetVar="deleteDialog" hideEffect="highlight" modal="true" resizable="false" header="Delete the current phrase">
-                        <p:commandButton type="submit" value="Yes" action="#{interfaceBean.delete()}" oncomplete="PF('deleteDialog').hide();">
-
-                        </p:commandButton>
-                        <p:commandButton type="button" value="No" onclick="PF('deleteDialog').hide();">
-
-                        </p:commandButton>
-
-                    </p:dialog>
 
                 </h:panelGroup>
 
 
             </div>
+
+    <p:dialog id="modDialog" widgetVar="modDialog" modal="true" resizable="false" position="center top" header="Edit the current phrase">
+        <h:form id="red">
+            <h:panelGrid columns="2" layout="grid">
+                <p:outputLabel value="Native word"/>
+                <p:inputText size="40" value="#{interfaceBean.currPhrNatWord}" title="Native word"
+                             label="Native word"> </p:inputText>
+
+                <p:outputLabel value="Foreign word"/>
+                <p:inputText size="40" value="#{interfaceBean.currPhrForWord}" title="Foreign word"
+                             label="Foreign word"> </p:inputText>
+
+                <p:outputLabel value="Transcription"/>
+                <p:inputText size="40" value="#{interfaceBean.currPhrTransc}" title="Transcription"
+                             label="Transcription"> </p:inputText>
+
+                <p:outputLabel value="Label"/>
+                <p:inputText size="40" value="#{interfaceBean.currPhrLabel}" title="Label"
+                             label="Label"> </p:inputText>
+            </h:panelGrid>
+            <p:commandButton type="submit" value="Submit" action="#{interfaceBean.resultProcessing()}"
+                             actionListener="#{messagesView.info}">
+            </p:commandButton>
+            <p:messages id="messages" showDetail="true" autoUpdate="true" closable="true"/>
+        </h:form>
+    </p:dialog>
+
+    <p:dialog id="deleteDialog" widgetVar="deleteDialog" hideEffect="highlight" modal="true" resizable="false" header="Delete the current phrase">
+        <p:commandButton type="submit" value="Yes" action="#{interfaceBean.delete()}" oncomplete="PF('deleteDialog').hide();">
+
+        </p:commandButton>
+        <p:commandButton type="button" value="No" onclick="PF('deleteDialog').hide();">
+
+        </p:commandButton>
+    </p:dialog>
             <!--<div style="width: 28%; display:inline-table; vertical-align: top; horiz-align: center">
                 <table >
                     <thead>
