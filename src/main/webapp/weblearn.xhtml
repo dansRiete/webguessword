@@ -43,15 +43,20 @@
         </f:facet>
     </p:ajaxStatus>-->
 
+    <div style="width: 100%">
+        <h:outputLabel style="color: #2a2a2a;font-size: 200%; font-weight: bold;" id="out1"
+                       value="#{interfaceBean.question}"> </h:outputLabel>
+        <p:separator/>
+
+    </div>
+
 
     <div>
 
 
-        <div id="main" style="height: 80%">
-            <div style="display:inline-block; width: 71%">
-                <h:outputLabel style="color: #2a2a2a;font-size: 200%; font-weight: bold" id="out1"
-                               value="#{interfaceBean.question}"> </h:outputLabel>
-                <p:separator/>
+        <!--<div id="main" style="background-color: bisque; height: 95vh">-->
+
+            <div style="display:inline-block; width: calc(100% - 200px)">
                 <h:form>
                     <h:panelGroup id="myblock" layout="block" escape="false" style="height:70%; width:100%">
                         <h:outputText id="list" escape="false" style="font-size: 130%"
@@ -59,38 +64,39 @@
                     </h:panelGroup>
                 </h:form>
             </div>
-            <div style="width: 100px; display:inline-table; vertical-align: top; horiz-align: center">
+
+            <div style="width: 150px; height: 98vh; display:inline-table; vertical-align: top; horiz-align: center">
 
                 <h:panelGroup>
 
-                    <p:commandButton style="margin-right: 3px; margin-top: 3px; width: 120px" id="previous" value="Previous"
+                    <p:commandButton style="margin-right: 3px; margin-top: 1vh; width: 120px" id="previous" value="Previous"
                                      actionListener="#{interfaceBean.previousQuestion}" update="@all"/>
 
-                    <p:commandButton  style="margin-right: 3px; margin-top: 3px; width: 120px" id="next" value="Next"
+                    <p:commandButton  style="margin-right: 3px; margin-top: 4vh; width: 120px" id="next" value="Next"
                                      action="#{interfaceBean.nextQuestion()}" update="@all"/>
 
-                    <p:commandButton style="margin-right: 3px; margin-top: 3px; width: 120px" id="know" value="Known"
+                    <p:commandButton style="margin-right: 3px; margin-top: 4vh; width: 120px" id="know" value="Known"
                                      action="#{interfaceBean.rightAnswer(null)}" update="@all"/>
 
-                    <p:commandButton style="margin-right: 3px; margin-top: 3px; width: 120px" id="donotknow" value="Unknown"
+                    <p:commandButton style="margin-right: 3px; margin-top: 4vh; width: 120px" id="donotknow" value="Unknown"
                                      action="#{interfaceBean.wrongAnswer(null)}" update="@all"/>
 
-                    <p:commandButton style="margin-right: 3px; margin-top: 3px; width: 120px" id="prevWrong" value="Prev.Wrong"
+                    <p:commandButton style="margin-right: 3px; margin-top: 4vh; width: 120px" id="prevWrong" value="Prev.Wrong"
                                      action="#{interfaceBean.previousWrong()}" update="@all"/>
 
-                    <p:commandButton style="margin-right: 3px; margin-top: 3px; width: 120px" id="prevRight" value="Prev.Right"
+                    <p:commandButton style="margin-right: 3px; margin-top: 4vh; width: 120px" id="prevRight" value="Prev.Right"
                                      action="#{interfaceBean.previousRight()}" update="@all"/>
 
-                    <p:commandButton style="margin-right: 3px; margin-top: 3px; width: 120px" id="dialogButton" value="Modificate"
+                    <p:commandButton style="margin-right: 3px; margin-top: 4vh; width: 120px" id="dialogButton" value="Modificate"
                                      onclick="PF('modDialog').show();"/>
 
-                    <p:commandButton style="margin-right: 3px; margin-top: 3px; width: 120px" id="deleteButton" value="Delete"
+                    <p:commandButton style="margin-right: 3px; margin-top: 4vh; width: 120px" id="deleteButton" value="Delete"
                                      onclick="PF('deleteDialog').show();"/>
 
-                    <p:commandButton style="margin-right: 3px; margin-top: 3px; width: 120px" id="content" value="Show All"
+                    <p:commandButton style="margin-right: 3px; margin-top: 4vh; width: 120px" id="content" value="Show All"
                                          action="content"/>
 
-                    <p:commandButton style="margin-right: 3px; margin-top: 3px; width: 120px" id="exit" type="submit" value="Exit" action="#{interfaceBean.exit()}"> </p:commandButton>
+                    <p:commandButton style="margin-right: 3px; margin-top: 4vh;margin-bottom: 1vh; width: 120px" id="exit" type="submit" value="Exit" action="#{interfaceBean.exit()}"> </p:commandButton>
 
 
                     <p:dialog id="modDialog" widgetVar="modDialog" modal="true" resizable="false" position="center top" header="Edit the current phrase">
@@ -227,7 +233,7 @@
             </div>-->
         </div>
 
-    </div>
+    <!--</div>-->
 
 
 
