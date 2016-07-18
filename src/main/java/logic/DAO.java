@@ -211,6 +211,7 @@ public class DAO {
             System.out.println("CALL: reloadCollectionOfPhrases() from DAO");
 
             listOfActivePhrases.clear();
+            totalPossibleWords = 0;
             while (rs.next()) {
 
                 int id = rs.getInt("id");
