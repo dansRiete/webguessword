@@ -71,38 +71,35 @@
 
                 <h:panelGroup>
 
-                    <p:commandButton style="margin-right: 3px; margin-top: 1vh; width: 9vw; height: 6.8vh" id="previous" value="Previous"
+                    <p:commandButton style="margin-top: 1vh; width: 9vw; height: 7.6vh; text-align: center" id="previous" value="Previous"
                                      actionListener="#{interfaceBean.previousQuestion}" update="@all"/>
 
-                    <p:commandButton  style="margin-right: 3px; margin-top: 2vh; width: 9vw; height: 6.8vh" id="next" value="Next"
+                    <p:commandButton  style="margin-top: 2vh; width: 9vw; height: 7.6vh" id="next" value="Next"
                                      action="#{interfaceBean.nextQuestion()}" update="@all"/>
 
-                    <p:commandButton style="margin-right: 3px; margin-top: 2vh; width: 9vw; height: 6.8vh" id="know" value="Known"
+                    <p:commandButton style="margin-top: 2vh; width: 9vw; height: 7.6vh" id="know" value="Known"
                                      action="#{interfaceBean.rightAnswer(null)}" update="@all"/>
 
-                    <p:commandButton style="margin-right: 3px; margin-top: 2vh; width: 9vw; height: 6.8vh" id="donotknow" value="Unknown"
+                    <p:commandButton style="margin-top: 2vh; width: 9vw; height: 7.6vh" id="donotknow" value="Unknown"
                                      action="#{interfaceBean.wrongAnswer(null)}" update="@all"/>
 
-                    <p:commandButton style="margin-right: 3px; margin-top: 2vh; width: 9vw; height: 6.8vh" id="prevWrong" value="Prev.Wrong"
+                    <p:commandButton style="margin-top: 2vh; width: 9vw; height: 7.6vh" id="prevWrong" value="Prev wrong"
                                      action="#{interfaceBean.previousWrong()}" update="@all"/>
 
-                    <p:commandButton style="margin-right: 3px; margin-top: 2vh; width: 9vw; height: 6.8vh" id="prevRight" value="Prev.Right"
+                    <p:commandButton style="margin-top: 2vh; width: 9vw; height: 7.6vh" id="prevRight" value="Prev right"
                                      action="#{interfaceBean.previousRight()}" update="@all"/>
 
-                    <p:commandButton style="margin-right: 3px; margin-top: 2vh; width: 9vw; height: 6.8vh" id="dialogButton" value="Modificate"
+                    <p:commandButton style="margin-top: 2vh; width: 9vw; height: 7.6vh" id="dialogButton" value="Modificate"
                                      onclick="PF('modDialog').show();"/>
 
-                    <p:commandButton style="margin-right: 3px; margin-top: 2vh; width: 9vw; height: 6.8vh" id="deleteButton" value="Delete"
+                    <p:commandButton style="margin-top: 2vh; width: 9vw; height: 7.6vh" id="deleteButton" value="Delete"
                                      onclick="PF('deleteDialog').show();"/>
 
-                    <p:commandButton style="margin-right: 3px; margin-top: 2vh; width: 9vw; height: 6.8vh" id="content" value="Show All"
+                    <p:commandButton style="margin-top: 2vh; width: 9vw; height: 7.6vh" id="content" value="Show all"
                                          action="content"/>
 
-                    <p:commandButton style="margin-right: 3px; margin-top: 2vh; width: 9vw; height: 6.8vh" id="desktop" value="Desktop"
+                    <p:commandButton style="margin-top: 2vh; width: 9vw; height: 7.6vh" id="desktop" value="Desktop"
                                      action="learn?faces-redirect=true"/>
-
-                    <p:commandButton style="margin-right: 3px; margin-top: 2vh; margin-bottom: 1vh; width: 9vw; height: 6.8vh" id="exit"
-                                     type="submit" value="Exit" action="#{interfaceBean.exit()}"> </p:commandButton>
 
 
 
@@ -114,7 +111,7 @@
 
             </div>
 
-    <p:dialog id="modDialog" widgetVar="modDialog" modal="true" resizable="false" position="center top" header="Edit the current phrase">
+    <p:dialog id="modDialog" widgetVar="modDialog" modal="true" resizable="false" header="Edit the current phrase">
         <h:form id="red">
             <h:panelGrid columns="2" layout="grid">
                 <p:outputLabel value="Native word"/>
