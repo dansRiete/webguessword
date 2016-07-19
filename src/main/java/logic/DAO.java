@@ -200,9 +200,9 @@ public class DAO {
     public void reloadCollectionOfPhrases() {
 
 
-        String insertSql = "INSERT INTO " + loginBean.getUser() +
+        /*String insertSql = "INSERT INTO " + loginBean.getUser() +
                 "(id, for_word, nat_word, transcr, prob_factor, create_date, label, last_accs_date, " +
-                "index_start, index_end, exactmatch) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+                "index_start, index_end, exactmatch) VALUES (?,?,?,?,?,?,?,?,?,?,?)";*/
 
 
         try (Statement mainSt = mainDbConn.createStatement();
