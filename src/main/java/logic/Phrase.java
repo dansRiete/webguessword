@@ -119,6 +119,9 @@ public class Phrase implements Serializable{
             this.indexStart = indexes[0];
             this.indexEnd = indexes[1];
         }
+
+        dao.statRightAnsw(this.id);
+
     }
 
     public void wrongAnswer(String answer){

@@ -39,26 +39,7 @@ public class DAO {
     private LoginBean loginBean;
     private ArrayList<Phrase> listOfActivePhrases = new ArrayList<>();
     private ArrayList<Phrase> listOfAllPhrases = new ArrayList<>();
-
-    private String getCreateInmemDb_MainTable_SqlString() {
-
-        return "CREATE TABLE " + loginBean.getUser() + "\n" +
-                "(\n" +
-                "    id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,\n" +
-                "    for_word VARCHAR(250) NOT NULL,\n" +
-                "    nat_word VARCHAR(250) NOT NULL,\n" +
-                "    transcr VARCHAR(100),\n" +
-                "    prob_factor DOUBLE,\n" +
-                "    create_date DATETIME,\n" +
-                "    label VARCHAR(50),\n" +
-                "    last_accs_date DATETIME,\n" +
-                "    exactmatch BOOLEAN,\n" +
-                "    index_start DOUBLE,\n" +
-                "    index_end DOUBLE\n" +
-                ")";
-        //"ALTER TABLE " + user + " ADD CONSTRAINT unique_id UNIQUE (id);";
-
-    }
+    private Statement statStatement;
 
     private String getCreateMainDb_MainTable_SqlString() {
         String str = "CREATE TABLE " + loginBean.getUser() + "\n" +
@@ -80,21 +61,7 @@ public class DAO {
 
     private String getCreateMainDb_StatTable_SqlString() {
 
-        return "CREATE TABLE " + loginBean.getUser() + "\n" +
-                "(\n" +
-                "    id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,\n" +
-                "    for_word VARCHAR(250) NOT NULL,\n" +
-                "    nat_word VARCHAR(250) NOT NULL,\n" +
-                "    transcr VARCHAR(100),\n" +
-                "    prob_factor DOUBLE,\n" +
-                "    create_date DATETIME,\n" +
-                "    label VARCHAR(50),\n" +
-                "    last_accs_date DATETIME,\n" +
-                "    exactmatch BOOLEAN,\n" +
-                "    index_start DOUBLE,\n" +
-                "    index_end DOUBLE\n" +
-                ")";
-        //"ALTER TABLE " + user + " ADD CONSTRAINT unique_id UNIQUE (id);";
+        return "CREATE TABLE " + loginBean.getUser() + "_stat (date DATETIME NOT NULL, event VARCHAR(30) NOT NULL, id INT NOT NULL)";
 
     }
 
@@ -159,7 +126,28 @@ public class DAO {
                 e.printStackTrace();
                 System.out.println("EXCEPTION: SQLException in checkTables() from DAO during create main table in main DB");
             }
+        }
 
+        if (!statDbExists) {
+            try (Statement statement = mainDbConn.createStatement()) {
+                System.out.println("Execute " + getCreateMainDb_StatTable_SqlString());
+                statement.execute(getCreateMainDb_StatTable_SqlString());
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.out.println("EXCEPTION: SQLException in checkTables() from DAO during create stat table in main DB");
+            }
+        }
+
+    }
+
+    public void statRightAnsw(int id){
+        String dateTime = ZonedDateTime.now(ZoneId.of("Europe/Kiev")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+        try (Statement statement = mainDbConn.createStatement()) {
+            System.out.println("INSERT INTO " + loginBean.getUser() + "_stat" + " VALUES ('" + dateTime + "', 'r_answ', " + id + ")");
+            statement.execute("INSERT INTO " + loginBean.getUser() + "_stat" + " VALUES ('" + dateTime + "', 'r_answ', " + id + ")");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("EXCEPTION: SQLException in statRightAnsw() from DAO");
         }
     }
 
@@ -212,6 +200,7 @@ public class DAO {
 
             listOfActivePhrases.clear();
             totalPossibleWords = 0;
+
             while (rs.next()) {
 
                 int id = rs.getInt("id");
@@ -230,6 +219,7 @@ public class DAO {
                         last_accs_date, index_start, index_end, exactmatch, this);
 
                 //Добавляем в активную коллекцию если метка фразы совпадает с выбранными - "chosedLabels" и считаем totalPossibleWords
+
                 if (phrase.inLabels(chosedLabels)) {
                     listOfActivePhrases.add(phrase);
                     listOfAllPhrases.add(phrase);
@@ -238,10 +228,10 @@ public class DAO {
                     listOfAllPhrases.add(phrase);
                     totalPossibleWords++;
                 }
+
                 /*listOfActivePhrases.add(phrase);
                 listOfAllPhrases.add(phrase);
                 totalPossibleWords++;*/
-
             }
 
         } catch (SQLException e) {
@@ -388,6 +378,7 @@ public class DAO {
         indOfLW = chanceOfLearnedWords / learnedWords;
         rangeOfNLW = learnedWords > 0 ? 1 - chanceOfLearnedWords : 1;
         scaleOf1prob = rangeOfNLW / summProbOfNLW;
+
         if (nonLearnedWords == 0) {
             System.out.println("Все слова выучены!");
         }
