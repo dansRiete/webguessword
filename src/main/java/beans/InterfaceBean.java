@@ -17,7 +17,6 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
-import javax.faces.event.SystemEvent;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
@@ -102,6 +101,7 @@ public class InterfaceBean implements Serializable{
             dao = loginBean.getDao();
         if(dao!=null){
             listOfChooses = dao.possibleLabels;
+            listOfPhrases = dao.makeInitialCollection();
             nextQuestion();
         }
     }
@@ -152,13 +152,12 @@ public class InterfaceBean implements Serializable{
         System.out.println("CALL: reloadStatTableData() from InterfaceBean");
 
         //After the answer creates String like this - "40.2 ➩ 37.3"
-        if(currPhrase.howWasAnswered == null)
-
+        if(currPhrase.howWasAnswered == null){
             currPhrProb = currPhrase.prob.setScale(1, RoundingMode.HALF_UP).toString();
-        else
-
+        }else{
             currPhrProb = currPhrase.returnUnmodified().prob.setScale(1, RoundingMode.HALF_UP) + "➩"
                     + currPhrase.prob.setScale(1, RoundingMode.HALF_UP);
+        }
 
         //After the answer creates String like this - "0.06116% ➩ 0.07294%"
         if(currPhrase.howWasAnswered == null)
@@ -223,7 +222,7 @@ public class InterfaceBean implements Serializable{
 
         reloadStatTableData();
 
-        try {
+        /*try {*/
             StringBuilder str = new StringBuilder();
             int countOfLearnedPhrases = 0;
             for (int i = listOfPhrases.size() - 1; i >= 0; i--) {
@@ -236,17 +235,17 @@ public class InterfaceBean implements Serializable{
                     countOfLearnedPhrases--;
                 }
                 if (listOfPhrases.get(i).howWasAnswered == null)
-                    str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
+                    str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).ldt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
                             .append(NONANSWERED_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt() ? "<font color=\"green\">" : "")
                             .append(listOfPhrases.get(i).natWord).append(listOfPhrases.get(i).isLearnt() ? "</font>" : "")
                             .append((i == index ? "</strong>" : "")).append("</br>");
                 else if (listOfPhrases.get(i).howWasAnswered)
-                    str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
+                    str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).ldt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
                             .append(RIGHT_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt() ? "<font color=\"green\">" : "")
                             .append(listOfPhrases.get(i).natWord).append(" - ").append(listOfPhrases.get(i).forWord).append(listOfPhrases.get(i).transcr == null ? "" : (" - " + listOfPhrases.get(i).transcr)).append(listOfPhrases.get(i).isLearnt() ? "</font>" : "")
                             .append((i == index ? "</strong>" : "")).append("</br>");
                 else if (!listOfPhrases.get(i).howWasAnswered)
-                    str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).lt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
+                    str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).ldt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
                             .append(WRONG_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt() ? "<font color=\"green\">" : "")
                             .append(listOfPhrases.get(i).natWord).append(" - ").append(listOfPhrases.get(i).forWord).append(listOfPhrases.get(i).transcr == null || listOfPhrases.get(i).transcr.equals("") ? "" : (" - " + listOfPhrases.get(i).transcr))
                             .append(listOfPhrases.get(i).isLearnt() ? "</font>" : "").append((i == index ? "</strong>" : "")).append("</br>");
@@ -260,10 +259,10 @@ public class InterfaceBean implements Serializable{
             currPhrLabel = listOfPhrases.get(index).label;
             if (currPhrase.isModified)
                 currPhrase.updatePhrase();
-        }catch (Exception e){
+        /*}catch (Exception e){
             e.printStackTrace();
             throw new RuntimeException();
-        }
+        }*/
     }
 
     private void newPhrase(){

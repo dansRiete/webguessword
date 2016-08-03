@@ -1,10 +1,10 @@
 package logic;
 
-import Exceptions.DataBaseConnectionException;
 import beans.LoginBean;
 
 import java.math.BigDecimal;
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -61,7 +61,7 @@ public class DAO {
 
     private String getCreateMainDb_StatTable_SqlString() {
 
-        return "CREATE TABLE " + loginBean.getUser() + "_stat (date DATETIME NOT NULL, event VARCHAR(30) NOT NULL, id INT NOT NULL)";
+        return "CREATE TABLE " + loginBean.getUser() + "_stat (date DATETIME NOT NULL, ms INT NOT NULL, event VARCHAR(30) NOT NULL, id INT NOT NULL)";
 
     }
 
@@ -140,15 +140,54 @@ public class DAO {
 
     }
 
-    public void statRightAnsw(int id){
-        String dateTime = ZonedDateTime.now(ZoneId.of("Europe/Kiev")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+    public void setStatistics(int id, LocalDateTime zdt, String mode){
+        String dateTime = zdt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+        int mlseconds = Integer.parseInt(ZonedDateTime.now(ZoneId.of("Europe/Kiev")).format(DateTimeFormatter.ofPattern("SSS")));
         try (Statement statement = mainDbConn.createStatement()) {
-            System.out.println("INSERT INTO " + loginBean.getUser() + "_stat" + " VALUES ('" + dateTime + "', 'r_answ', " + id + ")");
-            statement.execute("INSERT INTO " + loginBean.getUser() + "_stat" + " VALUES ('" + dateTime + "', 'r_answ', " + id + ")");
+            System.out.println("INSERT INTO " + loginBean.getUser() + "_stat" + " VALUES ('" + dateTime + "', " + mlseconds + ", '" + mode + "', " + id + ")");
+            statement.execute("INSERT INTO " + loginBean.getUser() + "_stat" + " VALUES ('" + dateTime + "', " + mlseconds + ", '" + mode + "', " + id + ")");
         } catch (SQLException e) {
             e.printStackTrace();
-            System.out.println("EXCEPTION: SQLException in statRightAnsw() from DAO");
+            System.out.println("EXCEPTION: SQLException in setStatistics() from DAO");
         }
+    }
+
+    public void updateStatistics(int id, LocalDateTime zdt, String mode){
+        String dateTime = zdt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+        int mlseconds = Integer.parseInt(ZonedDateTime.now(ZoneId.of("Europe/Kiev")).format(DateTimeFormatter.ofPattern("SSS")));
+        try (Statement statement = mainDbConn.createStatement()) {
+            System.out.println("UPDATE " + loginBean.getUser() + "_stat" + " SET event='" + mode + "' WHERE date='" + dateTime +"' AND id=" + id);
+            statement.execute("UPDATE " + loginBean.getUser() + "_stat" + " SET event='" + mode + "' WHERE date='" + dateTime +"' AND id=" + id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("EXCEPTION: SQLException in updateStatistics from DAO");
+        }
+    }
+
+    public ArrayList<Phrase> makeInitialCollection(){
+        ArrayList<Phrase> list = new ArrayList<>();
+
+        try (Statement statement = mainDbConn.createStatement(); ResultSet rs = statement.executeQuery("SELECT * FROM " + loginBean.getUser() + "_stat" + " WHERE date > DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)")) {
+
+            while (rs.next()){
+                Phrase phr = getPhraseById(rs.getInt("id"));
+
+                if(rs.getString("event").equalsIgnoreCase("r_answ"))
+                    phr.howWasAnswered = true;
+                else
+                    phr.howWasAnswered = false;
+
+                phr.ldt = rs.getTimestamp("date").toLocalDateTime();
+
+                list.add(phr);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("EXCEPTION: SQLException in setStatistics() from DAO");
+        }
+
+        return list;
     }
 
     public ArrayList<Phrase> returnPhrasesList() {

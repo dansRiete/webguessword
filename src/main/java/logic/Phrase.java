@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
@@ -26,7 +27,7 @@ public class Phrase implements Serializable{
     public Timestamp createDate;
     public Timestamp lastAccs;
     public boolean exactMatch;
-    public ZonedDateTime lt = ZonedDateTime.now(ZoneId.of("Europe/Kiev"));
+    public LocalDateTime ldt = ZonedDateTime.now(ZoneId.of("Europe/Kiev")).toLocalDateTime();
     public Boolean howWasAnswered;
     public double indexStart;
     public double indexEnd;
@@ -93,60 +94,70 @@ public class Phrase implements Serializable{
     public void rightAnswer(String answer){
         long[] indexes = null;
         this.answer = answer;
-        if(howWasAnswered == null){
-            System.out.println("dao.nonLearnedWords="+dao.nonLearnedWords+"/"+"dao.totalPossibleWords="+dao.totalPossibleWords);
-            if(!isLearnt()){
-                BigDecimal subtr = new BigDecimal(3*Math.sqrt((dao.nonLearnedWords) / dao.totalPossibleWords));
+
+        if(howWasAnswered == null){     //Ответ на фразу первый раз
+
+            if(!isLearnt()){    //Prob вычитается только если фраза неизучена
+                BigDecimal subtr = new BigDecimal(3 * Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWords));
                 prob = prob.subtract(subtr);
-//                dao.setProbById(id, prob.doubleValue());
             }
+
+            dao.setStatistics(this.id, ldt, "r_answ");
             howWasAnswered = true;
             indexes = dao.updateProb(this);
-        }else if(!howWasAnswered){
-            if(!unmodifiedPhrase.isLearnt()){
-                BigDecimal subtr = new BigDecimal(9*Math.sqrt((dao.nonLearnedWords) / dao.totalPossibleWords));
+
+        }else if(!howWasAnswered){      //если true значит на фразу уже был ответ
+
+            if(!unmodifiedPhrase.isLearnt()){   //Если до ответа на фразу она не была изучена
+                BigDecimal subtr = new BigDecimal(9 * Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWords));
                 prob = prob.subtract(subtr);
-//                dao.setProbById(id, prob.doubleValue());
-            }else{
+            }else{      //Если была, просто возвращаем первоначальное значение prob
                 prob = unmodifiedPhrase.prob;
-//                dao.setProbById(id, prob.doubleValue());
-//                prob=3*Math.sqrt((dao.nonLearnedWords + dao.learnedWords) / 1500d);
             }
+
+            dao.updateStatistics(this.id, ldt, "r_answ");
             howWasAnswered = true;
-            indexes =  dao.updateProb(this);
+            indexes = dao.updateProb(this);
+
         }
+
         if(indexes!=null){
             this.indexStart = indexes[0];
             this.indexEnd = indexes[1];
         }
 
-        dao.statRightAnsw(this.id);
+
 
     }
 
     public void wrongAnswer(String answer){
         long[] indexes = null;
         this.answer = answer;
-        if(howWasAnswered == null){
-            System.out.println("dao.nonLearnedWords="+dao.nonLearnedWords+"/"+"dao.totalPossibleWords="+dao.totalPossibleWords);
+
+        if(howWasAnswered == null){     //Ответ на фразу первый раз
+
             BigDecimal summ = new BigDecimal(6*Math.sqrt((dao.nonLearnedWords) / dao.totalPossibleWords));
             prob = prob.add(summ);
-//            dao.setProbById(id, prob.doubleValue());
             howWasAnswered = false;
             indexes = dao.updateProb(this);
+            dao.setStatistics(this.id, ldt, "w_answ");
+
         }else if(howWasAnswered){
+
             if(!unmodifiedPhrase.isLearnt()) {
-                BigDecimal summ = new BigDecimal(9 * Math.sqrt((dao.nonLearnedWords) / dao.totalPossibleWords));
+                BigDecimal summ = new BigDecimal(9 * Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWords));
                 prob = prob.add(summ);
-//                dao.setProbById(id, prob.doubleValue());
             }else{
-                BigDecimal summ = new BigDecimal(6*Math.sqrt((dao.nonLearnedWords) / dao.totalPossibleWords));
+                BigDecimal summ = new BigDecimal(6*Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWords));
                 prob = prob.add(summ);
-//                dao.setProbById(id, prob.doubleValue());
             }
+
             howWasAnswered = false;
             indexes = dao.updateProb(this);
+            dao.updateStatistics(this.id, ldt, "w_answ");
+
         }
+
         if(indexes!=null){
             this.indexStart = indexes[0];
             this.indexEnd = indexes[1];
