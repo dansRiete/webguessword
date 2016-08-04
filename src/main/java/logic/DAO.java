@@ -170,10 +170,8 @@ public class DAO {
 
     public void updateStatistics(Phrase phr){
         String dateTime = phr.ldt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
-        int mlseconds = Integer.parseInt(ZonedDateTime.now(ZoneId.of("Europe/Kiev")).format(DateTimeFormatter.ofPattern("SSS")));
+
         String mode;
-
-
         if(phr.howWasAnswered)
             mode = "r_answ";
         else
