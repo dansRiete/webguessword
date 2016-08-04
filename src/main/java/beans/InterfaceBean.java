@@ -205,7 +205,7 @@ public class InterfaceBean implements Serializable{
             else if(phrs.howWasAnswered)
                 numOfRightAnswForSession++;
         }
-        numOfAnswForSession = numOfPhrForSession-numOfNonAnswForSession;
+        numOfAnswForSession = numOfPhrForSession - numOfNonAnswForSession;
         //Формирует строку с процентным соотношением правильных ответов к общему кол-ву ответов
         percentOfRightAnswers = ((new BigDecimal(numOfRightAnswForSession)).divide(new BigDecimal(numOfAnswForSession==0?1:numOfAnswForSession),2, RoundingMode.HALF_UP).multiply(new BigDecimal(100))).setScale(0, RoundingMode.HALF_UP)+"%";
         learnedWords = (int) dao.learnedWords;

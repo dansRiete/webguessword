@@ -38,7 +38,7 @@ public class Phrase implements Serializable{
     /**
      * Saved state of phrase object before changing howWasAnswered to false or true
      */
-    private Phrase unmodifiedPhrase;
+    public Phrase unmodifiedPhrase;
 
 
 
@@ -102,8 +102,9 @@ public class Phrase implements Serializable{
                 prob = prob.subtract(subtr);
             }
 
-            dao.setStatistics(this.id, ldt, "r_answ");
+
             howWasAnswered = true;
+            dao.setStatistics(this);
             indexes = dao.updateProb(this);
 
         }else if(!howWasAnswered){      //если true значит на фразу уже был ответ
@@ -115,8 +116,9 @@ public class Phrase implements Serializable{
                 prob = unmodifiedPhrase.prob;
             }
 
-            dao.updateStatistics(this.id, ldt, "r_answ");
+
             howWasAnswered = true;
+            dao.updateStatistics(this);
             indexes = dao.updateProb(this);
 
         }
@@ -140,7 +142,7 @@ public class Phrase implements Serializable{
             prob = prob.add(summ);
             howWasAnswered = false;
             indexes = dao.updateProb(this);
-            dao.setStatistics(this.id, ldt, "w_answ");
+            dao.setStatistics(this);
 
         }else if(howWasAnswered){
 
@@ -154,7 +156,7 @@ public class Phrase implements Serializable{
 
             howWasAnswered = false;
             indexes = dao.updateProb(this);
-            dao.updateStatistics(this.id, ldt, "w_answ");
+            dao.updateStatistics(this);
 
         }
 
