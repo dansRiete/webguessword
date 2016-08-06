@@ -27,7 +27,7 @@ public class Phrase implements Serializable{
     public Timestamp createDate;
     public Timestamp lastAccs;
     public boolean exactMatch;
-    public LocalDateTime ldt = ZonedDateTime.now(ZoneId.of("Europe/Kiev")).toLocalDateTime();
+    public LocalDateTime ldt = LocalDateTime.now();
     public Boolean howWasAnswered;
     public double indexStart;
     public double indexEnd;
@@ -35,6 +35,7 @@ public class Phrase implements Serializable{
     public boolean isModified;
     public String answer;
     public String timeOfReturningFromList;
+
     /**
      * Saved state of phrase object before changing howWasAnswered to false or true
      */

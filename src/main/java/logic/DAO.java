@@ -38,6 +38,15 @@ public class DAO {
     private ArrayList<Phrase> listOfActivePhrases = new ArrayList<>();
     private ArrayList<Phrase> listOfAllPhrases = new ArrayList<>();
     private Statement statStatement;
+    /**
+     * Number of replies to 6 am of the current day
+     */
+    public int countAnswUntil6am;
+
+    /**
+     * Number of hours spent from the very begining till 6am of the current day
+     */
+    public int totalHoursUntil6am;
 
     private String getCreateMainDb_MainTable_SqlString() {
         String str = "CREATE TABLE " + loginBean.getUser() + "\n" +
@@ -55,6 +64,24 @@ public class DAO {
         System.out.println(str);
         return str;
 
+    }
+
+    private void initialStatistics(){
+        try(
+                ResultSet rs1 = mainDbConn.createStatement().executeQuery
+                    ("SELECT COUNT(*) FROM " + loginBean.getUser() + "_stat WHERE date < DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)");
+                ResultSet rs2 = mainDbConn.createStatement().executeQuery
+                    ("SELECT TIMESTAMPDIFF(HOUR, (SELECT MIN(date) FROM " + loginBean.getUser() + "_stat WHERE date < DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)), " +
+                            "DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR))")
+        ){
+            rs1.next();
+            countAnswUntil6am = rs1.getInt(1);
+            rs2.next();
+            totalHoursUntil6am = rs2.getInt(1);
+
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
     }
 
     private String getCreateMainDb_StatTable_SqlString() {
@@ -91,6 +118,7 @@ public class DAO {
         checkTables();
         reloadCollectionOfPhrases();
         reloadLabelsList();
+        initialStatistics();
 
 
     }
@@ -197,7 +225,9 @@ public class DAO {
     public ArrayList<Phrase> makeInitialCollection(){
         ArrayList<Phrase> list = new ArrayList<>();
 
-        try (Statement statement = mainDbConn.createStatement(); ResultSet rs = statement.executeQuery("SELECT * FROM " + loginBean.getUser() + "_stat" + " WHERE date > DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)")) {
+        try (Statement statement = mainDbConn.createStatement();
+             ResultSet rs = statement.executeQuery
+                     ("SELECT * FROM " + loginBean.getUser() + "_stat" + " WHERE date > DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)")) {
 
             while (rs.next()){
                 Phrase phr = null;

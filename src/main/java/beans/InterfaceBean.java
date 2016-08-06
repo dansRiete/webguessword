@@ -47,6 +47,7 @@ public class InterfaceBean implements Serializable{
     private int totalNumberOfLearnedWords;
     private int learnedWords;
     private int nonLearnedWords;
+    private int avgAnswersPerDay;
     private int totalNumberOfPhrases;
     private int numberOfLearnedPhrasePerSession;
     private String percentOfRightAnswers;
@@ -211,6 +212,10 @@ public class InterfaceBean implements Serializable{
         learnedWords = (int) dao.learnedWords;
         nonLearnedWords = (int) dao.nonLearnedWords;
         totalNumberOfPhrases = learnedWords+nonLearnedWords;
+         System.out.println("?????????????dao.countAnswUntil6am=" + dao.countAnswUntil6am);
+         System.out.println("?????????????numOfAnswForSession=" + numOfAnswForSession);
+         System.out.println("?????????????dao.totalHoursUntil6am=" + dao.totalHoursUntil6am);
+         avgAnswersPerDay = (int) ( (float) (dao.countAnswUntil6am+numOfAnswForSession)/ (float) (dao.totalHoursUntil6am+LocalDateTime.now().getHour()-6) * 24);
         //<<
 
     }
@@ -662,6 +667,14 @@ public class InterfaceBean implements Serializable{
 
     public void setTimeOfReturningPhraseFromCollection(BigDecimal timeOfReturningPhraseFromCollection) {
         this.timeOfReturningPhraseFromCollection = timeOfReturningPhraseFromCollection;
+    }
+
+    public int getAvgAnswersPerDay() {
+        return avgAnswersPerDay;
+    }
+
+    public void setAvgAnswersPerDay(int avgAnswersPerDay) {
+        this.avgAnswersPerDay = avgAnswersPerDay;
     }
 }
 
