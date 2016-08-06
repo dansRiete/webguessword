@@ -215,7 +215,12 @@ public class InterfaceBean implements Serializable{
          System.out.println("?????????????dao.countAnswUntil6am=" + dao.countAnswUntil6am);
          System.out.println("?????????????numOfAnswForSession=" + numOfAnswForSession);
          System.out.println("?????????????dao.totalHoursUntil6am=" + dao.totalHoursUntil6am);
-         avgAnswersPerDay = (int) ( (float) (dao.countAnswUntil6am+numOfAnswForSession)/ (float) (dao.totalHoursUntil6am+LocalDateTime.now().getHour()-6) * 24);
+
+         try{
+             avgAnswersPerDay = (int) ( (float) (dao.countAnswUntil6am+numOfAnswForSession)/ (float) (dao.totalHoursUntil6am+LocalDateTime.now().getHour()-6) * 24);
+         }catch (ArithmeticException e){
+             avgAnswersPerDay = 0;
+         }
         //<<
 
     }
