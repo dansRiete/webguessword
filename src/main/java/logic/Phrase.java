@@ -27,7 +27,7 @@ public class Phrase implements Serializable{
     public Timestamp createDate;
     public Timestamp lastAccs;
     public boolean exactMatch;
-    public LocalDateTime ldt = LocalDateTime.now();
+    public ZonedDateTime ldt = ZonedDateTime.now(ZoneId.of("Europe/Helsinki"));
     public Boolean howWasAnswered;
     public double indexStart;
     public double indexEnd;
