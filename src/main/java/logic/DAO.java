@@ -251,7 +251,7 @@ public class DAO {
                         }
                     }
 
-                    phr.ldt = rs.getTimestamp("date").toLocalDateTime();
+                    phr.ldt = rs.getTimestamp("date").toLocalDateTime().atZone(ZoneId.of("Europe/Helsinki"));
 
                     list.add(phr);
 
