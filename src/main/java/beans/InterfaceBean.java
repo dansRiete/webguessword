@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -211,7 +212,7 @@ public class InterfaceBean implements Serializable{
          percentOfCompleteLearning = new BigDecimal(dao.summProbOfNLW / (dao.summProbOfLW + dao.summProbOfNLW)).setScale(2).multiply(new BigDecimal(100)).toString() + "%";
 
          try{
-             avgAnswersPerDay = (int) ( (float) (dao.countAnswUntil6am+numOfAnswForSession)/ (float) (dao.totalHoursUntil6am+LocalDateTime.now().getHour()-6) * 24);
+             avgAnswersPerDay = (int) ( (float) (dao.countAnswUntil6am+numOfAnswForSession)/ (float) (dao.totalHoursUntil6am + ZonedDateTime.now(ZoneId.of("Europe/Kiev")).getHour()-6) * 24);
          }catch (ArithmeticException e){
              avgAnswersPerDay = 0;
          }
