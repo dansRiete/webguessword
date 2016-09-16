@@ -18,6 +18,7 @@ import java.util.HashSet;
 @Dependent
 public class Phrase implements Serializable{
 
+    public static final double INITIAL_RATE = 1.2;
     public int id;
     public String forWord;
     public String natWord;
@@ -31,6 +32,7 @@ public class Phrase implements Serializable{
     public Boolean howWasAnswered;
     public double indexStart;
     public double indexEnd;
+    public double rate = 1;
     private DAO dao;
     public boolean isModified;
     public String answer;
@@ -46,7 +48,7 @@ public class Phrase implements Serializable{
     public Phrase(){}
 
     public Phrase(int id, String forWord, String natWord, String transcr, BigDecimal prob, Timestamp createDate,
-                  String label, Timestamp lastAccs, double indexStart, double indexEnd, boolean exactMatch, DAO dao){
+                  String label, Timestamp lastAccs, double indexStart, double indexEnd, boolean exactMatch, double rate, DAO dao){
         this.dao = dao;
         this.id = id;
         this.forWord = forWord;
@@ -59,6 +61,7 @@ public class Phrase implements Serializable{
         this.indexStart = indexStart;
         this.indexEnd = indexEnd;
         this.exactMatch = exactMatch;
+        this.rate = rate<=1 ? 1 : rate;
         this.unmodifiedPhrase = new Phrase(forWord, natWord, transcr, prob, createDate, label, lastAccs, indexStart, indexEnd, exactMatch);
     }
 
@@ -98,31 +101,49 @@ public class Phrase implements Serializable{
 
         if(howWasAnswered == null){     //Ответ на фразу первый раз
 
-            if(!isLearnt()){    //Prob вычитается только если фраза неизучена
-                BigDecimal subtr = new BigDecimal(3 * Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWords));
+            if(!isLearnt()){
+
+                double rateDepandableOnNumberOfWords = Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWords);
+                System.out.println("rateDepandableOnNumberOfWords = " + rateDepandableOnNumberOfWords + "; rate=" + rate);
+                BigDecimal subtr = new BigDecimal(3 * rateDepandableOnNumberOfWords * rate);
+
+                if(rate <= 1){
+                    rate = INITIAL_RATE;
+                }else {
+                    rate *= INITIAL_RATE;
+                }
+
                 prob = prob.subtract(subtr);
             }
 
 
-            howWasAnswered = true;
-            dao.setStatistics(this);
-            indexes = dao.updateProb(this);
-
-        }else if(!howWasAnswered){      //если true значит на фразу уже был ответ
+        }else if(!howWasAnswered){      //если true значит на фразу уже был неправильный ответ
 
             if(!unmodifiedPhrase.isLearnt()){   //Если до ответа на фразу она не была изучена
-                BigDecimal subtr = new BigDecimal(9 * Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWords));
+                /*BigDecimal subtr = new BigDecimal(9 * Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWords) * unmodifiedPhrase.rate);
+                prob = prob.subtract(subtr);*/
+                prob = unmodifiedPhrase.prob;
+
+                double rateDepandableOnNumberOfWords = Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWords);
+                System.out.println("rateDepandableOnNumberOfWords = " + rateDepandableOnNumberOfWords + "; rate=" + rate);
+                BigDecimal subtr = new BigDecimal(3 * rateDepandableOnNumberOfWords * rate);
+
+                if(rate <= 1){
+                    rate = INITIAL_RATE;
+                }else {
+                    rate *= INITIAL_RATE;
+                }
+
                 prob = prob.subtract(subtr);
             }else{      //Если была, просто возвращаем первоначальное значение prob
                 prob = unmodifiedPhrase.prob;
             }
 
-
-            howWasAnswered = true;
-            dao.updateStatistics(this);
-            indexes = dao.updateProb(this);
-
         }
+
+        howWasAnswered = true;
+        dao.setStatistics(this);
+        indexes = dao.updateProb(this);
 
         if(indexes!=null){
             this.indexStart = indexes[0];
@@ -136,6 +157,7 @@ public class Phrase implements Serializable{
     public void wrongAnswer(String answer){
         long[] indexes = null;
         this.answer = answer;
+        rate = 1;
 
         if(howWasAnswered == null){     //Ответ на фразу первый раз
 
@@ -182,6 +204,10 @@ public class Phrase implements Serializable{
             return true;
         }
 
+    }
+
+    public String getForWordAndTranscription(){
+        return forWord + (transcr.equalsIgnoreCase("") ? "" : (" [" + transcr + "]"));
     }
 
     public void delete(){

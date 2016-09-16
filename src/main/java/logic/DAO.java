@@ -61,6 +61,7 @@ public class DAO {
                 "    create_date DATETIME,\n" +
                 "    last_accs_date DATETIME,\n" +
                 "    exactmatch BOOLEAN DEFAULT FALSE  NOT NULL,\n" +
+                "    rate DOUBLE,\n" +
                 "    index_start DOUBLE,\n" +
                 "    index_end DOUBLE)";
         System.out.println(str);
@@ -307,11 +308,6 @@ public class DAO {
     public void reloadCollectionOfPhrases() {
 
 
-        /*String insertSql = "INSERT INTO " + loginBean.getUser() +
-                "(id, for_word, nat_word, transcr, prob_factor, create_date, label, last_accs_date, " +
-                "index_start, index_end, exactmatch) VALUES (?,?,?,?,?,?,?,?,?,?,?)";*/
-
-
         try (Statement mainSt = mainDbConn.createStatement();
              ResultSet rs = mainSt.executeQuery("SELECT * FROM " + loginBean.getUser() + " ORDER BY create_date DESC, id DESC")) {
 
@@ -332,10 +328,11 @@ public class DAO {
                 Timestamp last_accs_date = rs.getTimestamp("last_accs_date");
                 double index_start = rs.getDouble("index_start");
                 double index_end = rs.getDouble("index_end");
+                double rate = rs.getDouble("rate");
                 boolean exactmatch = rs.getBoolean("exactmatch");
 
                 Phrase phrase = new Phrase(id, for_word, nat_word, transcr, prob, create_date, label,
-                        last_accs_date, index_start, index_end, exactmatch, this);
+                        last_accs_date, index_start, index_end, exactmatch, rate, this);
 
                 //Добавляем в активную коллекцию если метка фразы совпадает с выбранными - "chosedLabels" и считаем totalPossibleWords
 
@@ -405,8 +402,8 @@ public class DAO {
         }
 
         try (Statement st = mainDbConn.createStatement()) {
-            st.execute("UPDATE " + loginBean.getUser() + " SET prob_factor=" + phrase.prob + ", last_accs_date='" + dateTime +
-                    "' WHERE id=" + phrase.id);
+            st.execute("UPDATE " + loginBean.getUser() + " SET prob_factor=" + phrase.prob + ", last_accs_date='" + dateTime + "', rate=" + phrase.rate +
+                    " WHERE id=" + phrase.id);
         } catch (SQLException e) {
             System.out.println("EXCEPTION#2: in updateProb(Phrase phrase) from DAO");
             e.printStackTrace();
@@ -497,6 +494,7 @@ public class DAO {
         //Считаем неизученные слова, summProbOfNLW и очищаем индексы
         nonLearnedWords = 0;
         summProbOfNLW = 0;
+        summProbOfLW = 0;
         for (Phrase phr : listOfActivePhrases) {
             phr.indexStart = phr.indexEnd = 0;
             if (phr.prob.doubleValue() > 3) {
@@ -737,7 +735,7 @@ public class DAO {
             int index = random.nextInt( (int) maxIndex);
             Phrase tempPhrase = getPhraseByIndex(index);
             phrase = new Phrase(tempPhrase.id, tempPhrase.forWord, tempPhrase.natWord, tempPhrase.transcr, tempPhrase.prob, tempPhrase.createDate,
-                    tempPhrase.label, tempPhrase.lastAccs, tempPhrase.indexStart, tempPhrase.indexEnd, tempPhrase.exactMatch, this);
+                    tempPhrase.label, tempPhrase.lastAccs, tempPhrase.indexStart, tempPhrase.indexEnd, tempPhrase.exactMatch, tempPhrase.rate, this);
             phrase.timeOfReturningFromList = tempPhrase.timeOfReturningFromList;
         } while (pushIntoStack(phrase));
 

@@ -70,6 +70,7 @@ public class InterfaceBean implements Serializable{
     private String currPhrRelLastAccsDate;
     private String currPhrRelCreateDate;
     private int currPhrId;
+    private double currentPhraseRate;
     //<<
 
     private RetDiff retDiff = new RetDiff();
@@ -195,6 +196,7 @@ public class InterfaceBean implements Serializable{
         int numOfNonAnswForSession = 0;
         int numOfRightAnswForSession = 0;
         currPhrId = currPhrase.id;
+         currentPhraseRate = currPhrase.rate;
 
         numOfPhrForSession = listOfPhrases.size();
         for(Phrase phrs : listOfPhrases){
@@ -209,7 +211,9 @@ public class InterfaceBean implements Serializable{
         learnedWords = (int) dao.learnedWords;
         nonLearnedWords = (int) dao.nonLearnedWords;
         totalNumberOfPhrases = learnedWords+nonLearnedWords;
-         percentOfCompleteLearning = new BigDecimal(dao.summProbOfNLW / (dao.summProbOfLW + dao.summProbOfNLW)).setScale(2).multiply(new BigDecimal(100)).toString() + "%";
+         System.out.println("dao.summProbOfNLW = " + dao.summProbOfNLW);
+         System.out.println("dao.summProbOfLW = " + dao.summProbOfLW);
+         percentOfCompleteLearning = new BigDecimal(dao.totalActiveWords*3/(dao.summProbOfLW+dao.summProbOfNLW)).setScale(4, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100)).setScale(2, BigDecimal.ROUND_HALF_UP).toString() + "%";
 
          try{
              avgAnswersPerDay = (int) ( (float) (dao.countAnswUntil6am+numOfAnswForSession)/ (float) (dao.totalHoursUntil6am + ZonedDateTime.now(ZoneId.of("Europe/Kiev")).getHour()-6) * 24);
@@ -246,12 +250,14 @@ public class InterfaceBean implements Serializable{
             else if (listOfPhrases.get(i).howWasAnswered)
                 str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).ldt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
                         .append(RIGHT_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt() ? "<font color=\"green\">" : "")
-                        .append(listOfPhrases.get(i).natWord).append(" - ").append(listOfPhrases.get(i).forWord).append(listOfPhrases.get(i).transcr == null ? "" : (" [" + listOfPhrases.get(i).transcr + "]"))
+                        .append(listOfPhrases.get(i).natWord + " - ")
+                        .append(listOfPhrases.get(i).getForWordAndTranscription())
                         .append(listOfPhrases.get(i).isLearnt() ? "</font>" : "").append((i == index ? "</strong>" : "")).append("</br>");
             else if (!listOfPhrases.get(i).howWasAnswered)
                 str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).ldt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
                         .append(WRONG_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt() ? "<font color=\"green\">" : "")
-                        .append(listOfPhrases.get(i).natWord).append(" - ").append(listOfPhrases.get(i).forWord).append(listOfPhrases.get(i).transcr == null || listOfPhrases.get(i).transcr.equals("") ? "" : (" [" + listOfPhrases.get(i).transcr + "]"))
+                        .append(listOfPhrases.get(i).natWord + " - ")
+                        .append(listOfPhrases.get(i).getForWordAndTranscription())
                         .append(listOfPhrases.get(i).isLearnt() ? "</font>" : "").append((i == index ? "</strong>" : "")).append("</br>");
 
         }
@@ -649,6 +655,14 @@ public class InterfaceBean implements Serializable{
 
     public void setPercentOfCompleteLearning(String percentOfCompleteLearning) {
         this.percentOfCompleteLearning = percentOfCompleteLearning;
+    }
+
+    public double getCurrentPhraseRate() {
+        return currentPhraseRate;
+    }
+
+    public void setCurrentPhraseRate(double currentPhraseRate) {
+        this.currentPhraseRate = currentPhraseRate;
     }
 }
 
