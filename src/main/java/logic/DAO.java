@@ -20,15 +20,17 @@ import java.util.Random;
 public class DAO {
     private Random random = new Random();
     private String timezone = "Europe/Kiev";
-    public static final String remoteHost = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
-    public static final String localHost3306 = "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
-    public static final String localHost3307 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
+//    public static final String remoteHost = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
+//    public static final String localHost3306 = "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
+//    public static final String localHost3307 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     public HashSet<String> chosedLabels;
     public ArrayList<String> possibleLabels = new ArrayList<>();
     public double learnedWords;
     public double nonLearnedWords;
     public double totalActiveWords;
     public double totalPossibleWords;
+    public int summProbOfNLW;
+    public int summProbOfLW;
     private double maxIndex;
     final double chanceOfLearnedWords = 1d / 15d;
     private Phrase[] lastPhrasesStack;
@@ -37,7 +39,7 @@ public class DAO {
     private LoginBean loginBean;
     private ArrayList<Phrase> listOfActivePhrases = new ArrayList<>();
     private ArrayList<Phrase> listOfAllPhrases = new ArrayList<>();
-    private Statement statStatement;
+
     /**
      * Number of replies to 6 am of the current day
      */
@@ -169,7 +171,7 @@ public class DAO {
 
     public void setStatistics(Phrase phr){
         String dateTime = phr.ldt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
-        int mlseconds = Integer.parseInt(ZonedDateTime.now(ZoneId.of("Europe/Kiev")).format(DateTimeFormatter.ofPattern("SSS")));
+        int mlseconds = Integer.parseInt(ZonedDateTime.now(ZoneId.of(timezone)).format(DateTimeFormatter.ofPattern("SSS")));
 
         String mode;
         if(phr.howWasAnswered)
@@ -393,7 +395,7 @@ public class DAO {
 
     public long[] updateProb(Phrase phrase) {
         System.out.println("CALL: updateProb(Phrase phrase) with id=" + phrase.id + " from DAO");
-        String dateTime = ZonedDateTime.now(ZoneId.of("Europe/Kiev")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+        String dateTime = ZonedDateTime.now(ZoneId.of(timezone)).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
 
         try {
             getPhraseById(phrase.id).prob = phrase.prob;
@@ -417,7 +419,7 @@ public class DAO {
 
     public void updatePhrase(Phrase phrase) {
         System.out.println("CALL: updatePhrase(Phrase phrase) from DAO with id=" + phrase.id);
-        String dateTime = ZonedDateTime.now(ZoneId.of("Europe/Kiev")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+        String dateTime = ZonedDateTime.now(ZoneId.of(timezone)).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
         String updateSql = "UPDATE " + loginBean.getUser() + " SET for_word=?, nat_word=?, transcr=?, last_accs_date=?, " +
                 "exactmatch=?, label=?, prob_factor=?  WHERE id =" + phrase.id;
         Phrase phr = null;
@@ -487,7 +489,7 @@ public class DAO {
         double indOfLW;     //Индекс выпадения изученных
         double rangeOfNLW;  //Диапазон индексов неизученных слов
         double scaleOf1prob;    //rangeOfNLW/summProbOfNLW  цена одного prob
-        int summProbOfNLW = 0;
+
         int countOfModIndices = 0;
         long[] indexes = new long[2];
         totalActiveWords = listOfActivePhrases.size(); //Считаем общее количество фраз
@@ -500,6 +502,8 @@ public class DAO {
             if (phr.prob.doubleValue() > 3) {
                 nonLearnedWords++;
                 summProbOfNLW += phr.prob.doubleValue();
+            }else {
+                summProbOfLW += phr.prob.doubleValue();
             }
         }
 

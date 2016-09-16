@@ -48,6 +48,7 @@ public class InterfaceBean implements Serializable{
     private int learnedWords;
     private int nonLearnedWords;
     private int avgAnswersPerDay;
+    private String percentOfCompleteLearning;
     private int totalNumberOfPhrases;
     private int numberOfLearnedPhrasePerSession;
     private String percentOfRightAnswers;
@@ -135,12 +136,7 @@ public class InterfaceBean implements Serializable{
 
         //If clause was changed
         if(!resultChoosedLabel.equals(previousResultChoosedLabel)){
-            if(!resultChoosedLabel.equalsIgnoreCase("")){
-//                dao.table = "(SELECT * FROM " + loginBean.getUser() + " WHERE LABEL IN(" + resultChoosedLabel + ")) As custom";
-            }
-            else{
-//                dao.table = loginBean.getUser();
-            }
+
             dao.chosedLabels = hshset;
             dao.reloadCollectionOfPhrases();
             previousResultChoosedLabel = resultChoosedLabel;
@@ -212,9 +208,7 @@ public class InterfaceBean implements Serializable{
         learnedWords = (int) dao.learnedWords;
         nonLearnedWords = (int) dao.nonLearnedWords;
         totalNumberOfPhrases = learnedWords+nonLearnedWords;
-         System.out.println("?????????????dao.countAnswUntil6am=" + dao.countAnswUntil6am);
-         System.out.println("?????????????numOfAnswForSession=" + numOfAnswForSession);
-         System.out.println("?????????????dao.totalHoursUntil6am=" + dao.totalHoursUntil6am);
+         percentOfCompleteLearning = new BigDecimal(dao.summProbOfNLW / (dao.summProbOfLW + dao.summProbOfNLW)).setScale(2).multiply(new BigDecimal(100)).toString() + "%";
 
          try{
              avgAnswersPerDay = (int) ( (float) (dao.countAnswUntil6am+numOfAnswForSession)/ (float) (dao.totalHoursUntil6am+LocalDateTime.now().getHour()-6) * 24);
@@ -226,64 +220,59 @@ public class InterfaceBean implements Serializable{
     }
 
     public void resultProcessing(){
-        System.out.println("CALL: resultProcessing() from InterfaceBean");
 
-//        calculateSessionStatistics();
+        System.out.println("CALL: resultProcessing() from InterfaceBean");
 
         reloadStatTableData();
 
-        /*try {*/
-            StringBuilder str = new StringBuilder();
-            int countOfLearnedPhrases = 0;
-            for (int i = listOfPhrases.size() - 1; i >= 0; i--) {
-                //If the phrase has been learnt and had not been learnt before then increase the counter of learnt phrases per current session
-                if (listOfPhrases.get(i).isLearnt() && !listOfPhrases.get(i).returnUnmodified().isLearnt()) {
-                    countOfLearnedPhrases++;
-                }
-                //If vice-versa --
-                if (!listOfPhrases.get(i).isLearnt() && listOfPhrases.get(i).returnUnmodified().isLearnt()) {
-                    countOfLearnedPhrases--;
-                }
-                if (listOfPhrases.get(i).howWasAnswered == null)
-                    str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).ldt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
-                            .append(NONANSWERED_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt() ? "<font color=\"green\">" : "")
-                            .append(listOfPhrases.get(i).natWord).append(listOfPhrases.get(i).isLearnt() ? "</font>" : "")
-                            .append((i == index ? "</strong>" : "")).append("</br>");
-                else if (listOfPhrases.get(i).howWasAnswered)
-                    str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).ldt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
-                            .append(RIGHT_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt() ? "<font color=\"green\">" : "")
-                            .append(listOfPhrases.get(i).natWord).append(" - ").append(listOfPhrases.get(i).forWord).append(listOfPhrases.get(i).transcr == null ? "" : (" - " + listOfPhrases.get(i).transcr)).append(listOfPhrases.get(i).isLearnt() ? "</font>" : "")
-                            .append((i == index ? "</strong>" : "")).append("</br>");
-                else if (!listOfPhrases.get(i).howWasAnswered)
-                    str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).ldt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
-                            .append(WRONG_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt() ? "<font color=\"green\">" : "")
-                            .append(listOfPhrases.get(i).natWord).append(" - ").append(listOfPhrases.get(i).forWord).append(listOfPhrases.get(i).transcr == null || listOfPhrases.get(i).transcr.equals("") ? "" : (" - " + listOfPhrases.get(i).transcr))
-                            .append(listOfPhrases.get(i).isLearnt() ? "</font>" : "").append((i == index ? "</strong>" : "")).append("</br>");
 
+        StringBuilder str = new StringBuilder();
+        int countOfLearnedPhrases = 0;
+        for (int i = listOfPhrases.size() - 1; i >= 0; i--) {
+            //If the phrase has been learnt and had not been learnt before then increase the counter of learnt phrases per current session
+            if (listOfPhrases.get(i).isLearnt() && !listOfPhrases.get(i).returnUnmodified().isLearnt()) {
+                countOfLearnedPhrases++;
             }
-            numberOfLearnedPhrasePerSession = countOfLearnedPhrases;
-            result = str.toString();
-            currPhrForWord = listOfPhrases.get(index).forWord;
-            currPhrNatWord = listOfPhrases.get(index).natWord;
-            currPhrTransc = listOfPhrases.get(index).transcr;
-            currPhrLabel = listOfPhrases.get(index).label;
-            if (currPhrase.isModified)
-                currPhrase.updatePhrase();
-        /*}catch (Exception e){
-            e.printStackTrace();
-            throw new RuntimeException();
-        }*/
+            //If vice-versa --
+            if (!listOfPhrases.get(i).isLearnt() && listOfPhrases.get(i).returnUnmodified().isLearnt()) {
+                countOfLearnedPhrases--;
+            }
+            if (listOfPhrases.get(i).howWasAnswered == null)
+                str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).ldt.format(DateTimeFormatter.ofPattern("HH:mm:ss"))).append(NONANSWERED_MESSAGE).append("] ")
+                        .append(listOfPhrases.get(i).isLearnt() ? "<font color=\"green\">" : "")
+                        .append(listOfPhrases.get(i).natWord).append(listOfPhrases.get(i).isLearnt() ? "</font>" : "")
+                        .append((i == index ? "</strong>" : "")).append("</br>");
+            else if (listOfPhrases.get(i).howWasAnswered)
+                str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).ldt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
+                        .append(RIGHT_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt() ? "<font color=\"green\">" : "")
+                        .append(listOfPhrases.get(i).natWord).append(" - ").append(listOfPhrases.get(i).forWord).append(listOfPhrases.get(i).transcr == null ? "" : (" [" + listOfPhrases.get(i).transcr + "]"))
+                        .append(listOfPhrases.get(i).isLearnt() ? "</font>" : "").append((i == index ? "</strong>" : "")).append("</br>");
+            else if (!listOfPhrases.get(i).howWasAnswered)
+                str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).ldt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
+                        .append(WRONG_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt() ? "<font color=\"green\">" : "")
+                        .append(listOfPhrases.get(i).natWord).append(" - ").append(listOfPhrases.get(i).forWord).append(listOfPhrases.get(i).transcr == null || listOfPhrases.get(i).transcr.equals("") ? "" : (" [" + listOfPhrases.get(i).transcr + "]"))
+                        .append(listOfPhrases.get(i).isLearnt() ? "</font>" : "").append((i == index ? "</strong>" : "")).append("</br>");
+
+        }
+        numberOfLearnedPhrasePerSession = countOfLearnedPhrases;
+        result = str.toString();
+        currPhrForWord = listOfPhrases.get(index).forWord;
+        currPhrNatWord = listOfPhrases.get(index).natWord;
+        currPhrTransc = listOfPhrases.get(index).transcr;
+        currPhrLabel = listOfPhrases.get(index).label;
+        if (currPhrase.isModified){
+            currPhrase.updatePhrase();
+        }
+
     }
 
     private void newPhrase(){
         System.out.println("CALL: newPhrase() from InterfaceBean");
-        long starTime = System.nanoTime();
         Phrase phrase = dao.createRandPhrase();
         if(phrase!=null){
             listOfPhrases.add(phrase);
             currPhrase = phrase;
         }
-//        timeOfLastAccsToDb = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000)).setScale(2, RoundingMode.HALF_UP);
     }
 
     public void rightAnswer(String answer){
@@ -294,8 +283,6 @@ public class InterfaceBean implements Serializable{
             currPhrase = listOfPhrases.get(index);
             currPhrase.rightAnswer(answer);
             nextQuestion();
-//            System.out.println("!!!Call res processing by rightAnswer(String answer)");
-//            resultProcessing();
         }catch (NullPointerException e){
             System.out.println("EXCEPTION: in rightAnswer() from InterfaceBean");
             e.printStackTrace();
@@ -311,8 +298,6 @@ public class InterfaceBean implements Serializable{
             currPhrase = listOfPhrases.get(index);
             currPhrase.wrongAnswer(answer);
             nextQuestion();
-//            System.out.println("!!!Call res processing by wrongAnswer(String answer)");
-//            resultProcessing();
         }catch (NullPointerException e){
             System.out.println("EXCEPTION: in wrongAnswer() from InterfaceBean");
             e.printStackTrace();
@@ -325,7 +310,6 @@ public class InterfaceBean implements Serializable{
         long starTime = System.nanoTime();
         try{
             listOfPhrases.get(index-1).rightAnswer(null);
-//            System.out.println("!!!Call res processing by previousRight()");
             resultProcessing();
         }catch (NullPointerException e){
             System.out.println("EXCEPTION: in previousRight() from InterfaceBean");
@@ -339,7 +323,6 @@ public class InterfaceBean implements Serializable{
         long starTime = System.nanoTime();
         try{
             listOfPhrases.get(index -1).wrongAnswer(null);
-//            System.out.println("!!!Call res processing by previousWrong()");
             resultProcessing();
         }catch (NullPointerException e){
             System.out.println("EXCEPTION: in previousWrong() from InterfaceBean");
@@ -383,10 +366,9 @@ public class InterfaceBean implements Serializable{
             currPhrase = listOfPhrases.get(index);
             question = currPhrase.natWord + " " + hint.getSlashHint(currPhrase.forWord);
         }
-//        System.out.println("!!!Call res processing by nextQuestion()");
+
         resultProcessing();
 
-//        System.out.println("--- nextQuestion() List size="+(listOfPhrases.size()+" Current shift="+shift+" Requested index="+index));
     }
 
     public void previousQuestion(){
@@ -398,9 +380,7 @@ public class InterfaceBean implements Serializable{
             index = 0;
         currPhrase = listOfPhrases.get(index);
         question = currPhrase.natWord;
-//        System.out.println("!!!Call res processing by previousQuestion()");
         resultProcessing();
-//        System.out.println("--- previousQuestion() List size="+(listOfPhrases.size()+" Current shift="+shift+" Requested index="+index));
     }
 
     public void delete(){
@@ -421,7 +401,6 @@ public class InterfaceBean implements Serializable{
             e.printStackTrace();
         }
 
-//        dao.backupDB();
     }
 
 
@@ -516,26 +495,12 @@ public class InterfaceBean implements Serializable{
         this.currPhrAbsCreateDate = pdCreateDate;
     }
 
-    /*public String getLabel() {
-        return label;
-    }
-    public void setLabel(String label) {
-        this.label = label;
-    }*/
-
     public BigDecimal getTimeOfLastAccsToDb() {
         return timeOfLastAccsToDb;
     }
     public void setTimeOfLastAccsToDb(BigDecimal timeOfLastAccsToDb) {
         this.timeOfLastAccsToDb = timeOfLastAccsToDb;
     }
-
-    /*public String getStrLastAccs() {
-        return strLastAccs;
-    }
-    public void setStrLastAccs(String strLastAccs) {
-        this.strLastAccs = strLastAccs;
-    }*/
 
     public String getCurrPhrAbsCreateDate() {
         return currPhrAbsCreateDate;
@@ -570,7 +535,6 @@ public class InterfaceBean implements Serializable{
     }
     public void setResultChoosedLabel(String resultChoosedLabel) {
         this.resultChoosedLabel = resultChoosedLabel;
-
     }
 
     public String getCurrPhrNatWord() {
@@ -653,7 +617,6 @@ public class InterfaceBean implements Serializable{
     public String getCurrPhrRelLastAccsDate() {
         return currPhrRelLastAccsDate;
     }
-
     public void setCurrPhrRelLastAccsDate(String currPhrRelLastAccsDate) {
         this.currPhrRelLastAccsDate = currPhrRelLastAccsDate;
     }
@@ -661,7 +624,6 @@ public class InterfaceBean implements Serializable{
     public String getCurrPhrRelCreateDate() {
         return currPhrRelCreateDate;
     }
-
     public void setCurrPhrRelCreateDate(String currPhrRelCreateDate) {
         this.currPhrRelCreateDate = currPhrRelCreateDate;
     }
@@ -669,7 +631,6 @@ public class InterfaceBean implements Serializable{
     public BigDecimal getTimeOfReturningPhraseFromCollection() {
         return timeOfReturningPhraseFromCollection;
     }
-
     public void setTimeOfReturningPhraseFromCollection(BigDecimal timeOfReturningPhraseFromCollection) {
         this.timeOfReturningPhraseFromCollection = timeOfReturningPhraseFromCollection;
     }
@@ -677,7 +638,6 @@ public class InterfaceBean implements Serializable{
     public int getAvgAnswersPerDay() {
         return avgAnswersPerDay;
     }
-
     public void setAvgAnswersPerDay(int avgAnswersPerDay) {
         this.avgAnswersPerDay = avgAnswersPerDay;
     }

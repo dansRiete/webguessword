@@ -167,6 +167,23 @@ public class Phrase implements Serializable{
         }
     }
 
+    public boolean inLabels(HashSet<String> hashSet){
+//        System.out.println("CALL: inLabels(HashSet<String> hashSet) hashSet = " + hashSet);
+        if(hashSet!=null){
+            if(hashSet.isEmpty())
+                return true;
+            for(String str : hashSet){
+                if(this.label!=null&&this.label.equalsIgnoreCase(str))
+                    return true;
+            }
+            return false;
+        }else {
+//            throw new RuntimeException("inLabels(HashSet<String> hashSet) hashSet == null");
+            return true;
+        }
+
+    }
+
     public void delete(){
         System.out.println("CALL delete(), requested id=" + id);
         dao.deletePhrase(this);
@@ -256,23 +273,6 @@ public class Phrase implements Serializable{
 
     public void setExactMatch(boolean exactMatch) {
         this.exactMatch = exactMatch;
-    }
-
-    public boolean inLabels(HashSet<String> hashSet){
-//        System.out.println("CALL: inLabels(HashSet<String> hashSet) hashSet = " + hashSet);
-        if(hashSet!=null){
-            if(hashSet.isEmpty())
-                return true;
-            for(String str : hashSet){
-                if(this.label!=null&&this.label.equalsIgnoreCase(str))
-                    return true;
-            }
-            return false;
-        }else {
-//            throw new RuntimeException("inLabels(HashSet<String> hashSet) hashSet == null");
-            return true;
-        }
-
     }
 
     public void setTimeOfReturningFromList(long time){
