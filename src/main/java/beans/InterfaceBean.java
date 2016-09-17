@@ -54,7 +54,6 @@ public class InterfaceBean implements Serializable{
     private int numberOfLearnedPhrasePerSession;
     private String percentOfRightAnswers;
     private BigDecimal timeOfLastAccsToDb;
-    private BigDecimal timeOfReturningPhraseFromCollection;
     //<<
 
 
@@ -263,10 +262,12 @@ public class InterfaceBean implements Serializable{
         }
         numberOfLearnedPhrasePerSession = countOfLearnedPhrases;
         result = str.toString();
-        currPhrForWord = listOfPhrases.get(index).forWord;
-        currPhrNatWord = listOfPhrases.get(index).natWord;
-        currPhrTransc = listOfPhrases.get(index).transcr;
-        currPhrLabel = listOfPhrases.get(index).label;
+        Phrase currentPhrase = listOfPhrases.get(index);
+        currPhrForWord = currentPhrase.forWord;
+        currPhrNatWord = currentPhrase.natWord;
+        currPhrTransc = currentPhrase.transcr;
+        currPhrLabel = currentPhrase.label;
+        currentPhraseRate = currentPhrase.rate;
         if (currPhrase.isModified){
             currPhrase.updatePhrase();
         }
@@ -633,13 +634,6 @@ public class InterfaceBean implements Serializable{
     }
     public void setCurrPhrRelCreateDate(String currPhrRelCreateDate) {
         this.currPhrRelCreateDate = currPhrRelCreateDate;
-    }
-
-    public BigDecimal getTimeOfReturningPhraseFromCollection() {
-        return timeOfReturningPhraseFromCollection;
-    }
-    public void setTimeOfReturningPhraseFromCollection(BigDecimal timeOfReturningPhraseFromCollection) {
-        this.timeOfReturningPhraseFromCollection = timeOfReturningPhraseFromCollection;
     }
 
     public int getAvgAnswersPerDay() {

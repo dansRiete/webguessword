@@ -92,13 +92,6 @@ public class LoginBean implements Serializable {
         //в противном случае sendRedirect("error.xhtml")
         if ((userExist)&&(password.equals(currentUser.password))) {
             dao = new DAO(this);
-//            dao.setLoginBean(this);
-            /*try {
-                FacesContext.getCurrentInstance().getExternalContext().dispatch("learn.xhtml");
-            } catch (IOException e) {
-                System.out.println("EXCEPTION#1: in checkUserAndPassword() from LoginBean");
-                e.printStackTrace();
-            }*/
             FacesContext context = FacesContext.getCurrentInstance();
             HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getResponse();
             try {

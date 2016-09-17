@@ -14,8 +14,8 @@ import java.util.HashSet;
 /**
  * Created by Aleks on 11.05.2016.
  */
-@ManagedBean
-@Dependent
+/*@ManagedBean
+@Dependent*/
 public class Phrase implements Serializable{
 
     public static final double INITIAL_RATE = 1.2;
@@ -41,11 +41,11 @@ public class Phrase implements Serializable{
     /**
      * Saved state of phrase object before changing howWasAnswered to false or true
      */
-    public Phrase unmodifiedPhrase;
+    public final Phrase unmodifiedPhrase;
 
 
 
-    public Phrase(){}
+//    public Phrase(){}
 
     public Phrase(int id, String forWord, String natWord, String transcr, BigDecimal prob, Timestamp createDate,
                   String label, Timestamp lastAccs, double indexStart, double indexEnd, boolean exactMatch, double rate, DAO dao){
@@ -62,11 +62,11 @@ public class Phrase implements Serializable{
         this.indexEnd = indexEnd;
         this.exactMatch = exactMatch;
         this.rate = rate<=1 ? 1 : rate;
-        this.unmodifiedPhrase = new Phrase(forWord, natWord, transcr, prob, createDate, label, lastAccs, indexStart, indexEnd, exactMatch);
+        this.unmodifiedPhrase = new Phrase(forWord, natWord, transcr, prob, createDate, label, lastAccs, indexStart, indexEnd, exactMatch, rate);
     }
 
     public Phrase(String forWord, String natWord, String transcr, BigDecimal prob, Timestamp createDate,
-                  String label, Timestamp lastAccs, double indexStart, double indexEnd, boolean exactMatch){
+                  String label, Timestamp lastAccs, double indexStart, double indexEnd, boolean exactMatch, double rate){
         this.forWord = forWord;
         this.natWord = natWord;
         this.transcr = transcr==null?"":transcr;
@@ -78,6 +78,7 @@ public class Phrase implements Serializable{
         this.indexEnd = indexEnd;
         this.exactMatch = exactMatch;
         this.unmodifiedPhrase = null;
+        this.rate = rate;
     }
 
     public Phrase(String forWord, String natWord, String transcr, String label){
@@ -107,10 +108,12 @@ public class Phrase implements Serializable{
                 System.out.println("rateDepandableOnNumberOfWords = " + rateDepandableOnNumberOfWords + "; rate=" + rate);
                 BigDecimal subtr = new BigDecimal(3 * rateDepandableOnNumberOfWords * rate);
 
-                if(rate <= 1){
-                    rate = INITIAL_RATE;
-                }else {
-                    rate *= INITIAL_RATE;
+                if(rateDepandableOnNumberOfWords>0.6) {
+                    if (rate <= 1) {
+                        rate = INITIAL_RATE;
+                    } else {
+                        rate *= INITIAL_RATE;
+                    }
                 }
 
                 prob = prob.subtract(subtr);
@@ -125,18 +128,25 @@ public class Phrase implements Serializable{
                 prob = unmodifiedPhrase.prob;
 
                 double rateDepandableOnNumberOfWords = Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWords);
-                System.out.println("rateDepandableOnNumberOfWords = " + rateDepandableOnNumberOfWords + "; rate=" + rate);
+
+                System.out.println("!howWasAnswered=true " + "unmodifiedPhrase.rate = " + unmodifiedPhrase.rate);
+                rate = unmodifiedPhrase.rate;
+
+//                System.out.println("rateDepandableOnNumberOfWords = " + rateDepandableOnNumberOfWords + "; rate=" + rate);
                 BigDecimal subtr = new BigDecimal(3 * rateDepandableOnNumberOfWords * rate);
 
-                if(rate <= 1){
-                    rate = INITIAL_RATE;
-                }else {
-                    rate *= INITIAL_RATE;
+                if(rateDepandableOnNumberOfWords>0.6) {
+                    if (rate <= 1) {
+                        rate = INITIAL_RATE;
+                    } else {
+                        rate *= INITIAL_RATE;
+                    }
                 }
 
                 prob = prob.subtract(subtr);
             }else{      //Если была, просто возвращаем первоначальное значение prob
                 prob = unmodifiedPhrase.prob;
+                rate = unmodifiedPhrase.rate;
             }
 
         }
@@ -159,8 +169,8 @@ public class Phrase implements Serializable{
         this.answer = answer;
         rate = 1;
 
-        if(howWasAnswered == null){     //Ответ на фразу первый раз
 
+        if(howWasAnswered == null){     //Ответ на фразу первый раз
             BigDecimal summ = new BigDecimal(6*Math.sqrt((dao.nonLearnedWords) / dao.totalPossibleWords));
             prob = prob.add(summ);
             howWasAnswered = false;

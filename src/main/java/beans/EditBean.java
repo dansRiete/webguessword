@@ -51,7 +51,7 @@ public class EditBean {
     public void addAction(){
         System.out.println("EDITBEAN CALL START addAction() from editBean mylist.size=" + myList.size());
 
-        if( (this.forWord != null && this.natWord != null) && (!this.forWord.equalsIgnoreCase("") && !this.natWord.equalsIgnoreCase(""))){
+        if( this.forWord != null && this.natWord != null && !this.forWord.equalsIgnoreCase("") && !this.natWord.equalsIgnoreCase("")){
 
             Phrase phrase = new Phrase(this.forWord, this.natWord, this.transcr, this.label);
             this.forWord = this.natWord = this.transcr = "";
