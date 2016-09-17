@@ -20,15 +20,17 @@ import java.util.Random;
 public class DAO {
     private Random random = new Random();
     private String timezone = "Europe/Kiev";
-    public static final String remoteHost = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
-    public static final String localHost3306 = "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
-    public static final String localHost3307 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
+//    public static final String remoteHost = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
+//    public static final String localHost3306 = "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
+//    public static final String localHost3307 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     public HashSet<String> chosedLabels;
     public ArrayList<String> possibleLabels = new ArrayList<>();
     public double learnedWords;
     public double nonLearnedWords;
     public double totalActiveWords;
     public double totalPossibleWords;
+    public int summProbOfNLW;
+    public int summProbOfLW;
     private double maxIndex;
     final double chanceOfLearnedWords = 1d / 15d;
     private Phrase[] lastPhrasesStack;
@@ -37,7 +39,6 @@ public class DAO {
     private LoginBean loginBean;
     private ArrayList<Phrase> listOfActivePhrases = new ArrayList<>();
     private ArrayList<Phrase> listOfAllPhrases = new ArrayList<>();
-    private Statement statStatement;
 
     /**
      * Number of replies to 6 am of the current day
@@ -60,6 +61,7 @@ public class DAO {
                 "    create_date DATETIME,\n" +
                 "    last_accs_date DATETIME,\n" +
                 "    exactmatch BOOLEAN DEFAULT FALSE  NOT NULL,\n" +
+                "    rate DOUBLE,\n" +
                 "    index_start DOUBLE,\n" +
                 "    index_end DOUBLE)";
         System.out.println(str);
@@ -72,8 +74,8 @@ public class DAO {
                 ResultSet rs1 = mainDbConn.createStatement().executeQuery
                     ("SELECT COUNT(*) FROM " + loginBean.getUser() + "_stat WHERE date < DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)");
                 ResultSet rs2 = mainDbConn.createStatement().executeQuery
-                    ("SELECT TIMESTAMPDIFF(HOUR, (SELECT MIN(date) FROM " + loginBean.getUser() + "_stat WHERE date < DATE_ADD(CURRENT_DATE()," +
-                            " INTERVAL 6 HOUR)), DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR))")
+                    ("SELECT TIMESTAMPDIFF(HOUR, (SELECT MIN(date) FROM " + loginBean.getUser() + "_stat WHERE date < DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)), " +
+                            "DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR))")
         ){
             rs1.next();
             countAnswUntil6am = rs1.getInt(1);
@@ -86,19 +88,41 @@ public class DAO {
     }
 
     private String getCreateMainDb_StatTable_SqlString() {
+
         return "CREATE TABLE " + loginBean.getUser() + "_stat (date DATETIME NOT NULL, ms INT NOT NULL, event VARCHAR(30) NOT NULL," +
                 " id INT NOT NULL, learnt INT)";
+
     }
+
+
 
     public DAO(LoginBean loginBean) {
 
         this.loginBean = loginBean;
+//        table = loginBean.getUser();
+
+        //>>>Получаем подключение к основной БД, в случае ошибки пробуем подключиться через локальнй хост (только для режима тестирования)
+        /*try {
+            mainDbConn = DriverManager.getConnection(remoteHost, "adminLtuHq9R", "d-AUIKakd1Br");
+            dbConnected = "- Remote DB was connected";
+        } catch (SQLException e) {
+            try {
+                mainDbConn = DriverManager.getConnection(localHost, "adminLtuHq9R", "d-AUIKakd1Br");
+                dbConnected = "- Local DB was connected";
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+                System.out.println("EXCEPTION: in DAO constructor");
+                throw new DataBaseConnectionException();
+            }
+        }*/
         mainDbConn = loginBean.returnConnection();
+        //<<<
 
         checkTables();
         reloadCollectionOfPhrases();
         reloadLabelsList();
         initialStatistics();
+
 
     }
 
@@ -148,7 +172,7 @@ public class DAO {
 
     public void setStatistics(Phrase phr){
         String dateTime = phr.ldt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
-        int mlseconds = Integer.parseInt(ZonedDateTime.now(ZoneId.of("Europe/Kiev")).format(DateTimeFormatter.ofPattern("SSS")));
+        int mlseconds = Integer.parseInt(ZonedDateTime.now(ZoneId.of(timezone)).format(DateTimeFormatter.ofPattern("SSS")));
 
         String mode;
         if(phr.howWasAnswered)
@@ -284,11 +308,6 @@ public class DAO {
     public void reloadCollectionOfPhrases() {
 
 
-        /*String insertSql = "INSERT INTO " + loginBean.getUser() +
-                "(id, for_word, nat_word, transcr, prob_factor, create_date, label, last_accs_date, " +
-                "index_start, index_end, exactmatch) VALUES (?,?,?,?,?,?,?,?,?,?,?)";*/
-
-
         try (Statement mainSt = mainDbConn.createStatement();
              ResultSet rs = mainSt.executeQuery("SELECT * FROM " + loginBean.getUser() + " ORDER BY create_date DESC, id DESC")) {
 
@@ -309,10 +328,11 @@ public class DAO {
                 Timestamp last_accs_date = rs.getTimestamp("last_accs_date");
                 double index_start = rs.getDouble("index_start");
                 double index_end = rs.getDouble("index_end");
+                double rate = rs.getDouble("rate");
                 boolean exactmatch = rs.getBoolean("exactmatch");
 
                 Phrase phrase = new Phrase(id, for_word, nat_word, transcr, prob, create_date, label,
-                        last_accs_date, index_start, index_end, exactmatch, this);
+                        last_accs_date, index_start, index_end, exactmatch, rate, this);
 
                 //Добавляем в активную коллекцию если метка фразы совпадает с выбранными - "chosedLabels" и считаем totalPossibleWords
 
@@ -372,7 +392,7 @@ public class DAO {
 
     public long[] updateProb(Phrase phrase) {
         System.out.println("CALL: updateProb(Phrase phrase) with id=" + phrase.id + " from DAO");
-        String dateTime = ZonedDateTime.now(ZoneId.of("Europe/Kiev")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+        String dateTime = ZonedDateTime.now(ZoneId.of(timezone)).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
 
         try {
             getPhraseById(phrase.id).prob = phrase.prob;
@@ -382,8 +402,8 @@ public class DAO {
         }
 
         try (Statement st = mainDbConn.createStatement()) {
-            st.execute("UPDATE " + loginBean.getUser() + " SET prob_factor=" + phrase.prob + ", last_accs_date='" + dateTime +
-                    "' WHERE id=" + phrase.id);
+            st.execute("UPDATE " + loginBean.getUser() + " SET prob_factor=" + phrase.prob + ", last_accs_date='" + dateTime + "', rate=" + phrase.rate +
+                    " WHERE id=" + phrase.id);
         } catch (SQLException e) {
             System.out.println("EXCEPTION#2: in updateProb(Phrase phrase) from DAO");
             e.printStackTrace();
@@ -396,7 +416,7 @@ public class DAO {
 
     public void updatePhrase(Phrase phrase) {
         System.out.println("CALL: updatePhrase(Phrase phrase) from DAO with id=" + phrase.id);
-        String dateTime = ZonedDateTime.now(ZoneId.of("Europe/Kiev")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+        String dateTime = ZonedDateTime.now(ZoneId.of(timezone)).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
         String updateSql = "UPDATE " + loginBean.getUser() + " SET for_word=?, nat_word=?, transcr=?, last_accs_date=?, " +
                 "exactmatch=?, label=?, prob_factor=?  WHERE id =" + phrase.id;
         Phrase phr = null;
@@ -466,7 +486,7 @@ public class DAO {
         double indOfLW;     //Индекс выпадения изученных
         double rangeOfNLW;  //Диапазон индексов неизученных слов
         double scaleOf1prob;    //rangeOfNLW/summProbOfNLW  цена одного prob
-        int summProbOfNLW = 0;
+
         int countOfModIndices = 0;
         long[] indexes = new long[2];
         totalActiveWords = listOfActivePhrases.size(); //Считаем общее количество фраз
@@ -474,11 +494,14 @@ public class DAO {
         //Считаем неизученные слова, summProbOfNLW и очищаем индексы
         nonLearnedWords = 0;
         summProbOfNLW = 0;
+        summProbOfLW = 0;
         for (Phrase phr : listOfActivePhrases) {
             phr.indexStart = phr.indexEnd = 0;
             if (phr.prob.doubleValue() > 3) {
                 nonLearnedWords++;
                 summProbOfNLW += phr.prob.doubleValue();
+            }else {
+                summProbOfLW += phr.prob.doubleValue();
             }
         }
 
@@ -712,7 +735,7 @@ public class DAO {
             int index = random.nextInt( (int) maxIndex);
             Phrase tempPhrase = getPhraseByIndex(index);
             phrase = new Phrase(tempPhrase.id, tempPhrase.forWord, tempPhrase.natWord, tempPhrase.transcr, tempPhrase.prob, tempPhrase.createDate,
-                    tempPhrase.label, tempPhrase.lastAccs, tempPhrase.indexStart, tempPhrase.indexEnd, tempPhrase.exactMatch, this);
+                    tempPhrase.label, tempPhrase.lastAccs, tempPhrase.indexStart, tempPhrase.indexEnd, tempPhrase.exactMatch, tempPhrase.rate, this);
             phrase.timeOfReturningFromList = tempPhrase.timeOfReturningFromList;
         } while (pushIntoStack(phrase));
 
