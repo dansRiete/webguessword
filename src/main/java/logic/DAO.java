@@ -38,6 +38,7 @@ public class DAO {
     private ArrayList<Phrase> listOfActivePhrases = new ArrayList<>();
     private ArrayList<Phrase> listOfAllPhrases = new ArrayList<>();
     private Statement statStatement;
+
     /**
      * Number of replies to 6 am of the current day
      */
@@ -71,8 +72,8 @@ public class DAO {
                 ResultSet rs1 = mainDbConn.createStatement().executeQuery
                     ("SELECT COUNT(*) FROM " + loginBean.getUser() + "_stat WHERE date < DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)");
                 ResultSet rs2 = mainDbConn.createStatement().executeQuery
-                    ("SELECT TIMESTAMPDIFF(HOUR, (SELECT MIN(date) FROM " + loginBean.getUser() + "_stat WHERE date < DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)), " +
-                            "DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR))")
+                    ("SELECT TIMESTAMPDIFF(HOUR, (SELECT MIN(date) FROM " + loginBean.getUser() + "_stat WHERE date < DATE_ADD(CURRENT_DATE()," +
+                            " INTERVAL 6 HOUR)), DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR))")
         ){
             rs1.next();
             countAnswUntil6am = rs1.getInt(1);
@@ -85,41 +86,19 @@ public class DAO {
     }
 
     private String getCreateMainDb_StatTable_SqlString() {
-
         return "CREATE TABLE " + loginBean.getUser() + "_stat (date DATETIME NOT NULL, ms INT NOT NULL, event VARCHAR(30) NOT NULL," +
                 " id INT NOT NULL, learnt INT)";
-
     }
-
-
 
     public DAO(LoginBean loginBean) {
 
         this.loginBean = loginBean;
-//        table = loginBean.getUser();
-
-        //>>>Получаем подключение к основной БД, в случае ошибки пробуем подключиться через локальнй хост (только для режима тестирования)
-        /*try {
-            mainDbConn = DriverManager.getConnection(remoteHost, "adminLtuHq9R", "d-AUIKakd1Br");
-            dbConnected = "- Remote DB was connected";
-        } catch (SQLException e) {
-            try {
-                mainDbConn = DriverManager.getConnection(localHost, "adminLtuHq9R", "d-AUIKakd1Br");
-                dbConnected = "- Local DB was connected";
-            } catch (SQLException e1) {
-                e1.printStackTrace();
-                System.out.println("EXCEPTION: in DAO constructor");
-                throw new DataBaseConnectionException();
-            }
-        }*/
         mainDbConn = loginBean.returnConnection();
-        //<<<
 
         checkTables();
         reloadCollectionOfPhrases();
         reloadLabelsList();
         initialStatistics();
-
 
     }
 
