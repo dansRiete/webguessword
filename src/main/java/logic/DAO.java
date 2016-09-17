@@ -262,12 +262,7 @@ public class DAO {
         return list;
     }
 
-    public ArrayList<Phrase> returnPhrasesList() {
-//        System.out.println("CALL: returnPhrasesList() from DAO");
-//        ArrayList<Phrase> list = new ArrayList<>();
 
-        return listOfActivePhrases;
-    }
 
     public List<String> reloadLabelsList() {
         //Возвращает список возможных меток для фраз + "All"
@@ -296,7 +291,6 @@ public class DAO {
 
     public void reloadCollectionOfPhrases() {
 
-
         try (Statement mainSt = mainDbConn.createStatement();
              ResultSet rs = mainSt.executeQuery("SELECT * FROM " + loginBean.getUser() + " ORDER BY create_date DESC, id DESC")) {
 
@@ -323,20 +317,13 @@ public class DAO {
                 Phrase phrase = new Phrase(id, for_word, nat_word, transcr, prob, create_date, label,
                         last_accs_date, index_start, index_end, exactmatch, rate, this);
 
-                //Добавляем в активную коллекцию если метка фразы совпадает с выбранными - "chosedLabels" и считаем totalPossibleWords
+                totalPossibleWords++;
+                listOfAllPhrases.add(phrase);
 
-                if (phrase.inLabels(chosedLabels)) {
+                if (phrase.inLabels(chosedLabels)) {   //Добавляем в активную коллекцию если метка фразы совпадает с выбранными - "chosedLabels"
                     listOfActivePhrases.add(phrase);
-                    listOfAllPhrases.add(phrase);
-                    totalPossibleWords++;
-                } else {
-                    listOfAllPhrases.add(phrase);
-                    totalPossibleWords++;
                 }
 
-                /*listOfActivePhrases.add(phrase);
-                listOfAllPhrases.add(phrase);
-                totalPossibleWords++;*/
             }
 
         } catch (SQLException e) {
@@ -347,6 +334,20 @@ public class DAO {
 
         reloadIndices(1);
 
+    }
+
+    public void sortCollectionByMatches(ArrayList<Phrase> collectionShouldBeSorted){
+        IntelliFind intelliFind = new IntelliFind();
+        for(int i1 = 0; i1 < collectionShouldBeSorted.size(); i1++){
+            Phrase currentPhrase = collectionShouldBeSorted.get(i1);
+            for(int i2 = i1 + 1; i2 < collectionShouldBeSorted.size(); i2++){
+                Phrase comparedPhrase = collectionShouldBeSorted.get(i2);
+                if(intelliFind.match(currentPhrase.forWord, comparedPhrase.forWord, false) || intelliFind.match(currentPhrase.natWord, comparedPhrase.natWord, false)){
+
+                }
+            }
+
+        }
     }
 
     private Phrase getPhraseById(int id) throws PhraseNotFoundException{
@@ -652,6 +653,12 @@ public class DAO {
 
 
         return reloadIndices(phrase.id);
+    }
+
+    public ArrayList<Phrase> returnPhrasesList() {
+
+        return listOfActivePhrases;
+
     }
 
 

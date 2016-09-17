@@ -55,16 +55,29 @@ public class Hints {
         return "";
     }
 
-    /*public String getShortHint(String word){
-        int numberOfSlashes = 0;
+    public String getShortHint(String word){
+
+        int numberOfVariants = 1;   // There is at least one
+        int serialNumberOfHint = 0;
+        StringBuilder finalHint = new StringBuilder("");
         boolean wasFirstSlash = false;
-        for(char currentChar : word.toCharArray()){
+
+        for(char currentChar : word.toCharArray()){     //Count numbers of variants
             if(currentChar == '/' || currentChar == '\\'){
-                numberOfSlashes++;
+                numberOfVariants++;
             }
         }
-        for(int i = 0; i<numberOfSlashes; i++){
 
+        if(numberOfVariants > 1){
+            finalHint.append('(');
+            for(int i = 0; i < numberOfVariants; i++){
+                finalHint.append(wasFirstSlash ? "/" : "").append(++serialNumberOfHint);
+                wasFirstSlash = true;
+            }
+            finalHint.append(')');
         }
-    }*/
+
+        return finalHint.toString();
+
+    }
 }

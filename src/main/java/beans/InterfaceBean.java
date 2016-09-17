@@ -368,11 +368,11 @@ public class InterfaceBean implements Serializable{
             newPhrase();
             index = listOfPhrases.size() - 1;
             currPhrase = listOfPhrases.get(index);
-            question = currPhrase.natWord + " " + hint.getFullLettersHint(currPhrase.forWord);
+            question = currPhrase.natWord + " " + hint.getShortHint(currPhrase.forWord);
         }else {
             index = listOfPhrases.size() - 1 - --shift;
             currPhrase = listOfPhrases.get(index);
-            question = currPhrase.natWord + " " + hint.getFullLettersHint(currPhrase.forWord);
+            question = currPhrase.natWord + " " + hint.getShortHint(currPhrase.forWord);
         }
 
         resultProcessing();

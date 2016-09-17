@@ -43,10 +43,6 @@ public class Phrase implements Serializable{
      */
     public Phrase unmodifiedPhrase;
 
-
-
-//    public Phrase(){}
-
     public Phrase(int id, String forWord, String natWord, String transcr, BigDecimal prob, Timestamp createDate,
                   String label, Timestamp lastAccs, double indexStart, double indexEnd, boolean exactMatch, double rate, DAO dao){
         this.dao = dao;
@@ -97,7 +93,7 @@ public class Phrase implements Serializable{
     }
 
     public void rightAnswer(String answer){
-        long[] indexes = null;
+        long[] indexes;
         this.answer = answer;
 
         if(howWasAnswered == null){     //Ответ на фразу первый раз
@@ -123,16 +119,10 @@ public class Phrase implements Serializable{
         }else if(!howWasAnswered){      //если true значит на фразу уже был неправильный ответ
 
             if(!unmodifiedPhrase.isLearnt()){   //Если до ответа на фразу она не была изучена
-                /*BigDecimal subtr = new BigDecimal(9 * Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWords) * unmodifiedPhrase.rate);
-                prob = prob.subtract(subtr);*/
+
                 prob = unmodifiedPhrase.prob;
-
                 double rateDepandableOnNumberOfWords = Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWords);
-
-                System.out.println("!howWasAnswered=true " + "unmodifiedPhrase.rate = " + unmodifiedPhrase.rate);
                 rate = unmodifiedPhrase.rate;
-
-//                System.out.println("rateDepandableOnNumberOfWords = " + rateDepandableOnNumberOfWords + "; rate=" + rate);
                 BigDecimal subtr = new BigDecimal(3 * rateDepandableOnNumberOfWords * rate);
 
                 if(rateDepandableOnNumberOfWords>0.6) {
@@ -144,9 +134,12 @@ public class Phrase implements Serializable{
                 }
 
                 prob = prob.subtract(subtr);
-            }else{      //Если была, просто возвращаем первоначальное значение prob
+
+            } else {      //Если была, просто возвращаем первоначальное значение prob
+
                 prob = unmodifiedPhrase.prob;
                 rate = unmodifiedPhrase.rate;
+
             }
 
         }
@@ -165,13 +158,13 @@ public class Phrase implements Serializable{
     }
 
     public void wrongAnswer(String answer){
+
         long[] indexes = null;
         this.answer = answer;
-        rate = 1;
 
-
-        if(howWasAnswered == null){     //Ответ на фразу первый раз
-            BigDecimal summ = new BigDecimal(6*Math.sqrt((dao.nonLearnedWords) / dao.totalPossibleWords));
+        if(howWasAnswered == null){     // The first answer
+            rate = 1;
+            BigDecimal summ = new BigDecimal(6 * Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWords));
             prob = prob.add(summ);
             howWasAnswered = false;
             indexes = dao.updateProb(this);
@@ -180,11 +173,13 @@ public class Phrase implements Serializable{
         }else if(howWasAnswered){
 
             if(!unmodifiedPhrase.isLearnt()) {
+                rate = 1;
                 BigDecimal summ = new BigDecimal(9 * Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWords));
                 prob = prob.add(summ);
             }else{
-                BigDecimal summ = new BigDecimal(6*Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWords));
+                BigDecimal summ = new BigDecimal(6 * rate);
                 prob = prob.add(summ);
+                rate = 1;
             }
 
             howWasAnswered = false;
@@ -200,8 +195,9 @@ public class Phrase implements Serializable{
     }
 
     public boolean inLabels(HashSet<String> hashSet){
-//        System.out.println("CALL: inLabels(HashSet<String> hashSet) hashSet = " + hashSet);
+
         if(hashSet!=null){
+
             if(hashSet.isEmpty())
                 return true;
             for(String str : hashSet){
@@ -209,9 +205,11 @@ public class Phrase implements Serializable{
                     return true;
             }
             return false;
-        }else {
-//            throw new RuntimeException("inLabels(HashSet<String> hashSet) hashSet == null");
+
+        } else {
+
             return true;
+
         }
 
     }
