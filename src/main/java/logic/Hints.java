@@ -12,7 +12,7 @@ public class Hints {
      * @return Если в фразе встречается слеш (например: car\my auto) возвращает
      * подсказку типа ***\** ****, если фраза не содержит слеш("/") возвращает ""
      */
-    public String getSlashHint(String engWord){
+    public String getFullLettersHint(String engWord){
         if(engWord.contains("/")||engWord.contains("\\")||engWord.contains(" ")||engWord.contains("-")||
                 engWord.contains("`")||engWord.contains("'")||engWord.contains(",")){
             char[] hintAr = engWord.toCharArray();
@@ -53,5 +53,18 @@ public class Hints {
             return new String(newHintAr);
     }else
         return "";
+    }
+
+    public String getShortHint(String word){
+        int numberOfSlashes = 0;
+        boolean wasFirstSlash = false;
+        for(char currentChar : word.toCharArray()){
+            if(currentChar == '/' || currentChar == '\\'){
+                numberOfSlashes++;
+            }
+        }
+        for(int i = 0; i<numberOfSlashes; i++){
+
+        }
     }
 }

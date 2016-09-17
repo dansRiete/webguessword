@@ -41,7 +41,7 @@ public class Phrase implements Serializable{
     /**
      * Saved state of phrase object before changing howWasAnswered to false or true
      */
-    public final Phrase unmodifiedPhrase;
+    public Phrase unmodifiedPhrase;
 
 
 
