@@ -55,7 +55,7 @@ public class Hints {
         return "";
     }
 
-    public String getShortHint(String word){
+    /*public String getShortHint(String word){
         int numberOfSlashes = 0;
         boolean wasFirstSlash = false;
         for(char currentChar : word.toCharArray()){
@@ -66,5 +66,5 @@ public class Hints {
         for(int i = 0; i<numberOfSlashes; i++){
 
         }
-    }
+    }*/
 }
