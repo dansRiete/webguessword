@@ -8,6 +8,21 @@ import java.util.regex.PatternSyntaxException;
  * Created by Aleks on 25.07.2015.
  */
 public class IntelliFind {
+
+    public boolean nearlyEquals(String firstWord, String secondWord){
+        if(firstWord.equalsIgnoreCase(secondWord)){
+            return true;
+        }else if(firstWord.length() > 5 && secondWord.length() > 5){
+            int numberOfMatches = 0;
+            char [] firstWordSymbolSequence = firstWord.toCharArray();
+            char [] secondWordSymbolSequence = secondWord.toCharArray();
+            for(int i = 0; i<firstWordSymbolSequence.length; i++)
+
+        }
+    }
+
+
+
     public boolean match(String firstWord, String secondWord, boolean exactMatch) {
 
         if(firstWord.equalsIgnoreCase(secondWord))
@@ -65,7 +80,7 @@ public class IntelliFind {
                             matchedSyllables++;
                     }
                     catch (PatternSyntaxException e){
-                        System.out.println("PatternSyntaxException in "+arWord[i]+" - "+shortAnswer);
+//                        System.out.println("PatternSyntaxException in "+arWord[i]+" - "+shortAnswer);
                     }
                 }
                 float f=matchedSyllables/(float)numOfSyllables;

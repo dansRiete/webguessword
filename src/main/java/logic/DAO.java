@@ -333,21 +333,46 @@ public class DAO {
         }
 
         reloadIndices(1);
+        System.out.println("SAME PHRASES = " + sortCollectionByMatches(listOfAllPhrases).size());
+
 
     }
 
-    public void sortCollectionByMatches(ArrayList<Phrase> collectionShouldBeSorted){
+    public ArrayList<Phrase> sortCollectionByMatches(ArrayList<Phrase> initialListOfPhrases){
         IntelliFind intelliFind = new IntelliFind();
-        for(int i1 = 0; i1 < collectionShouldBeSorted.size(); i1++){
-            Phrase currentPhrase = collectionShouldBeSorted.get(i1);
-            for(int i2 = i1 + 1; i2 < collectionShouldBeSorted.size(); i2++){
-                Phrase comparedPhrase = collectionShouldBeSorted.get(i2);
-                if(intelliFind.match(currentPhrase.forWord, comparedPhrase.forWord, false) || intelliFind.match(currentPhrase.natWord, comparedPhrase.natWord, false)){
+        ArrayList<Phrase> listOfSamePhrases = new ArrayList<>();
 
+        for(int i1 = 0; i1 < initialListOfPhrases.size(); i1++){
+            boolean firstPhraseWasAdded = false;
+            Phrase currentPhrase = initialListOfPhrases.get(i1);
+
+            for(int i2 = 0; i2 < initialListOfPhrases.size(); i2++){
+
+                Phrase comparedPhrase = initialListOfPhrases.get(i2);
+
+
+
+                if(currentPhrase.id != comparedPhrase.id &&
+                        (intelliFind.match(currentPhrase.forWord, comparedPhrase.forWord, true) ||
+                        intelliFind.match(currentPhrase.natWord, comparedPhrase.natWord, true))
+
+                        ){
+
+                    System.out.println(currentPhrase.forWord + "-" + currentPhrase.natWord + " --- " + comparedPhrase.forWord + "-" + comparedPhrase.natWord);
+
+
+                    if(!firstPhraseWasAdded){
+                        listOfSamePhrases.add(currentPhrase);
+//                        System.out.println(currentPhrase);
+                        firstPhraseWasAdded = true;
+                    }
+
+                    listOfSamePhrases.add(comparedPhrase);
+//                    System.out.println(comparedPhrase);
                 }
             }
-
         }
+        return listOfSamePhrases;
     }
 
     private Phrase getPhraseById(int id) throws PhraseNotFoundException{
