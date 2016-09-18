@@ -341,6 +341,7 @@ public class InterfaceBean implements Serializable{
 
     public void checkTheAnswer(){
         System.out.println("CALL: checkTheAnswer() from InterfaceBean");
+        IntelliFind intelliFind = new IntelliFind();
         if(answer!=null){
             if (answer.equals("+")){
                 rightAnswer(null);
@@ -351,7 +352,7 @@ public class InterfaceBean implements Serializable{
             }else if (answer.equals("--")){
                 previousWrong();
             }else if(!(answer.equals("")||answer.equals("+")||answer.equals("-")||answer.equals("++")||answer.equals("--"))){
-                boolean bool = logic.IntelliFind.match(listOfPhrases.get(listOfPhrases.size() - 1 - shift).forWord, answer, false);
+                boolean bool = intelliFind.match(listOfPhrases.get(listOfPhrases.size() - 1 - shift).forWord, answer, false);
                 if(bool)
                     rightAnswer(answer);
                 else
