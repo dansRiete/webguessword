@@ -1,78 +1,53 @@
 package logic;
 
-import Exceptions.PhraseNotFoundException;
-import beans.LoginBean;
-
-import java.math.BigDecimal;
+import Exceptions.*;
+import beans.*;
+import java.math.*;
 import java.sql.*;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 /**
  * Created by Aleks on 11.05.2016.
  */
 public class DAO {
     private Random random = new Random();
-    private String timezone = "Europe/Kiev";
+    private final String timezone = "Europe/Kiev";
 //    public static final String remoteHost = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
 //    public static final String localHost3306 = "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
 //    public static final String localHost3307 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
-    public HashSet<String> chosedLabels;
+    public HashSet<String> currentChosedLabels;
     public ArrayList<String> possibleLabels = new ArrayList<>();
     public double learnedWords;
     public double nonLearnedWords;
-    public double totalActiveWords;
-    public double totalPossibleWords;
-    public int summProbOfNLW;
-    public int summProbOfLW;
-    private double maxIndex;
+    public double totalActiveWordsAmount;
+    public double totalPossibleWordsAmount;
+    public int nonLearnedWordsProbSumm;
+    public int learnedWordsProbSumm;
+    private int maxPossibleAppearingIndex;
     public static final double CHANCE_OF_APPEARING_LEARNED_WORDS = 1d / 15d;
-    private Phrase[] lastPhrasesStack;
-    private int stackNum;
+    private Phrase[] lastSevenPhrasesStack;
+    private int lastSevenStackCurrentPosition;
     public Connection mainDbConn;
     private LoginBean loginBean;
     private ArrayList<Phrase> listOfActivePhrases = new ArrayList<>();
     private ArrayList<Phrase> listOfAllPhrases = new ArrayList<>();
-    public int countAnswUntil6am; //Number of replies to 6 am of the current day
+    public int answUntil6amAmount; //Number of replies to 6 am of the current day
     public int totalHoursUntil6am; // Number of hours spent from the very begining till 6am of the current day
 
     public DAO(LoginBean loginBean) {
 
         this.loginBean = loginBean;
-//        table = loginBean.getUser();
-
-        //>>>Получаем подключение к основной БД, в случае ошибки пробуем подключиться через локальнй хост (только для режима тестирования)
-        /*try {
-            mainDbConn = DriverManager.getConnection(remoteHost, "adminLtuHq9R", "d-AUIKakd1Br");
-            dbConnected = "- Remote DB was connected";
-        } catch (SQLException e) {
-            try {
-                mainDbConn = DriverManager.getConnection(localHost, "adminLtuHq9R", "d-AUIKakd1Br");
-                dbConnected = "- Local DB was connected";
-            } catch (SQLException e1) {
-                e1.printStackTrace();
-                System.out.println("EXCEPTION: in DAO constructor");
-                throw new DataBaseConnectionException();
-            }
-        }*/
-        mainDbConn = loginBean.returnConnection();
-        //<<<
-
-        checkForExistAllTablesInDB();
+        mainDbConn = loginBean.getConnection();
+        checkDbForExistingAllTables();
         reloadCollectionOfPhrases();
         reloadLabelsList();
-        initialStatistics();
-
-
+        initThisDayStatistics();
     }
 
-    private String getCreateMainDb_MainTable_SqlString() {
-        String str = "CREATE TABLE " + loginBean.getUser() + "\n" +
+    private String getSql_CreateMainTable() {
+        return "CREATE TABLE " + loginBean.getUser() + "\n" +
                 "    (id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,\n" +
                 "    for_word VARCHAR(250) NOT NULL,\n" +
                 "    nat_word VARCHAR(250) NOT NULL,\n" +
@@ -85,19 +60,16 @@ public class DAO {
                 "    rate DOUBLE,\n" +
                 "    index_start DOUBLE,\n" +
                 "    index_end DOUBLE)";
-        System.out.println(str);
-        return str;
-
     }
 
-    private String getCreateMainDb_StatTable_SqlString() {
+    private String getSql_CreateStatTable() {
 
         return "CREATE TABLE " + loginBean.getUser() + "_stat (date DATETIME NOT NULL, ms INT NOT NULL, event VARCHAR(30) NOT NULL," +
                 " id INT NOT NULL, learnt INT)";
 
     }
 
-    private void initialStatistics(){
+    private void initThisDayStatistics(){
         try(
                 ResultSet rs1 = mainDbConn.createStatement().executeQuery
                     ("SELECT COUNT(*) FROM " + loginBean.getUser() + "_stat WHERE date < DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)");
@@ -106,7 +78,7 @@ public class DAO {
                             "DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR))")
         ){
             rs1.next();
-            countAnswUntil6am = rs1.getInt(1);
+            answUntil6amAmount = rs1.getInt(1);
             rs2.next();
             totalHoursUntil6am = rs2.getInt(1);
 
@@ -115,50 +87,53 @@ public class DAO {
         }
     }
 
+    private void createMainDb(){
+        try (Statement statement = mainDbConn.createStatement()) {
+            statement.execute(getSql_CreateMainTable());
+            statement.execute("INSERT INTO " + loginBean.getUser() + " (for_word, nat_word, prob_factor) VALUES ('The', " +
+                    "'The collection is empty, push Show All an add phrases', 30)");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("EXCEPTION: SQLException in checkDbForExistingAllTables() from DAO during create main table in main DB");
+        }
+    }
 
+    private void createStatisticsDb(){
+        try (Statement statement = mainDbConn.createStatement()) {
+            System.out.println("Execute " + getSql_CreateStatTable());
+            statement.execute(getSql_CreateStatTable());
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("EXCEPTION: SQLException in checkDbForExistingAllTables() from DAO during create stat table in main DB");
+        }
+    }
 
+    private void checkDbForExistingAllTables() {
 
-
-    private void checkForExistAllTablesInDB() {
-        //Проверяет наличие соответствующих таблиц БД необходимых для работы приложения
         boolean mainDbExists = false;
         boolean statDbExists = false;
         try (ResultSet rs_tables = mainDbConn.createStatement().executeQuery
                 ("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA='guessword'")) {
             while (rs_tables.next()) {
-                //Проверяем или в БД существует основная таблица фраз
+                //Check for exisiting the Main DB
                 if (rs_tables.getString("TABLE_NAME").equals(loginBean.getUser()))
                     mainDbExists = true;
-                //Проверяем или в БД существует статистическая таблица
+                //Check for exisiting the Stat DB
                 if (rs_tables.getString("TABLE_NAME").equals(loginBean.getUser() + "_stat"))
                     statDbExists = true;
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            System.out.println("EXCEPTION: SQLException in checkForExistAllTablesInDB() from DAO");
+            System.out.println("EXCEPTION: SQLException in checkDbForExistingAllTables() from DAO");
         }
 
         if (!mainDbExists) {
-            try (Statement statement = mainDbConn.createStatement()) {
-                statement.execute(getCreateMainDb_MainTable_SqlString());
-                statement.execute("INSERT INTO " + loginBean.getUser() + " (for_word, nat_word, prob_factor) VALUES ('The', " +
-                        "'The collection is empty, push Show All an add phrases', 30)");
-            } catch (SQLException e) {
-                e.printStackTrace();
-                System.out.println("EXCEPTION: SQLException in checkForExistAllTablesInDB() from DAO during create main table in main DB");
-            }
+            createMainDb();
         }
 
         if (!statDbExists) {
-            try (Statement statement = mainDbConn.createStatement()) {
-                System.out.println("Execute " + getCreateMainDb_StatTable_SqlString());
-                statement.execute(getCreateMainDb_StatTable_SqlString());
-            } catch (SQLException e) {
-                e.printStackTrace();
-                System.out.println("EXCEPTION: SQLException in checkForExistAllTablesInDB() from DAO during create stat table in main DB");
-            }
+            createStatisticsDb();
         }
-
     }
 
     public void setStatistics(Phrase phr){
@@ -224,34 +199,32 @@ public class DAO {
                      ("SELECT * FROM " + loginBean.getUser() + "_stat" + " WHERE date > DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)")) {
 
             while (rs.next()){
-                Phrase phr = null;
+                Phrase currentPhrase = null;
                 try {
-                    phr = getPhraseById(rs.getInt("id"));
+                    currentPhrase = getPhraseById(rs.getInt("id"));
 
                     if(rs.getString("event").equalsIgnoreCase("r_answ"))
-                        phr.howWasAnswered = true;
+                        currentPhrase.howWasAnswered = true;
                     else
-                        phr.howWasAnswered = false;
+                        currentPhrase.howWasAnswered = false;
 
                     int learnt = rs.getInt("learnt");
 
                     if(learnt!=0){
                         if(learnt==1){
-                            phr.unmodifiedPhrase.prob = new BigDecimal(6);
+                            currentPhrase.unmodifiedPhrase.prob = new BigDecimal(6);
                         }else if(learnt == -1){
-                            phr.unmodifiedPhrase.prob = new BigDecimal(1);
+                            currentPhrase.unmodifiedPhrase.prob = new BigDecimal(1);
                         }
                     }
 
-                    phr.ldt = rs.getTimestamp("date").toLocalDateTime().atZone(ZoneId.of("Europe/Helsinki"));
+                    currentPhrase.ldt = rs.getTimestamp("date").toLocalDateTime().atZone(ZoneId.of("Europe/Helsinki"));
 
-                    list.add(phr);
+                    list.add(currentPhrase);
 
                 } catch (PhraseNotFoundException e) {
                     e.printStackTrace();
                 }
-
-
             }
 
         } catch (SQLException e) {
@@ -297,7 +270,7 @@ public class DAO {
             System.out.println("CALL: reloadCollectionOfPhrases() from DAO");
 
             listOfActivePhrases.clear();
-            totalPossibleWords = 0;
+            totalPossibleWordsAmount = 0;
 
             while (rs.next()) {
 
@@ -317,13 +290,12 @@ public class DAO {
                 Phrase phrase = new Phrase(id, for_word, nat_word, transcr, prob, create_date, label,
                         last_accs_date, index_start, index_end, exactmatch, rate, this);
 
-                totalPossibleWords++;
+                totalPossibleWordsAmount++;
                 listOfAllPhrases.add(phrase);
 
-                if (phrase.inLabels(chosedLabels)) {   //Добавляем в активную коллекцию если метка фразы совпадает с выбранными - "chosedLabels"
+                if (phrase.inLabels(currentChosedLabels)) {   //Добавляем в активную коллекцию если метка фразы совпадает с выбранными - "currentChosedLabels"
                     listOfActivePhrases.add(phrase);
                 }
-
             }
 
         } catch (SQLException e) {
@@ -346,29 +318,16 @@ public class DAO {
             boolean firstPhraseWasAdded = false;
             Phrase currentPhrase = initialListOfPhrases.get(i1);
 
-            for(int i2 = 0; i2 < initialListOfPhrases.size(); i2++){
+            for (Phrase comparedPhrase : initialListOfPhrases) {
 
-                Phrase comparedPhrase = initialListOfPhrases.get(i2);
-
-
-
-                if(currentPhrase.id != comparedPhrase.id &&
-                        (intelliFind.match(currentPhrase.forWord, comparedPhrase.forWord, true) ||
-                        intelliFind.match(currentPhrase.natWord, comparedPhrase.natWord, true))
-
-                        ){
+                if (currentPhrase.id != comparedPhrase.id && (intelliFind.match(currentPhrase.forWord, comparedPhrase.forWord, true) || intelliFind.match(currentPhrase.natWord, comparedPhrase.natWord, true))) {
 
                     System.out.println(currentPhrase.forWord + "-" + currentPhrase.natWord + " --- " + comparedPhrase.forWord + "-" + comparedPhrase.natWord);
-
-
-                    if(!firstPhraseWasAdded){
+                    if (!firstPhraseWasAdded) {
                         listOfSamePhrases.add(currentPhrase);
-//                        System.out.println(currentPhrase);
                         firstPhraseWasAdded = true;
                     }
-
                     listOfSamePhrases.add(comparedPhrase);
-//                    System.out.println(comparedPhrase);
                 }
             }
         }
@@ -406,31 +365,31 @@ public class DAO {
         double temp = 0;
         double indOfLW;     //Индекс выпадения изученных
         double rangeOfNLW;  //Диапазон индексов неизученных слов
-        double scaleOf1prob;    //rangeOfNLW/summProbOfNLW  цена одного prob
+        double scaleOf1prob;    //rangeOfNLW/nonLearnedWordsProbSumm  цена одного prob
 
         int countOfModIndices = 0;
         long[] indexes = new long[2];
-        totalActiveWords = listOfActivePhrases.size(); //Считаем общее количество фраз
+        totalActiveWordsAmount = listOfActivePhrases.size(); //Считаем общее количество фраз
 
-        //Считаем неизученные слова, summProbOfNLW и очищаем индексы
+        //Считаем неизученные слова, nonLearnedWordsProbSumm и очищаем индексы
         nonLearnedWords = 0;
-        summProbOfNLW = 0;
-        summProbOfLW = 0;
+        nonLearnedWordsProbSumm = 0;
+        learnedWordsProbSumm = 0;
         for (Phrase phr : listOfActivePhrases) {
             phr.indexStart = phr.indexEnd = 0;
             if (phr.prob.doubleValue() > 3) {
                 nonLearnedWords++;
-                summProbOfNLW += phr.prob.doubleValue();
+                nonLearnedWordsProbSumm += phr.prob.doubleValue();
             }else {
-                summProbOfLW += phr.prob.doubleValue();
+                learnedWordsProbSumm += phr.prob.doubleValue();
             }
         }
 
         //Считаем изученные (learnedWords)
-        learnedWords = totalActiveWords - nonLearnedWords;
+        learnedWords = totalActiveWordsAmount - nonLearnedWords;
         indOfLW = CHANCE_OF_APPEARING_LEARNED_WORDS / learnedWords;
         rangeOfNLW = learnedWords > 0 ? 1 - CHANCE_OF_APPEARING_LEARNED_WORDS : 1;
-        scaleOf1prob = rangeOfNLW / summProbOfNLW;
+        scaleOf1prob = rangeOfNLW / nonLearnedWordsProbSumm;
 
         if (nonLearnedWords == 0) {
             System.out.println("Все слова выучены!");
@@ -475,8 +434,7 @@ public class DAO {
 
             countOfModIndices++;
             if(countOfModIndices==listOfActivePhrases.size()){
-                maxIndex = phrase.indexEnd;
-//                System.out.println("maxIndex is " + maxIndex);
+                maxPossibleAppearingIndex = (int) phrase.indexEnd;
             }
             if (phrase.id == id) {
                 indexes[0] = indexStart;
@@ -488,80 +446,43 @@ public class DAO {
         return indexes;
     }
 
-    private boolean pushIntoStack(Phrase id) {
-        //Помещает данный в качестве параметра Id фразы в стек, стек используется для предотвращения повторения фраз
-        StringBuilder msg = new StringBuilder("CALL: pushIntoStack(Phrase id) from DAO;");
-        StringBuilder stackContent = new StringBuilder("Содержимое стека [");
-        //Если массив не инстантиирован или количество фраз стало меньше чем размер массива-стека заново создаём его с
-        // нужным размером и обнуляем положение стека
-        boolean result = false;
-        if (lastPhrasesStack == null || lastPhrasesStack.length > totalActiveWords) {
-            //Если количество фраз больше или равно 7 создаётся стандартный стек на 7 элементов.
-            if (totalActiveWords >= 7) {
-                lastPhrasesStack = new Phrase[7];
-                stackNum = 0;
-                msg.append(" создан стек на 7 элементов;");
-            }
-            //Если количество фраз меньше 3 в стеке нет надобности, метод возвращает false
-            else if (totalActiveWords < 3) {
-                msg.append(" в стеке нет необходимости - выход из метода (возврат false);");
-                System.out.println(msg);
-                return false;
-            }
-            //Если кол-во слов меньше 7 но больше трёх создаётся стек на (кол-во слов минус 1) элементов
-            else {
-                msg.append(" создан стек на " + ((int) totalActiveWords - 1) + " элементов;");
-                lastPhrasesStack = new Phrase[(int) totalActiveWords - 1];
-                stackNum = 0;
+    private boolean doesStackContainPhrase(Phrase givenPhrase){
+        for (Phrase currentPhraseFromStack : lastSevenPhrasesStack) {
+            if (currentPhraseFromStack != null && currentPhraseFromStack.id == givenPhrase.id) {
+                return true;
             }
         }
-        //Проверяем или стек не содержит айдишник данной в качестве параметра фразы
-        for (Phrase phrase : lastPhrasesStack) {
-            if (phrase != null && phrase.id == id.id) {
-                msg.append(" в стеке уже есть фраза " + id.forWord + " метод возвращает true;");
-                result = true;
-                break;
-            }
-        }
-        if (!result) {
-            msg.append(" в стек помещается фраза \"" + id.natWord + "\";");
-            lastPhrasesStack[stackNum > lastPhrasesStack.length - 1 ? stackNum = 0 : stackNum] = id;
-            stackNum++;
-        }
-
-        for (Phrase phrase : lastPhrasesStack) {
-            if (phrase != null) {
-                stackContent.append(phrase.id + ", ");
-            } else {
-                stackContent.append("null, ");
-            }
-        }
-        stackContent.append("]");
-        System.out.println(msg + " " + stackContent);
-        return result;
+        return false;
     }
 
-    public Phrase createRandPhrase() {
-        System.out.println("CALL: createRandPhrase()");
-        Phrase phrase = null;
+    private void pushToLastSevenPhrasesStack(Phrase addedPhrase) {
 
+        if (lastSevenPhrasesStack == null || lastSevenPhrasesStack.length > totalActiveWordsAmount) {
+            if (totalActiveWordsAmount >= 7) {
+                lastSevenPhrasesStack = new Phrase[7];
+                lastSevenStackCurrentPosition = 0;
+            }
+        }
 
-        //Новая фраза создаётся пока не подтвердится, что она отсутствует в стеке(последние 7 фраз)
+        if (!doesStackContainPhrase(addedPhrase) && lastSevenPhrasesStack != null) {
+            lastSevenPhrasesStack[lastSevenStackCurrentPosition > lastSevenPhrasesStack.length - 1 ? lastSevenStackCurrentPosition = 0 : lastSevenStackCurrentPosition] = addedPhrase;
+            lastSevenStackCurrentPosition++;
+        }
+    }
+
+    public Phrase createRandomPhrase() {
+
+        Phrase createdPhrase;
+
         do {
-            int index = random.nextInt( (int) maxIndex);
-            Phrase tempPhrase = getPhraseByIndex(index);
-            phrase = new Phrase(tempPhrase.id, tempPhrase.forWord, tempPhrase.natWord, tempPhrase.transcr, tempPhrase.prob, tempPhrase.createDate,
-                    tempPhrase.label, tempPhrase.lastAccs, tempPhrase.indexStart, tempPhrase.indexEnd, tempPhrase.exactMatch, tempPhrase.rate, this);
-            phrase.timeOfReturningFromList = "";
-        } while (pushIntoStack(phrase));
+            createdPhrase = getPhraseByIndex(random.nextInt(maxPossibleAppearingIndex));
+//            createdPhrase.timeOfReturningFromList = "";
 
+        } while (doesStackContainPhrase(createdPhrase));
 
-        System.out.println("Phrase is " + phrase.natWord + " " +
-                "indexes are: (" + phrase.indexStart + " - " + phrase.indexEnd + ")");
-        return phrase;
+        pushToLastSevenPhrasesStack(createdPhrase);
+        return createdPhrase;
     }
-
-    //Access to DB -------------------------------------
 
     public void insertPhrase(Phrase phrase) {
         System.out.println("CALL: insertPhrase(Phrase phrase) from DAO");

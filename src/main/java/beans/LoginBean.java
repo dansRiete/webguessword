@@ -53,7 +53,7 @@ public class LoginBean implements Serializable {
         }
     }
 
-    public Connection returnConnection(){
+    public Connection getConnection(){
         return mainDbConn;
     }
 

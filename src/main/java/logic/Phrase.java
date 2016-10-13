@@ -1,12 +1,9 @@
 package logic;
 
-import javax.enterprise.context.Dependent;
-import javax.faces.bean.ManagedBean;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
@@ -14,8 +11,6 @@ import java.util.HashSet;
 /**
  * Created by Aleks on 11.05.2016.
  */
-/*@ManagedBean
-@Dependent*/
 public class Phrase implements Serializable{
 
     public static final double INITIAL_RATE = 1.2;
@@ -100,7 +95,7 @@ public class Phrase implements Serializable{
 
             if(!isLearnt()){
 
-                double rateDepandableOnNumberOfWords = Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWords);
+                double rateDepandableOnNumberOfWords = Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWordsAmount);
                 System.out.println("rateDepandableOnNumberOfWords = " + rateDepandableOnNumberOfWords + "; rate=" + rate);
                 BigDecimal subtr = new BigDecimal(3 * rateDepandableOnNumberOfWords * rate);
 
@@ -121,7 +116,7 @@ public class Phrase implements Serializable{
             if(!unmodifiedPhrase.isLearnt()){   //Если до ответа на фразу она не была изучена
 
                 prob = unmodifiedPhrase.prob;
-                double rateDepandableOnNumberOfWords = Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWords);
+                double rateDepandableOnNumberOfWords = Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWordsAmount);
                 rate = unmodifiedPhrase.rate;
                 BigDecimal subtr = new BigDecimal(3 * rateDepandableOnNumberOfWords * rate);
 
@@ -139,9 +134,7 @@ public class Phrase implements Serializable{
 
                 prob = unmodifiedPhrase.prob;
                 rate = unmodifiedPhrase.rate;
-
             }
-
         }
 
         howWasAnswered = true;
@@ -164,7 +157,7 @@ public class Phrase implements Serializable{
 
         if(howWasAnswered == null){     // The first answer
             rate = 1;
-            BigDecimal summ = new BigDecimal(6 * Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWords));
+            BigDecimal summ = new BigDecimal(6 * Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWordsAmount));
             prob = prob.add(summ);
             howWasAnswered = false;
             indexes = dao.updateProb(this);
@@ -174,7 +167,7 @@ public class Phrase implements Serializable{
 
             if(!unmodifiedPhrase.isLearnt()) {
                 rate = 1;
-                BigDecimal summ = new BigDecimal(9 * Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWords));
+                BigDecimal summ = new BigDecimal(9 * Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWordsAmount));
                 prob = prob.add(summ);
             }else{
                 BigDecimal summ = new BigDecimal(6 * rate);
@@ -197,7 +190,6 @@ public class Phrase implements Serializable{
     public boolean inLabels(HashSet<String> hashSet){
 
         if(hashSet!=null){
-
             if(hashSet.isEmpty())
                 return true;
             for(String str : hashSet){
@@ -205,13 +197,9 @@ public class Phrase implements Serializable{
                     return true;
             }
             return false;
-
         } else {
-
             return true;
-
         }
-
     }
 
     public String getForWordAndTranscription(){
@@ -301,20 +289,8 @@ public class Phrase implements Serializable{
         this.lastAccs = lastAccs;
     }
 
-    public boolean isExactMatch() {
-        return exactMatch;
-    }
-
-    public void setExactMatch(boolean exactMatch) {
-        this.exactMatch = exactMatch;
-    }
-
     public void setTimeOfReturningFromList(long time){
         timeOfReturningFromList = Double.toString((double) time / 1000000d);
-    }
-
-    public String getTimeOfReturningFromList(){
-        return timeOfReturningFromList;
     }
 
     public int getIndexStart() {
