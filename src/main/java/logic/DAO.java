@@ -11,6 +11,7 @@ import java.util.*;
 /**
  * Created by Aleks on 11.05.2016.
  */
+@SuppressWarnings("SqlResolve")
 public class DAO {
     private Random random = new Random();
     private final String timezone = "Europe/Kiev";
@@ -137,11 +138,11 @@ public class DAO {
     }
 
     public void setStatistics(Phrase phr){
-        String dateTime = phr.ldt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+        String dateTime = phr.creationDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
         int mlseconds = Integer.parseInt(ZonedDateTime.now(ZoneId.of(timezone)).format(DateTimeFormatter.ofPattern("SSS")));
 
         String mode;
-        if(phr.howWasAnswered)
+        if(phr.answeredCorrectly)
             mode = "r_answ";
         else
             mode = "w_answ";
@@ -166,10 +167,10 @@ public class DAO {
     }
 
     public void updateStatistics(Phrase phr){
-        String dateTime = phr.ldt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+        String dateTime = phr.creationDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
 
         String mode;
-        if(phr.howWasAnswered)
+        if(phr.answeredCorrectly)
             mode = "r_answ";
         else
             mode = "w_answ";
@@ -183,6 +184,7 @@ public class DAO {
         try (Statement statement = mainDbConn.createStatement()) {
             String sql = "UPDATE " + loginBean.getUser() + "_stat" + " SET event='" + mode + "' WHERE date='" + dateTime +"' AND id=" + phr.id
                     + (learnt!=0?(", " + learnt):", NULL");
+            System.out.println("SQL from updateStatistics() is " + sql);
             System.out.println(sql);
             statement.execute(sql);
         } catch (SQLException e) {
@@ -191,35 +193,33 @@ public class DAO {
         }
     }
 
-    public ArrayList<Phrase> makeInitialCollection(){
+    public ArrayList<Phrase> getTodaysPhrasesCollection(){
         ArrayList<Phrase> list = new ArrayList<>();
 
         try (Statement statement = mainDbConn.createStatement();
              ResultSet rs = statement.executeQuery
-                     ("SELECT * FROM " + loginBean.getUser() + "_stat" + " WHERE date > DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)")) {
+                     ("SELECT * FROM " + loginBean.getUser() + "_stat" + " WHERE " +
+                             "date > DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR) ORDER BY DATE , ms")) {
 
             while (rs.next()){
                 Phrase currentPhrase = null;
                 try {
                     currentPhrase = getPhraseById(rs.getInt("id"));
-
-                    if(rs.getString("event").equalsIgnoreCase("r_answ"))
-                        currentPhrase.howWasAnswered = true;
-                    else
-                        currentPhrase.howWasAnswered = false;
-
-                    int learnt = rs.getInt("learnt");
-
-                    if(learnt!=0){
-                        if(learnt==1){
-                            currentPhrase.unmodifiedPhrase.prob = new BigDecimal(6);
-                        }else if(learnt == -1){
-                            currentPhrase.unmodifiedPhrase.prob = new BigDecimal(1);
-                        }
+                    currentPhrase.wasAnswered = true;
+                    if(rs.getString("event").equalsIgnoreCase("r_answ")) {
+                        currentPhrase.answeredCorrectly = true;
+                    } else {
+                        currentPhrase.answeredCorrectly = false;
                     }
 
-                    currentPhrase.ldt = rs.getTimestamp("date").toLocalDateTime().atZone(ZoneId.of("Europe/Helsinki"));
+                    /*int learnt = rs.getInt("learnt");
+                    if(learnt==1){
+                        currentPhrase.unmodifiedPhrase.prob = new BigDecimal(6);
+                    }else if(learnt == -1){
+                        currentPhrase.unmodifiedPhrase.prob = new BigDecimal(1);
+                    }*/
 
+                    currentPhrase.creationDate = rs.getTimestamp("date").toLocalDateTime().atZone(ZoneId.of("Europe/Helsinki"));
                     list.add(currentPhrase);
 
                 } catch (PhraseNotFoundException e) {
@@ -305,12 +305,12 @@ public class DAO {
         }
 
         reloadIndices(1);
-        System.out.println("SAME PHRASES = " + sortCollectionByMatches(listOfAllPhrases).size());
+//        System.out.println("SAME PHRASES = " + sortCollectionByMatches(listOfAllPhrases).size());
 
 
     }
 
-    public ArrayList<Phrase> sortCollectionByMatches(ArrayList<Phrase> initialListOfPhrases){
+    /*public ArrayList<Phrase> sortCollectionByMatches(ArrayList<Phrase> initialListOfPhrases){
         IntelliFind intelliFind = new IntelliFind();
         ArrayList<Phrase> listOfSamePhrases = new ArrayList<>();
 
@@ -332,7 +332,7 @@ public class DAO {
             }
         }
         return listOfSamePhrases;
-    }
+    }*/
 
     private Phrase getPhraseById(int id) throws PhraseNotFoundException{
         //Возвращает фразу из коллекции по данному id
@@ -447,6 +447,10 @@ public class DAO {
     }
 
     private boolean doesStackContainPhrase(Phrase givenPhrase){
+        if(givenPhrase == null){
+            throw new IllegalArgumentException("Given phrase was null");
+        }
+        checkLastSevenPhraseSatck();
         for (Phrase currentPhraseFromStack : lastSevenPhrasesStack) {
             if (currentPhraseFromStack != null && currentPhraseFromStack.id == givenPhrase.id) {
                 return true;
@@ -455,18 +459,27 @@ public class DAO {
         return false;
     }
 
-    private void pushToLastSevenPhrasesStack(Phrase addedPhrase) {
-
+    private void checkLastSevenPhraseSatck(){
         if (lastSevenPhrasesStack == null || lastSevenPhrasesStack.length > totalActiveWordsAmount) {
             if (totalActiveWordsAmount >= 7) {
                 lastSevenPhrasesStack = new Phrase[7];
                 lastSevenStackCurrentPosition = 0;
+            }else {
+                lastSevenPhrasesStack = new Phrase[0];
             }
         }
+    }
+
+    private int getCurrentLssPosition(){
+        int position = lastSevenStackCurrentPosition > lastSevenPhrasesStack.length - 1 ? lastSevenStackCurrentPosition = 0 : lastSevenStackCurrentPosition;
+        return position++;
+    }
+    private void pushToLastSevenPhrasesStack(Phrase addedPhrase) {
+
+        checkLastSevenPhraseSatck();
 
         if (!doesStackContainPhrase(addedPhrase) && lastSevenPhrasesStack != null) {
-            lastSevenPhrasesStack[lastSevenStackCurrentPosition > lastSevenPhrasesStack.length - 1 ? lastSevenStackCurrentPosition = 0 : lastSevenStackCurrentPosition] = addedPhrase;
-            lastSevenStackCurrentPosition++;
+            lastSevenPhrasesStack[getCurrentLssPosition()] = addedPhrase;
         }
     }
 
@@ -494,9 +507,9 @@ public class DAO {
             ps.setString(2, phrase.natWord);
             ps.setString(3, phrase.transcr);
             ps.setDouble(4, phrase.prob.doubleValue());
-            ps.setTimestamp(5, phrase.createDate);
+            ps.setTimestamp(5, phrase.addingToCollectionDate);
             ps.setString(6, phrase.label);
-            ps.setTimestamp(7, phrase.lastAccs);
+            ps.setTimestamp(7, phrase.lastAccessDate);
             ps.setBoolean(8, phrase.exactMatch);
             ps.execute();
         } catch (SQLException e) {
@@ -540,7 +553,7 @@ public class DAO {
         phraseInTheCollection.forWord = givenPhrase.forWord;
         phraseInTheCollection.natWord = givenPhrase.natWord;
         phraseInTheCollection.transcr = givenPhrase.transcr;
-        phraseInTheCollection.lastAccs = givenPhrase.lastAccs;
+        phraseInTheCollection.lastAccessDate = givenPhrase.lastAccessDate;
         phraseInTheCollection.exactMatch = givenPhrase.exactMatch;
         phraseInTheCollection.label = givenPhrase.label;
         phraseInTheCollection.prob = givenPhrase.prob;

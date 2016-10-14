@@ -100,7 +100,7 @@ public class InterfaceBean implements Serializable{
             dao = loginBean.getDao();
         if(dao!=null){
             listOfChooses = dao.possibleLabels;
-            listOfPhrases = dao.makeInitialCollection();
+            listOfPhrases = dao.getTodaysPhrasesCollection();
             nextQuestion();
         }
     }
@@ -137,11 +137,13 @@ public class InterfaceBean implements Serializable{
         }
     }
 
+
+
      private void reloadStatTableData(){
         System.out.println("CALL: reloadStatTableData() from InterfaceBean");
 
         //After the answer creates String like this - "40.2 ➩ 37.3"
-        if(currPhrase.howWasAnswered == null){
+        if(!currPhrase.wasAnswered){
             currPhrProb = currPhrase.prob.setScale(1, RoundingMode.HALF_UP).toString();
         }else{
             currPhrProb = currPhrase.returnUnmodified().prob.setScale(1, RoundingMode.HALF_UP) + "➩"
@@ -149,35 +151,23 @@ public class InterfaceBean implements Serializable{
         }
 
         //After the answer creates String like this - "0.06116% ➩ 0.07294%"
-        if(currPhrase.howWasAnswered == null)
+         currPhrPercentOfAppearance = currPhrase.getpercentChanceView();
 
-            currPhrPercentOfAppearance = new BigDecimal(currPhrase.indexEnd-currPhrase.indexStart).divide(new BigDecimal(1.0e+7))
-                    .setScale(5, RoundingMode.HALF_UP) + "%";
-        else {
 
-            BigDecimal percentOfAppear = new BigDecimal(currPhrase.indexEnd-currPhrase.indexStart).divide(new BigDecimal(1.0e+7))
-                    .setScale(5, RoundingMode.HALF_UP);
+        if(currPhrase.lastAccessDate !=null){
 
-            BigDecimal previousPercentOfAppear = new BigDecimal(currPhrase.returnUnmodified().indexEnd-currPhrase.returnUnmodified().indexStart)
-                    .divide(new BigDecimal(1.0e+7)).setScale(5, RoundingMode.HALF_UP);
-
-            currPhrPercentOfAppearance = previousPercentOfAppear + "% ➩ " + percentOfAppear + "%";
-        }
-
-        if(currPhrase.lastAccs!=null){
-
-            currPhrAbsLastAccsDate = LocalDateTime.ofInstant(currPhrase.lastAccs.toInstant(),
+            currPhrAbsLastAccsDate = LocalDateTime.ofInstant(currPhrase.lastAccessDate.toInstant(),
                     ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
 
-            currPhrRelLastAccsDate = retDiff.retDiffInTime(System.currentTimeMillis() - currPhrase.lastAccs.getTime());
+            currPhrRelLastAccsDate = retDiff.retDiffInTime(System.currentTimeMillis() - currPhrase.lastAccessDate.getTime());
         }
 
-        if(currPhrase.createDate!=null){
+        if(currPhrase.addingToCollectionDate !=null){
 
-            currPhrAbsCreateDate = LocalDateTime.ofInstant(currPhrase.createDate.toInstant(),
+            currPhrAbsCreateDate = LocalDateTime.ofInstant(currPhrase.addingToCollectionDate.toInstant(),
                     ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
 
-            currPhrRelCreateDate = retDiff.retDiffInTime(System.currentTimeMillis() - currPhrase.createDate.getTime());
+            currPhrRelCreateDate = retDiff.retDiffInTime(System.currentTimeMillis() - currPhrase.addingToCollectionDate.getTime());
         }
 
         currPhrLabel = currPhrase.label;
@@ -190,9 +180,9 @@ public class InterfaceBean implements Serializable{
         currentPhraseRate = currPhrase.rate;
 
         for(Phrase phrs : listOfPhrases){
-            if(phrs.howWasAnswered ==null)
+            if(phrs.answeredCorrectly ==null)
                 numOfNonAnswForSession++;
-            else if(phrs.howWasAnswered)
+            else if(phrs.answeredCorrectly)
                 numOfRightAnswForSession++;
         }
 
@@ -201,10 +191,7 @@ public class InterfaceBean implements Serializable{
         percentOfRightAnswers = ((new BigDecimal(numOfRightAnswForSession)).divide(new BigDecimal(numOfAnswForSession==0?1:numOfAnswForSession),2, RoundingMode.HALF_UP).multiply(new BigDecimal(100))).setScale(0, RoundingMode.HALF_UP)+"%";
         learnedWords = (int) dao.learnedWords;
         nonLearnedWords = (int) dao.nonLearnedWords;
-        totalNumberOfPhrases = learnedWords+nonLearnedWords;
-         System.out.println("dao.nonLearnedWordsProbSumm = " + dao.nonLearnedWordsProbSumm);
-         System.out.println("dao.learnedWordsProbSumm = " + dao.learnedWordsProbSumm);
-         percentOfCompleteLearning = new BigDecimal(dao.totalActiveWordsAmount *3/(dao.learnedWordsProbSumm +dao.nonLearnedWordsProbSumm)).setScale(4, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100)).setScale(2, BigDecimal.ROUND_HALF_UP).toString() + "%";
+        totalNumberOfPhrases = learnedWords + nonLearnedWords;
 
          try{
              avgAnswersPerDay = (int) ( (float) (dao.answUntil6amAmount +numOfAnswForSession)/ (float) (dao.totalHoursUntil6am + ZonedDateTime.now(ZoneId.of("Europe/Kiev")).getHour()-6) * 24);
@@ -231,21 +218,21 @@ public class InterfaceBean implements Serializable{
             if (!listOfPhrases.get(i).isLearnt() && listOfPhrases.get(i).returnUnmodified().isLearnt()) {
                 countOfLearnedPhrases--;
             }
-            if (listOfPhrases.get(i).howWasAnswered == null)
-                str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).ldt.format(DateTimeFormatter.ofPattern("HH:mm:ss"))).append(NONANSWERED_MESSAGE).append("] ")
+            if (!listOfPhrases.get(i).wasAnswered)
+                str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).creationDate.format(DateTimeFormatter.ofPattern("HH:mm:ss"))).append(NONANSWERED_MESSAGE).append("] ")
                         .append(listOfPhrases.get(i).isLearnt() ? "<font color=\"green\">" : "")
                         .append(listOfPhrases.get(i).natWord).append(listOfPhrases.get(i).isLearnt() ? "</font>" : "")
                         .append((i == index ? "</strong>" : "")).append("</br>");
-            else if (listOfPhrases.get(i).howWasAnswered)
-                str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).ldt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
+            else if (listOfPhrases.get(i).answeredCorrectly)
+                str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).creationDate.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
                         .append(RIGHT_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt() ? "<font color=\"green\">" : "")
-                        .append(listOfPhrases.get(i).natWord + " - ")
+                        .append(listOfPhrases.get(i).natWord).append(" - ")
                         .append(listOfPhrases.get(i).getForWordAndTranscription())
                         .append(listOfPhrases.get(i).isLearnt() ? "</font>" : "").append((i == index ? "</strong>" : "")).append("</br>");
-            else if (!listOfPhrases.get(i).howWasAnswered)
-                str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).ldt.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
+            else if (!listOfPhrases.get(i).answeredCorrectly)
+                str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).creationDate.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
                         .append(WRONG_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt() ? "<font color=\"green\">" : "")
-                        .append(listOfPhrases.get(i).natWord + " - ")
+                        .append(listOfPhrases.get(i).natWord).append(" - ")
                         .append(listOfPhrases.get(i).getForWordAndTranscription())
                         .append(listOfPhrases.get(i).isLearnt() ? "</font>" : "").append((i == index ? "</strong>" : "")).append("</br>");
 

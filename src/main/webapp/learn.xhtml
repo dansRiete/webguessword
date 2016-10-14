@@ -139,8 +139,7 @@
                         <p:inputText size="40" value="#{interfaceBean.currPhrLabel}" title="Label"
                                      label="Label"> </p:inputText>
                     </h:panelGrid>
-                    <p:commandButton type="submit" value="Submit" action="#{interfaceBean.resultProcessing()}"
-                                     actionListener="#{messagesView.info}">
+                    <p:commandButton type="submit" value="Submit" actionListener="#{messagesView.info}">
                     </p:commandButton>
                     <p:messages id="messages" showDetail="true" autoUpdate="true" closable="true"/>
                 </h:form>

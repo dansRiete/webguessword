@@ -13,18 +13,19 @@ import java.util.HashSet;
  */
 public class Phrase implements Serializable{
 
-    public static final double INITIAL_RATE = 1.2;
+    public static final double RIGHT_ANSWER_RATIO = 1.2;
     public int id;
     public String forWord;
     public String natWord;
     public String transcr;
     public BigDecimal prob;
     public String label;
-    public Timestamp createDate;
-    public Timestamp lastAccs;
+    public Timestamp addingToCollectionDate;
+    public Timestamp lastAccessDate;
     public boolean exactMatch;
-    public ZonedDateTime ldt = ZonedDateTime.now(ZoneId.of("Europe/Helsinki"));
-    public Boolean howWasAnswered;
+    public ZonedDateTime creationDate = ZonedDateTime.now(ZoneId.of("Europe/Helsinki"));
+    public Boolean answeredCorrectly;
+    public boolean wasAnswered = false;
     public double indexStart;
     public double indexEnd;
     public double rate = 1;
@@ -32,39 +33,35 @@ public class Phrase implements Serializable{
     public boolean isModified;
     public String answer;
     public String timeOfReturningFromList;
-
-    /**
-     * Saved state of phrase object before changing howWasAnswered to false or true
-     */
     public Phrase unmodifiedPhrase;
 
-    public Phrase(int id, String forWord, String natWord, String transcr, BigDecimal prob, Timestamp createDate,
-                  String label, Timestamp lastAccs, double indexStart, double indexEnd, boolean exactMatch, double rate, DAO dao){
+    public Phrase(int id, String forWord, String natWord, String transcr, BigDecimal prob, Timestamp addingToCollectionDate,
+                  String label, Timestamp lastAccessDate, double indexStart, double indexEnd, boolean exactMatch, double rate, DAO dao){
         this.dao = dao;
         this.id = id;
         this.forWord = forWord;
         this.natWord = natWord;
         this.transcr = transcr==null?"":transcr;
         this.prob = prob.setScale(1, RoundingMode.HALF_UP);
-        this.createDate = createDate;
+        this.addingToCollectionDate = addingToCollectionDate;
         this.label = label==null?"":label;
-        this.lastAccs = lastAccs;
+        this.lastAccessDate = lastAccessDate;
         this.indexStart = indexStart;
         this.indexEnd = indexEnd;
         this.exactMatch = exactMatch;
-        this.rate = rate<=1 ? 1 : rate;
-        this.unmodifiedPhrase = new Phrase(forWord, natWord, transcr, prob, createDate, label, lastAccs, indexStart, indexEnd, exactMatch, rate);
+        this.rate = rate <=1 ? 1 : rate;
+        this.unmodifiedPhrase = new Phrase(forWord, natWord, transcr, prob, addingToCollectionDate, label, lastAccessDate, indexStart, indexEnd, exactMatch, rate);
     }
 
-    public Phrase(String forWord, String natWord, String transcr, BigDecimal prob, Timestamp createDate,
-                  String label, Timestamp lastAccs, double indexStart, double indexEnd, boolean exactMatch, double rate){
+    public Phrase(String forWord, String natWord, String transcr, BigDecimal prob, Timestamp addingToCollectionDate,
+                  String label, Timestamp lastAccessDate, double indexStart, double indexEnd, boolean exactMatch, double rate){
         this.forWord = forWord;
         this.natWord = natWord;
         this.transcr = transcr==null?"":transcr;
-        this.prob = prob;
-        this.createDate = createDate;
+        this.prob = prob.setScale(1, RoundingMode.HALF_UP);
+        this.addingToCollectionDate = addingToCollectionDate;
         this.label = label==null?"":label;
-        this.lastAccs = lastAccs;
+        this.lastAccessDate = lastAccessDate;
         this.indexStart = indexStart;
         this.indexEnd = indexEnd;
         this.exactMatch = exactMatch;
@@ -77,7 +74,7 @@ public class Phrase implements Serializable{
         this.natWord = natWord;
         this.transcr = transcr==null?"":transcr;
         this.prob = new BigDecimal(30);
-        this.createDate = new Timestamp(System.currentTimeMillis());
+        this.addingToCollectionDate = new Timestamp(System.currentTimeMillis());
         this.label = label==null?"":label;
         this.exactMatch = false;
     }
@@ -91,27 +88,25 @@ public class Phrase implements Serializable{
         long[] indexes;
         this.answer = answer;
 
-        if(howWasAnswered == null){     //Ответ на фразу первый раз
+        if(!wasAnswered){     //Ответ на фразу первый раз
 
             if(!isLearnt()){
 
-                double rateDepandableOnNumberOfWords = Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWordsAmount);
-                System.out.println("rateDepandableOnNumberOfWords = " + rateDepandableOnNumberOfWords + "; rate=" + rate);
-                BigDecimal subtr = new BigDecimal(3 * rateDepandableOnNumberOfWords * rate);
+                double activeWordsAmountRatio = Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWordsAmount);
+                BigDecimal subtrahendForProb = new BigDecimal(3 * activeWordsAmountRatio * rate);
 
-                if(rateDepandableOnNumberOfWords>0.6) {
+                if(activeWordsAmountRatio>0.6) {
                     if (rate <= 1) {
-                        rate = INITIAL_RATE;
+                        rate = RIGHT_ANSWER_RATIO;
                     } else {
-                        rate *= INITIAL_RATE;
+                        rate *= RIGHT_ANSWER_RATIO;
                     }
                 }
-
-                prob = prob.subtract(subtr);
+                prob = prob.subtract(subtrahendForProb);
             }
 
 
-        }else if(!howWasAnswered){      //если true значит на фразу уже был неправильный ответ
+        }else if(!answeredCorrectly){      //если true значит на фразу уже был неправильный ответ
 
             if(!unmodifiedPhrase.isLearnt()){   //Если до ответа на фразу она не была изучена
 
@@ -122,9 +117,9 @@ public class Phrase implements Serializable{
 
                 if(rateDepandableOnNumberOfWords>0.6) {
                     if (rate <= 1) {
-                        rate = INITIAL_RATE;
+                        rate = RIGHT_ANSWER_RATIO;
                     } else {
-                        rate *= INITIAL_RATE;
+                        rate *= RIGHT_ANSWER_RATIO;
                     }
                 }
 
@@ -137,7 +132,8 @@ public class Phrase implements Serializable{
             }
         }
 
-        howWasAnswered = true;
+        answeredCorrectly = true;
+        wasAnswered = true;
         dao.setStatistics(this);
         indexes = dao.updateProb(this);
 
@@ -145,9 +141,6 @@ public class Phrase implements Serializable{
             this.indexStart = indexes[0];
             this.indexEnd = indexes[1];
         }
-
-
-
     }
 
     public void wrongAnswer(String answer){
@@ -155,15 +148,15 @@ public class Phrase implements Serializable{
         long[] indexes = null;
         this.answer = answer;
 
-        if(howWasAnswered == null){     // The first answer
+        if(!wasAnswered){     // The first answer
             rate = 1;
             BigDecimal summ = new BigDecimal(6 * Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWordsAmount));
             prob = prob.add(summ);
-            howWasAnswered = false;
+            answeredCorrectly = false;
             indexes = dao.updateProb(this);
             dao.setStatistics(this);
 
-        }else if(howWasAnswered){
+        }else if(answeredCorrectly){
 
             if(!unmodifiedPhrase.isLearnt()) {
                 rate = 1;
@@ -174,12 +167,12 @@ public class Phrase implements Serializable{
                 prob = prob.add(summ);
                 rate = 1;
             }
-
-            howWasAnswered = false;
-            indexes = dao.updateProb(this);
-            dao.updateStatistics(this);
-
         }
+
+        answeredCorrectly = false;
+        wasAnswered = true;
+        indexes = dao.updateProb(this);
+        dao.updateStatistics(this);
 
         if(indexes!=null){
             this.indexStart = indexes[0];
@@ -199,6 +192,16 @@ public class Phrase implements Serializable{
             return false;
         } else {
             return true;
+        }
+    }
+
+    public String getpercentChanceView(){
+        if(!wasAnswered)
+            return new BigDecimal(indexEnd - indexStart).divide(new BigDecimal(1.0e+9/100), BigDecimal.ROUND_HALF_UP).setScale(5, RoundingMode.HALF_UP) + "%";
+        else {
+            BigDecimal currentPercentChance = new BigDecimal(indexEnd - indexStart).divide(new BigDecimal(1.0e+7), BigDecimal.ROUND_HALF_UP).setScale(5, RoundingMode.HALF_UP);
+            BigDecimal previousPercentChance = new BigDecimal(returnUnmodified().indexEnd - returnUnmodified().indexStart).divide(new BigDecimal(1.0e+9/100), BigDecimal.ROUND_HALF_UP).setScale(5, RoundingMode.HALF_UP);
+            return previousPercentChance + "% ➩ " + currentPercentChance + "%";
         }
     }
 
@@ -224,7 +227,7 @@ public class Phrase implements Serializable{
     }
 
     public String toString(){
-        return forWord + " - " + natWord + " last. accs:" + lastAccs;
+        return forWord + " - " + natWord + " last. accs:" + lastAccessDate;
     }
 
     public int getId() {
@@ -277,16 +280,16 @@ public class Phrase implements Serializable{
         updatePhrase();
     }
 
-    public Timestamp getCreateDate() {
-        return createDate;
+    public Timestamp getAddingToCollectionDate() {
+        return addingToCollectionDate;
     }
 
-    public Timestamp getLastAccs() {
-        return lastAccs;
+    public Timestamp getLastAccessDate() {
+        return lastAccessDate;
     }
 
-    public void setLastAccs(Timestamp lastAccs) {
-        this.lastAccs = lastAccs;
+    public void setLastAccessDate(Timestamp lastAccessDate) {
+        this.lastAccessDate = lastAccessDate;
     }
 
     public void setTimeOfReturningFromList(long time){

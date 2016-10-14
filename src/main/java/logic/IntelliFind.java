@@ -9,6 +9,20 @@ import java.util.regex.PatternSyntaxException;
  */
 public class IntelliFind {
 
+    /*public boolean nearlyEquals(String firstWord, String secondWord){
+        if(firstWord.equalsIgnoreCase(secondWord)){
+            return true;
+        }else if(firstWord.length() > 5 && secondWord.length() > 5){
+            int numberOfMatches = 0;
+            char [] firstWordSymbolSequence = firstWord.toCharArray();
+            char [] secondWordSymbolSequence = secondWord.toCharArray();
+            for(int i = 0; i<firstWordSymbolSequence.length; i++);
+
+        }
+    }*/
+
+
+
     public boolean match(String firstWord, String secondWord, boolean exactMatch) {
 
         if(firstWord.equalsIgnoreCase(secondWord))
