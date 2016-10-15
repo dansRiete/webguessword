@@ -33,7 +33,7 @@ public class Phrase implements Serializable{
     public boolean isModified;
     public String answer;
     public String timeOfReturningFromList;
-    public Phrase unmodifiedPhrase;
+    public Phrase originalPhrase;
 
     public Phrase(int id, String forWord, String natWord, String transcr, BigDecimal prob, Timestamp addingToCollectionDate,
                   String label, Timestamp lastAccessDate, double indexStart, double indexEnd, boolean exactMatch, double rate, DAO dao){
@@ -41,7 +41,7 @@ public class Phrase implements Serializable{
         this.id = id;
         this.forWord = forWord;
         this.natWord = natWord;
-        this.transcr = transcr==null?"":transcr;
+        this.transcr = transcr == null ? "" : transcr;
         this.prob = prob.setScale(1, RoundingMode.HALF_UP);
         this.addingToCollectionDate = addingToCollectionDate;
         this.label = label==null?"":label;
@@ -49,8 +49,9 @@ public class Phrase implements Serializable{
         this.indexStart = indexStart;
         this.indexEnd = indexEnd;
         this.exactMatch = exactMatch;
-        this.rate = rate <=1 ? 1 : rate;
-        this.unmodifiedPhrase = new Phrase(forWord, natWord, transcr, prob, addingToCollectionDate, label, lastAccessDate, indexStart, indexEnd, exactMatch, rate);
+        this.rate = rate <= 1 ? 1 : rate;
+        this.originalPhrase = new Phrase(forWord, natWord, transcr, prob, addingToCollectionDate, label, lastAccessDate,
+                indexStart, indexEnd, exactMatch, rate);
     }
 
     public Phrase(String forWord, String natWord, String transcr, BigDecimal prob, Timestamp addingToCollectionDate,
@@ -65,7 +66,6 @@ public class Phrase implements Serializable{
         this.indexStart = indexStart;
         this.indexEnd = indexEnd;
         this.exactMatch = exactMatch;
-        this.unmodifiedPhrase = null;
         this.rate = rate;
     }
 
@@ -81,7 +81,7 @@ public class Phrase implements Serializable{
 
 
     public Phrase returnUnmodified(){
-        return unmodifiedPhrase;
+        return originalPhrase;
     }
 
     public void rightAnswer(String answer){
@@ -108,14 +108,14 @@ public class Phrase implements Serializable{
 
         }else if(!answeredCorrectly){      //если true значит на фразу уже был неправильный ответ
 
-            if(!unmodifiedPhrase.isLearnt()){   //Если до ответа на фразу она не была изучена
+            if(!originalPhrase.isLearnt()){   //Если до ответа на фразу она не была изучена
 
-                prob = unmodifiedPhrase.prob;
+                prob = originalPhrase.prob;
                 double rateDepandableOnNumberOfWords = Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWordsAmount);
-                rate = unmodifiedPhrase.rate;
+                rate = originalPhrase.rate;
                 BigDecimal subtr = new BigDecimal(3 * rateDepandableOnNumberOfWords * rate);
 
-                if(rateDepandableOnNumberOfWords>0.6) {
+                if(rateDepandableOnNumberOfWords > 0.6) {
                     if (rate <= 1) {
                         rate = RIGHT_ANSWER_RATIO;
                     } else {
@@ -127,8 +127,8 @@ public class Phrase implements Serializable{
 
             } else {      //Если была, просто возвращаем первоначальное значение prob
 
-                prob = unmodifiedPhrase.prob;
-                rate = unmodifiedPhrase.rate;
+                prob = originalPhrase.prob;
+                rate = originalPhrase.rate;
             }
         }
 
@@ -158,7 +158,7 @@ public class Phrase implements Serializable{
 
         }else if(answeredCorrectly){
 
-            if(!unmodifiedPhrase.isLearnt()) {
+            if(!originalPhrase.isLearnt()) {
                 rate = 1;
                 BigDecimal summ = new BigDecimal(9 * Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWordsAmount));
                 prob = prob.add(summ);
@@ -195,12 +195,15 @@ public class Phrase implements Serializable{
         }
     }
 
-    public String getpercentChanceView(){
+    public String getPercentChanceView(){
+
+        System.out.println("indexEnd - indexStart " + indexStart + " - " + indexEnd);
+        System.out.println("returnUnmodified.indexEnd - returnUnmodified.indexStart " + returnUnmodified().indexStart + " - " + returnUnmodified().indexEnd);
         if(!wasAnswered)
-            return new BigDecimal(indexEnd - indexStart).divide(new BigDecimal(1.0e+9/100), BigDecimal.ROUND_HALF_UP).setScale(5, RoundingMode.HALF_UP) + "%";
+            return new BigDecimal(indexEnd - indexStart).divide(new BigDecimal(1.0e+9*100), BigDecimal.ROUND_HALF_UP).setScale(5, RoundingMode.HALF_UP) + "%";
         else {
-            BigDecimal currentPercentChance = new BigDecimal(indexEnd - indexStart).divide(new BigDecimal(1.0e+7), BigDecimal.ROUND_HALF_UP).setScale(5, RoundingMode.HALF_UP);
-            BigDecimal previousPercentChance = new BigDecimal(returnUnmodified().indexEnd - returnUnmodified().indexStart).divide(new BigDecimal(1.0e+9/100), BigDecimal.ROUND_HALF_UP).setScale(5, RoundingMode.HALF_UP);
+            BigDecimal currentPercentChance = new BigDecimal(indexEnd - indexStart).divide(new BigDecimal(1.0e+9*100), BigDecimal.ROUND_HALF_UP).setScale(5, RoundingMode.HALF_UP);
+            BigDecimal previousPercentChance = new BigDecimal(returnUnmodified().indexEnd - returnUnmodified().indexStart).divide(new BigDecimal(1.0e+9*100), BigDecimal.ROUND_HALF_UP).setScale(5, RoundingMode.HALF_UP);
             return previousPercentChance + "% ➩ " + currentPercentChance + "%";
         }
     }

@@ -151,7 +151,7 @@ public class InterfaceBean implements Serializable{
         }
 
         //After the answer creates String like this - "0.06116% ➩ 0.07294%"
-         currPhrPercentOfAppearance = currPhrase.getpercentChanceView();
+         currPhrPercentOfAppearance = currPhrase.getPercentChanceView();
 
 
         if(currPhrase.lastAccessDate !=null){

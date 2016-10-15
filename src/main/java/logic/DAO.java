@@ -214,9 +214,9 @@ public class DAO {
 
                     /*int learnt = rs.getInt("learnt");
                     if(learnt==1){
-                        currentPhrase.unmodifiedPhrase.prob = new BigDecimal(6);
+                        currentPhrase.originalPhrase.prob = new BigDecimal(6);
                     }else if(learnt == -1){
-                        currentPhrase.unmodifiedPhrase.prob = new BigDecimal(1);
+                        currentPhrase.originalPhrase.prob = new BigDecimal(1);
                     }*/
 
                     currentPhrase.creationDate = rs.getTimestamp("date").toLocalDateTime().atZone(ZoneId.of("Europe/Helsinki"));
