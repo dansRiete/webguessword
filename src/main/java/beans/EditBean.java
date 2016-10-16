@@ -7,7 +7,10 @@ import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
-import javax.faces.bean.ViewScoped;
+import javax.faces.event.SystemEvent;
+import java.math.BigDecimal;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +36,7 @@ public class EditBean {
     private String natWord;
     private String transcr;
     private String label;
+    private BigDecimal probabilityFactor;
     public EditBean(){
         init();
     }
@@ -52,9 +56,11 @@ public class EditBean {
         System.out.println("EDITBEAN CALL START addAction() from editBean mylist.size=" + myList.size());
 
         if( this.forWord != null && this.natWord != null && !this.forWord.equalsIgnoreCase("") && !this.natWord.equalsIgnoreCase("")){
+            Timestamp now = new Timestamp(System.currentTimeMillis());
 
-            Phrase phrase = new Phrase(this.forWord, this.natWord, this.transcr, this.label);
-            this.forWord = this.natWord = this.transcr = "";
+            Phrase phrase = new Phrase(0, this.forWord, this.natWord, this.transcr, this.probabilityFactor, now, this.label, null, 0, 0, false, 1, dao);
+            this.forWord = this.natWord = this.transcr = this.label = "";
+            probabilityFactor = null;
             myList.add(0, phrase);
             dao.insertPhrase(phrase);
         }
@@ -64,7 +70,7 @@ public class EditBean {
 
     public void deleteById(Phrase phr){
 
-        System.out.println("EDITBEAN CALL START deleteById(Phrase phr)  mylist.size=" + myList.size() + " deleted phrase is " + phr.forWord);
+        System.out.println("EDITBEAN CALL START deleteById(Phrase phr)  mylist.size=" + myList.size() + " deleted phrase is " + phr.foreignWord);
         dao.deletePhrase(phr);
         myList = dao.returnPhrasesList();
         labelsList = dao.reloadLabelsList();
@@ -127,6 +133,14 @@ public class EditBean {
 
     public void setLabel(String label) {
         this.label = label;
+    }
+
+    public BigDecimal getProbabilityFactor() {
+        return probabilityFactor;
+    }
+
+    public void setProbabilityFactor(double probabilityFactor) {
+        this.probabilityFactor = new BigDecimal(probabilityFactor);
     }
 
     /*public ArrayList<Phrase> getCurrList() {

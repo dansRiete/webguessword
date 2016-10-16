@@ -130,7 +130,7 @@ public class InterfaceBean implements Serializable{
         }
 
         if(!resultChoosedLabel.equals(previousResultChoosedLabel)){ //If clause was changed
-            dao.currentChosedLabels = hshset;
+            dao.activeChosedLabels = hshset;
             dao.reloadCollectionOfPhrases();
             previousResultChoosedLabel = resultChoosedLabel;
             reloadStatTableData();
@@ -144,14 +144,14 @@ public class InterfaceBean implements Serializable{
 
         //After the answer creates String like this - "40.2 ➩ 37.3"
         if(!currPhrase.wasAnswered){
-            currPhrProb = currPhrase.prob.setScale(1, RoundingMode.HALF_UP).toString();
+            currPhrProb = currPhrase.probabilityFactor.setScale(1, RoundingMode.HALF_UP).toString();
         }else{
-            currPhrProb = currPhrase.returnUnmodified().prob.setScale(1, RoundingMode.HALF_UP) + "➩"
-                    + currPhrase.prob.setScale(1, RoundingMode.HALF_UP);
+            currPhrProb = currPhrase.previousProbabilityFactor.setScale(1, RoundingMode.HALF_UP) + "➩"
+                    + currPhrase.probabilityFactor.setScale(1, RoundingMode.HALF_UP);
         }
 
         //After the answer creates String like this - "0.06116% ➩ 0.07294%"
-         currPhrPercentOfAppearance = currPhrase.getPercentChanceView();
+         currPhrPercentOfAppearance = /*currPhrase.getPercentChanceView();*/ "NOT YET IMPLEMENTED";
 
 
         if(currPhrase.lastAccessDate !=null){
@@ -177,10 +177,10 @@ public class InterfaceBean implements Serializable{
         int numOfRightAnswForSession = 0;
         int numOfPhrForSession = listOfPhrases.size();
         currPhrId = currPhrase.id;
-        currentPhraseRate = currPhrase.rate;
+        currentPhraseRate = currPhrase.multiplier;
 
         for(Phrase phrs : listOfPhrases){
-            if(phrs.answeredCorrectly ==null)
+            if(!phrs.wasAnswered)
                 numOfNonAnswForSession++;
             else if(phrs.answeredCorrectly)
                 numOfRightAnswForSession++;
@@ -211,28 +211,28 @@ public class InterfaceBean implements Serializable{
 
         for (int i = listOfPhrases.size() - 1; i >= 0; i--) {
             //If the phrase has been learnt and had not been learnt before then increase the counter of learnt phrases per current session
-            if (listOfPhrases.get(i).isLearnt() && !listOfPhrases.get(i).returnUnmodified().isLearnt()) {
+            if (listOfPhrases.get(i).isLearnt() && !listOfPhrases.get(i).previousIsLearnt()) {
                 countOfLearnedPhrases++;
             }
             //If vice-versa --
-            if (!listOfPhrases.get(i).isLearnt() && listOfPhrases.get(i).returnUnmodified().isLearnt()) {
+            if (!listOfPhrases.get(i).isLearnt() && listOfPhrases.get(i).previousIsLearnt()) {
                 countOfLearnedPhrases--;
             }
             if (!listOfPhrases.get(i).wasAnswered)
                 str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).creationDate.format(DateTimeFormatter.ofPattern("HH:mm:ss"))).append(NONANSWERED_MESSAGE).append("] ")
                         .append(listOfPhrases.get(i).isLearnt() ? "<font color=\"green\">" : "")
-                        .append(listOfPhrases.get(i).natWord).append(listOfPhrases.get(i).isLearnt() ? "</font>" : "")
+                        .append(listOfPhrases.get(i).nativeWord).append(listOfPhrases.get(i).isLearnt() ? "</font>" : "")
                         .append((i == index ? "</strong>" : "")).append("</br>");
             else if (listOfPhrases.get(i).answeredCorrectly)
                 str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).creationDate.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
                         .append(RIGHT_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt() ? "<font color=\"green\">" : "")
-                        .append(listOfPhrases.get(i).natWord).append(" - ")
+                        .append(listOfPhrases.get(i).nativeWord).append(" - ")
                         .append(listOfPhrases.get(i).getForWordAndTranscription())
                         .append(listOfPhrases.get(i).isLearnt() ? "</font>" : "").append((i == index ? "</strong>" : "")).append("</br>");
             else if (!listOfPhrases.get(i).answeredCorrectly)
                 str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).creationDate.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
                         .append(WRONG_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt() ? "<font color=\"green\">" : "")
-                        .append(listOfPhrases.get(i).natWord).append(" - ")
+                        .append(listOfPhrases.get(i).nativeWord).append(" - ")
                         .append(listOfPhrases.get(i).getForWordAndTranscription())
                         .append(listOfPhrases.get(i).isLearnt() ? "</font>" : "").append((i == index ? "</strong>" : "")).append("</br>");
 
@@ -241,11 +241,11 @@ public class InterfaceBean implements Serializable{
         numberOfLearnedPhrasePerSession = countOfLearnedPhrases;
         result = str.toString();
         Phrase currentPhrase = listOfPhrases.get(index);
-        currPhrForWord = currentPhrase.forWord;
-        currPhrNatWord = currentPhrase.natWord;
-        currPhrTransc = currentPhrase.transcr;
+        currPhrForWord = currentPhrase.foreignWord;
+        currPhrNatWord = currentPhrase.nativeWord;
+        currPhrTransc = currentPhrase.transcription;
         currPhrLabel = currentPhrase.label;
-        currentPhraseRate = currentPhrase.rate;
+        currentPhraseRate = currentPhrase.multiplier;
         if (currPhrase.isModified){
             currPhrase.updatePhrase();
         }
@@ -330,7 +330,7 @@ public class InterfaceBean implements Serializable{
             }else if (answer.equals("--")){
                 previousWrong();
             }else if(!(answer.equals("")||answer.equals("+")||answer.equals("-")||answer.equals("++")||answer.equals("--"))){
-                boolean bool = intelliFind.match(listOfPhrases.get(listOfPhrases.size() - 1 - shift).forWord, answer, false);
+                boolean bool = intelliFind.match(listOfPhrases.get(listOfPhrases.size() - 1 - shift).foreignWord, answer, false);
                 if(bool)
                     rightAnswer(answer);
                 else
@@ -347,11 +347,11 @@ public class InterfaceBean implements Serializable{
             newPhrase();
             index = listOfPhrases.size() - 1;
             currPhrase = listOfPhrases.get(index);
-            question = currPhrase.natWord + " " + hint.getShortHint(currPhrase.forWord);
+            question = currPhrase.nativeWord + " " + hint.getShortHint(currPhrase.foreignWord);
         }else {
             index = listOfPhrases.size() - 1 - --shift;
             currPhrase = listOfPhrases.get(index);
-            question = currPhrase.natWord + " " + hint.getShortHint(currPhrase.forWord);
+            question = currPhrase.nativeWord + " " + hint.getShortHint(currPhrase.foreignWord);
         }
 
         resultProcessing();
@@ -366,7 +366,7 @@ public class InterfaceBean implements Serializable{
         if(index<0)
             index = 0;
         currPhrase = listOfPhrases.get(index);
-        question = currPhrase.natWord;
+        question = currPhrase.nativeWord;
         resultProcessing();
     }
 
@@ -490,7 +490,7 @@ public class InterfaceBean implements Serializable{
     }
     public void setCurrPhrNatWord(String currPhrNatWord) {
         this.currPhrNatWord = currPhrNatWord;
-        currPhrase.natWord = this.currPhrNatWord;
+        currPhrase.nativeWord = this.currPhrNatWord;
         currPhrase.isModified = true;
     }
 
@@ -500,7 +500,7 @@ public class InterfaceBean implements Serializable{
     public void setCurrPhrForWord(String currPhrForWord) {
 
         this.currPhrForWord = currPhrForWord;
-        currPhrase.forWord = this.currPhrForWord;
+        currPhrase.foreignWord = this.currPhrForWord;
         currPhrase.isModified = true;
         System.out.println("--- inside setCurrPhrForWord(String currPhrForWord) currPhrForWord is " + this.currPhrForWord);
     }
@@ -510,7 +510,7 @@ public class InterfaceBean implements Serializable{
     }
     public void setCurrPhrTransc(String currPhrTransc) {
         this.currPhrTransc = currPhrTransc;
-        currPhrase.transcr = this.currPhrTransc;
+        currPhrase.transcription = this.currPhrTransc;
         currPhrase.isModified = true;
     }
 

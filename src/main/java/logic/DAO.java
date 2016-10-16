@@ -18,7 +18,7 @@ public class DAO {
 //    public static final String remoteHost = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
 //    public static final String localHost3306 = "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
 //    public static final String localHost3307 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
-    public HashSet<String> currentChosedLabels;
+    public HashSet<String> activeChosedLabels;
     public ArrayList<String> possibleLabels = new ArrayList<>();
     public double learnedWords;
     public double nonLearnedWords;
@@ -32,7 +32,7 @@ public class DAO {
     private int lastSevenStackCurrentPosition;
     public Connection mainDbConn;
     private LoginBean loginBean;
-    private ArrayList<Phrase> listOfActivePhrases = new ArrayList<>();
+    private ArrayList<Phrase> activePhrases = new ArrayList<>();
     private ArrayList<Phrase> listOfAllPhrases = new ArrayList<>();
     public int answUntil6amAmount; //Number of replies to 6 am of the current day
     public int totalHoursUntil6am; // Number of hours spent from the very begining till 6am of the current day
@@ -58,9 +58,10 @@ public class DAO {
                 "    create_date DATETIME,\n" +
                 "    last_accs_date DATETIME,\n" +
                 "    exactmatch BOOLEAN DEFAULT FALSE  NOT NULL,\n" +
-                "    rate DOUBLE,\n" +
                 "    index_start DOUBLE,\n" +
-                "    index_end DOUBLE)";
+                "    index_end DOUBLE,\n" +
+                "    rate DOUBLE" +
+                ")";
     }
 
     private String getSql_CreateStatTable() {
@@ -137,25 +138,25 @@ public class DAO {
         }
     }
 
-    public void setStatistics(Phrase phr){
-        String dateTime = phr.creationDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+    public void setStatistics(Phrase givenPhrase){
+        String dateTime = givenPhrase.creationDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
         int mlseconds = Integer.parseInt(ZonedDateTime.now(ZoneId.of(timezone)).format(DateTimeFormatter.ofPattern("SSS")));
 
         String mode;
-        if(phr.answeredCorrectly)
+        if(givenPhrase.answeredCorrectly)
             mode = "r_answ";
         else
             mode = "w_answ";
 
         int learnt = 0;
-        if(phr.isLearnt() && !phr.returnUnmodified().isLearnt())
+        if(givenPhrase.isLearnt() && !givenPhrase.previousIsLearnt())
             learnt = 1;
-        else if(!phr.isLearnt() && phr.returnUnmodified().isLearnt())
+        else if(!givenPhrase.isLearnt() && givenPhrase.previousIsLearnt())
             learnt = -1;
 
         try (Statement statement = mainDbConn.createStatement()) {
             String sql = "INSERT INTO " + loginBean.getUser() + "_stat" + " VALUES ('" + dateTime + "', " + mlseconds +
-                    ", '" + mode + "', " + phr.id + (learnt!=0?(", " + learnt):", NULL") + ")";
+                    ", '" + mode + "', " + givenPhrase.id + (learnt!=0?(", " + learnt):", NULL") + ")";
 
             System.out.println(sql);
             statement.execute(sql);
@@ -176,9 +177,9 @@ public class DAO {
             mode = "w_answ";
 
         int learnt = 0;
-        if(phr.isLearnt() && !phr.returnUnmodified().isLearnt())
+        if(phr.isLearnt() && !phr.previousIsLearnt())
             learnt = 1;
-        else if(!phr.isLearnt() && phr.returnUnmodified().isLearnt())
+        else if(!phr.isLearnt() && phr.previousIsLearnt())
             learnt = -1;
 
         try (Statement statement = mainDbConn.createStatement()) {
@@ -214,9 +215,9 @@ public class DAO {
 
                     /*int learnt = rs.getInt("learnt");
                     if(learnt==1){
-                        currentPhrase.originalPhrase.prob = new BigDecimal(6);
+                        currentPhrase.originalPhrase.probabilityFactor = new BigDecimal(6);
                     }else if(learnt == -1){
-                        currentPhrase.originalPhrase.prob = new BigDecimal(1);
+                        currentPhrase.originalPhrase.probabilityFactor = new BigDecimal(1);
                     }*/
 
                     currentPhrase.creationDate = rs.getTimestamp("date").toLocalDateTime().atZone(ZoneId.of("Europe/Helsinki"));
@@ -263,13 +264,13 @@ public class DAO {
     }
 
     public void reloadCollectionOfPhrases() {
+        String sql = "SELECT * FROM " + loginBean.getUser() + " ORDER BY create_date DESC, id DESC";
 
-        try (Statement mainSt = mainDbConn.createStatement();
-             ResultSet rs = mainSt.executeQuery("SELECT * FROM " + loginBean.getUser() + " ORDER BY create_date DESC, id DESC")) {
+        try (Statement mainSt = mainDbConn.createStatement(); ResultSet rs = mainSt.executeQuery(sql)) {
 
             System.out.println("CALL: reloadCollectionOfPhrases() from DAO");
 
-            listOfActivePhrases.clear();
+            activePhrases.clear();
             totalPossibleWordsAmount = 0;
 
             while (rs.next()) {
@@ -287,21 +288,20 @@ public class DAO {
                 double rate = rs.getDouble("rate");
                 boolean exactmatch = rs.getBoolean("exactmatch");
 
-                Phrase phrase = new Phrase(id, for_word, nat_word, transcr, prob, create_date, label,
+                Phrase addedToCollectionPhrase = new Phrase(id, for_word, nat_word, transcr, prob, create_date, label,
                         last_accs_date, index_start, index_end, exactmatch, rate, this);
 
                 totalPossibleWordsAmount++;
-                listOfAllPhrases.add(phrase);
+                listOfAllPhrases.add(addedToCollectionPhrase);
 
-                if (phrase.inLabels(currentChosedLabels)) {   //Добавляем в активную коллекцию если метка фразы совпадает с выбранными - "currentChosedLabels"
-                    listOfActivePhrases.add(phrase);
+                if (addedToCollectionPhrase.isInLabels(activeChosedLabels)) {
+                    activePhrases.add(addedToCollectionPhrase);
                 }
             }
 
         } catch (SQLException e) {
-            System.out.println("EXCEPTION#1: in reloadCollectionOfPhrases() from DAO");
             e.printStackTrace();
-            throw new RuntimeException();
+            throw new RuntimeException("SQL Exception in reloadCollectionOfPhrases() from DAO, sql was \"" + sql + "\"");
         }
 
         reloadIndices(1);
@@ -320,9 +320,9 @@ public class DAO {
 
             for (Phrase comparedPhrase : initialListOfPhrases) {
 
-                if (currentPhrase.id != comparedPhrase.id && (intelliFind.match(currentPhrase.forWord, comparedPhrase.forWord, true) || intelliFind.match(currentPhrase.natWord, comparedPhrase.natWord, true))) {
+                if (currentPhrase.id != comparedPhrase.id && (intelliFind.match(currentPhrase.foreignWord, comparedPhrase.foreignWord, true) || intelliFind.match(currentPhrase.nativeWord, comparedPhrase.nativeWord, true))) {
 
-                    System.out.println(currentPhrase.forWord + "-" + currentPhrase.natWord + " --- " + comparedPhrase.forWord + "-" + comparedPhrase.natWord);
+                    System.out.println(currentPhrase.foreignWord + "-" + currentPhrase.nativeWord + " --- " + comparedPhrase.foreignWord + "-" + comparedPhrase.nativeWord);
                     if (!firstPhraseWasAdded) {
                         listOfSamePhrases.add(currentPhrase);
                         firstPhraseWasAdded = true;
@@ -349,7 +349,7 @@ public class DAO {
         // @param index индекс, как правило, рандомный по которому искать фразу в коллекции
         // @return Возвращает фразу из коллекции
         long startTime = System.nanoTime();
-        for (Phrase phrase : listOfActivePhrases) {
+        for (Phrase phrase : activePhrases) {
             if (index >= phrase.indexStart && index <= phrase.indexEnd) {
                 //Записываем время доступа в объект фразы
                 phrase.setTimeOfReturningFromList(System.nanoTime() - startTime);
@@ -365,23 +365,23 @@ public class DAO {
         double temp = 0;
         double indOfLW;     //Индекс выпадения изученных
         double rangeOfNLW;  //Диапазон индексов неизученных слов
-        double scaleOf1prob;    //rangeOfNLW/nonLearnedWordsProbSumm  цена одного prob
+        double scaleOf1prob;    //rangeOfNLW/nonLearnedWordsProbSumm  цена одного probabilityFactor
 
         int countOfModIndices = 0;
         long[] indexes = new long[2];
-        totalActiveWordsAmount = listOfActivePhrases.size(); //Считаем общее количество фраз
+        totalActiveWordsAmount = activePhrases.size(); //Считаем общее количество фраз
 
         //Считаем неизученные слова, nonLearnedWordsProbSumm и очищаем индексы
         nonLearnedWords = 0;
         nonLearnedWordsProbSumm = 0;
         learnedWordsProbSumm = 0;
-        for (Phrase phr : listOfActivePhrases) {
+        for (Phrase phr : activePhrases) {
             phr.indexStart = phr.indexEnd = 0;
-            if (phr.prob.doubleValue() > 3) {
+            if (phr.probabilityFactor.doubleValue() > 3) {
                 nonLearnedWords++;
-                nonLearnedWordsProbSumm += phr.prob.doubleValue();
+                nonLearnedWordsProbSumm += phr.probabilityFactor.doubleValue();
             }else {
-                learnedWordsProbSumm += phr.prob.doubleValue();
+                learnedWordsProbSumm += phr.probabilityFactor.doubleValue();
             }
         }
 
@@ -395,12 +395,12 @@ public class DAO {
             System.out.println("Все слова выучены!");
         }
 
-        for (Phrase phrase : listOfActivePhrases) { //Устанавилвает индексы для неизученных слов
+        for (Phrase phrase : activePhrases) { //Устанавилвает индексы для неизученных слов
             long indexStart;
             long indexEnd;
-            //Переменной prob присваивается prob фразы с currentPhraseId = i;
+            //Переменной probabilityFactor присваивается probabilityFactor фразы с currentPhraseId = i;
             double prob;
-            prob = phrase.prob.doubleValue();
+            prob = phrase.probabilityFactor.doubleValue();
 
             //Если nonLearnedWords == 0, то есть, все слова выучены устанавливаются равные для всех индексы
             if (nonLearnedWords == 0) {
@@ -433,7 +433,7 @@ public class DAO {
             }
 
             countOfModIndices++;
-            if(countOfModIndices==listOfActivePhrases.size()){
+            if(countOfModIndices== activePhrases.size()){
                 maxPossibleAppearingIndex = (int) phrase.indexEnd;
             }
             if (phrase.id == id) {
@@ -503,10 +503,10 @@ public class DAO {
                 " label, last_accs_date, exactmatch) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement ps = mainDbConn.prepareStatement(insertSql)) {
-            ps.setString(1, phrase.forWord);
-            ps.setString(2, phrase.natWord);
-            ps.setString(3, phrase.transcr);
-            ps.setDouble(4, phrase.prob.doubleValue());
+            ps.setString(1, phrase.foreignWord);
+            ps.setString(2, phrase.nativeWord);
+            ps.setString(3, phrase.transcription);
+            ps.setDouble(4, phrase.probabilityFactor.doubleValue());
             ps.setTimestamp(5, phrase.addingToCollectionDate);
             ps.setString(6, phrase.label);
             ps.setTimestamp(7, phrase.lastAccessDate);
@@ -517,8 +517,8 @@ public class DAO {
             e.printStackTrace();
             throw new RuntimeException();
         }
-//        listOfActivePhrases.add(phrase);
-        reloadCollectionOfPhrases();
+        activePhrases.add(phrase);
+//        reloadCollectionOfPhrases();
 
     }
 
@@ -532,7 +532,7 @@ public class DAO {
             e.printStackTrace();
             throw new RuntimeException();
         }
-        reloadCollectionOfPhrases();
+        activePhrases.remove(phr);
 
     }
 
@@ -550,24 +550,24 @@ public class DAO {
             throw new RuntimeException();
         }
 
-        phraseInTheCollection.forWord = givenPhrase.forWord;
-        phraseInTheCollection.natWord = givenPhrase.natWord;
-        phraseInTheCollection.transcr = givenPhrase.transcr;
+        phraseInTheCollection.foreignWord = givenPhrase.foreignWord;
+        phraseInTheCollection.nativeWord = givenPhrase.nativeWord;
+        phraseInTheCollection.transcription = givenPhrase.transcription;
         phraseInTheCollection.lastAccessDate = givenPhrase.lastAccessDate;
         phraseInTheCollection.exactMatch = givenPhrase.exactMatch;
         phraseInTheCollection.label = givenPhrase.label;
-        phraseInTheCollection.prob = givenPhrase.prob;
-        phraseInTheCollection.rate = givenPhrase.rate;
+        phraseInTheCollection.probabilityFactor = givenPhrase.probabilityFactor;
+        phraseInTheCollection.multiplier = givenPhrase.multiplier;
 
         try (PreparedStatement mainDbPrepStat = mainDbConn.prepareStatement(updateSql)) {
 
-            mainDbPrepStat.setString(1, givenPhrase.forWord);
-            mainDbPrepStat.setString(2, givenPhrase.natWord);
+            mainDbPrepStat.setString(1, givenPhrase.foreignWord);
+            mainDbPrepStat.setString(2, givenPhrase.nativeWord);
 
-            if (givenPhrase.transcr == null || givenPhrase.transcr.equalsIgnoreCase(""))
+            if (givenPhrase.transcription == null || givenPhrase.transcription.equalsIgnoreCase(""))
                 mainDbPrepStat.setString(3, null);
             else
-                mainDbPrepStat.setString(3, givenPhrase.transcr);
+                mainDbPrepStat.setString(3, givenPhrase.transcription);
 
             if (givenPhrase.label == null || givenPhrase.label.equalsIgnoreCase(""))
                 mainDbPrepStat.setString(6, null);
@@ -576,8 +576,8 @@ public class DAO {
 
             mainDbPrepStat.setString(4, dateTime);
             mainDbPrepStat.setBoolean(5, givenPhrase.exactMatch);
-            mainDbPrepStat.setDouble(7, givenPhrase.prob.doubleValue());
-            mainDbPrepStat.setDouble(8, givenPhrase.rate);
+            mainDbPrepStat.setDouble(7, givenPhrase.probabilityFactor.doubleValue());
+            mainDbPrepStat.setDouble(8, givenPhrase.multiplier);
             mainDbPrepStat.execute();
         } catch (SQLException e) {
             System.out.println("EXCEPTION#2: in updateProb(Phrase givenPhrase) from DAO");
@@ -585,7 +585,7 @@ public class DAO {
             throw new RuntimeException();
         }
 
-        reloadCollectionOfPhrases();
+//        reloadCollectionOfPhrases();
 
     }
 
@@ -594,15 +594,15 @@ public class DAO {
         String dateTime = ZonedDateTime.now(ZoneId.of(timezone)).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
 
         try {
-            getPhraseById(phrase.id).prob = phrase.prob;
-            getPhraseById(phrase.id).rate = phrase.rate;
+            getPhraseById(phrase.id).probabilityFactor = phrase.probabilityFactor;
+            getPhraseById(phrase.id).multiplier = phrase.multiplier;
         } catch (PhraseNotFoundException e) {
             e.printStackTrace();
             throw new RuntimeException();
         }
 
         try (Statement st = mainDbConn.createStatement()) {
-            st.execute("UPDATE " + loginBean.getUser() + " SET prob_factor=" + phrase.prob + ", last_accs_date='" + dateTime + "', rate=" + phrase.rate +
+            st.execute("UPDATE " + loginBean.getUser() + " SET prob_factor=" + phrase.probabilityFactor + ", last_accs_date='" + dateTime + "', rate=" + phrase.multiplier +
                     " WHERE id=" + phrase.id);
         } catch (SQLException e) {
             System.out.println("EXCEPTION#2: in updateProb(Phrase phrase) from DAO");
@@ -616,7 +616,7 @@ public class DAO {
 
     public ArrayList<Phrase> returnPhrasesList() {
 
-        return listOfActivePhrases;
+        return activePhrases;
 
     }
 

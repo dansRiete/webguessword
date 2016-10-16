@@ -14,75 +14,80 @@ import java.util.HashSet;
 public class Phrase implements Serializable{
 
     public static final double RIGHT_ANSWER_RATIO = 1.2;
-    public int id;
-    public String forWord;
-    public String natWord;
-    public String transcr;
-    public BigDecimal prob;
+    public final int id;
+    public String foreignWord;
+    public String nativeWord;
+    public String transcription;
+    public BigDecimal probabilityFactor;
+    public BigDecimal previousProbabilityFactor;
     public String label;
+    public ZonedDateTime creationDate = ZonedDateTime.now(ZoneId.of("Europe/Helsinki"));
     public Timestamp addingToCollectionDate;
     public Timestamp lastAccessDate;
     public boolean exactMatch;
-    public ZonedDateTime creationDate = ZonedDateTime.now(ZoneId.of("Europe/Helsinki"));
-    public Boolean answeredCorrectly;
+    public boolean answeredCorrectly;
     public boolean wasAnswered = false;
     public double indexStart;
     public double indexEnd;
-    public double rate = 1;
-    private DAO dao;
+    public double multiplier = 1;
+    public double previousMultiplier = 1;
+    public DAO dao;
     public boolean isModified;
     public String answer;
     public String timeOfReturningFromList;
-    public Phrase originalPhrase;
+//    private Phrase originalPhrase;
 
-    public Phrase(int id, String forWord, String natWord, String transcr, BigDecimal prob, Timestamp addingToCollectionDate,
-                  String label, Timestamp lastAccessDate, double indexStart, double indexEnd, boolean exactMatch, double rate, DAO dao){
+    public Phrase(int id, String foreignWord, String nativeWord, String transcription, BigDecimal probabilityFactor, Timestamp addingToCollectionDate,
+                  String label, Timestamp lastAccessDate, double indexStart, double indexEnd, boolean exactMatch, double multiplier, DAO dao){
+        System.out.println(nativeWord + " - " + foreignWord + " Create indexes: " + indexStart + " - " + indexEnd);
         this.dao = dao;
         this.id = id;
-        this.forWord = forWord;
-        this.natWord = natWord;
-        this.transcr = transcr == null ? "" : transcr;
-        this.prob = prob.setScale(1, RoundingMode.HALF_UP);
+        this.foreignWord = foreignWord;
+        this.nativeWord = nativeWord;
+        this.transcription = transcription == null ? "" : transcription;
+        this.probabilityFactor = probabilityFactor.setScale(1, RoundingMode.HALF_UP);
+        this.previousProbabilityFactor = probabilityFactor.setScale(1, RoundingMode.HALF_UP);
         this.addingToCollectionDate = addingToCollectionDate;
         this.label = label==null?"":label;
         this.lastAccessDate = lastAccessDate;
         this.indexStart = indexStart;
         this.indexEnd = indexEnd;
         this.exactMatch = exactMatch;
-        this.rate = rate <= 1 ? 1 : rate;
-        this.originalPhrase = new Phrase(forWord, natWord, transcr, prob, addingToCollectionDate, label, lastAccessDate,
-                indexStart, indexEnd, exactMatch, rate);
+        this.multiplier = multiplier <= 1 ? 1 : multiplier;
+        /*this.originalPhrase = new Phrase(foreignWord, nativeWord, transcription, probabilityFactor, addingToCollectionDate, label, lastAccessDate,
+                indexStart, indexEnd, exactMatch, multiplier);*/
     }
 
-    public Phrase(String forWord, String natWord, String transcr, BigDecimal prob, Timestamp addingToCollectionDate,
-                  String label, Timestamp lastAccessDate, double indexStart, double indexEnd, boolean exactMatch, double rate){
-        this.forWord = forWord;
-        this.natWord = natWord;
-        this.transcr = transcr==null?"":transcr;
-        this.prob = prob.setScale(1, RoundingMode.HALF_UP);
+    /*public Phrase(String foreignWord, String nativeWord, String transcription, BigDecimal probabilityFactor, Timestamp addingToCollectionDate,
+                  String label, Timestamp lastAccessDate, double indexStart, double indexEnd, boolean exactMatch, double multiplier){
+        this.foreignWord = foreignWord;
+        this.nativeWord = nativeWord;
+        this.transcription = transcription==null?"":transcription;
+        this.probabilityFactor = probabilityFactor.setScale(1, RoundingMode.HALF_UP);
         this.addingToCollectionDate = addingToCollectionDate;
         this.label = label==null?"":label;
         this.lastAccessDate = lastAccessDate;
         this.indexStart = indexStart;
         this.indexEnd = indexEnd;
         this.exactMatch = exactMatch;
-        this.rate = rate;
+        this.multiplier = multiplier;
     }
 
-    public Phrase(String forWord, String natWord, String transcr, String label){
-        this.forWord = forWord;
-        this.natWord = natWord;
-        this.transcr = transcr==null?"":transcr;
-        this.prob = new BigDecimal(30);
+    public Phrase(int id, String foreignWord, String nativeWord, String transcription, String label){
+        this.id = id;
+        this.foreignWord = foreignWord;
+        this.nativeWord = nativeWord;
+        this.transcription = transcription==null?"":transcription;
+        this.probabilityFactor = new BigDecimal(30);
         this.addingToCollectionDate = new Timestamp(System.currentTimeMillis());
         this.label = label==null?"":label;
         this.exactMatch = false;
-    }
+    }*/
 
 
-    public Phrase returnUnmodified(){
+    /*public Phrase returnUnmodified(){
         return originalPhrase;
-    }
+    }*/
 
     public void rightAnswer(String answer){
         long[] indexes;
@@ -93,42 +98,42 @@ public class Phrase implements Serializable{
             if(!isLearnt()){
 
                 double activeWordsAmountRatio = Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWordsAmount);
-                BigDecimal subtrahendForProb = new BigDecimal(3 * activeWordsAmountRatio * rate);
+                BigDecimal subtrahendForProb = new BigDecimal(3 * activeWordsAmountRatio * multiplier);
 
                 if(activeWordsAmountRatio>0.6) {
-                    if (rate <= 1) {
-                        rate = RIGHT_ANSWER_RATIO;
+                    if (multiplier <= 1) {
+                        multiplier = RIGHT_ANSWER_RATIO;
                     } else {
-                        rate *= RIGHT_ANSWER_RATIO;
+                        multiplier *= RIGHT_ANSWER_RATIO;
                     }
                 }
-                prob = prob.subtract(subtrahendForProb);
+                probabilityFactor = probabilityFactor.subtract(subtrahendForProb);
             }
 
 
         }else if(!answeredCorrectly){      //если true значит на фразу уже был неправильный ответ
 
-            if(!originalPhrase.isLearnt()){   //Если до ответа на фразу она не была изучена
+            if(!previousIsLearnt()){   //Если до ответа на фразу она не была изучена
 
-                prob = originalPhrase.prob;
+                probabilityFactor = previousProbabilityFactor;
                 double rateDepandableOnNumberOfWords = Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWordsAmount);
-                rate = originalPhrase.rate;
-                BigDecimal subtr = new BigDecimal(3 * rateDepandableOnNumberOfWords * rate);
+                multiplier = previousMultiplier;
+                BigDecimal subtr = new BigDecimal(3 * rateDepandableOnNumberOfWords * multiplier);
 
                 if(rateDepandableOnNumberOfWords > 0.6) {
-                    if (rate <= 1) {
-                        rate = RIGHT_ANSWER_RATIO;
+                    if (multiplier <= 1) {
+                        multiplier = RIGHT_ANSWER_RATIO;
                     } else {
-                        rate *= RIGHT_ANSWER_RATIO;
+                        multiplier *= RIGHT_ANSWER_RATIO;
                     }
                 }
 
-                prob = prob.subtract(subtr);
+                probabilityFactor = probabilityFactor.subtract(subtr);
 
-            } else {      //Если была, просто возвращаем первоначальное значение prob
+            } else {      //Если была, просто возвращаем первоначальное значение probabilityFactor
 
-                prob = originalPhrase.prob;
-                rate = originalPhrase.rate;
+                probabilityFactor = previousProbabilityFactor;
+                multiplier = previousMultiplier;
             }
         }
 
@@ -149,23 +154,23 @@ public class Phrase implements Serializable{
         this.answer = answer;
 
         if(!wasAnswered){     // The first answer
-            rate = 1;
+            multiplier = 1;
             BigDecimal summ = new BigDecimal(6 * Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWordsAmount));
-            prob = prob.add(summ);
+            probabilityFactor = probabilityFactor.add(summ);
             answeredCorrectly = false;
             indexes = dao.updateProb(this);
             dao.setStatistics(this);
 
         }else if(answeredCorrectly){
 
-            if(!originalPhrase.isLearnt()) {
-                rate = 1;
+            if(!previousIsLearnt()) {
+                multiplier = 1;
                 BigDecimal summ = new BigDecimal(9 * Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWordsAmount));
-                prob = prob.add(summ);
+                probabilityFactor = probabilityFactor.add(summ);
             }else{
-                BigDecimal summ = new BigDecimal(6 * rate);
-                prob = prob.add(summ);
-                rate = 1;
+                BigDecimal summ = new BigDecimal(6 * multiplier);
+                probabilityFactor = probabilityFactor.add(summ);
+                multiplier = 1;
             }
         }
 
@@ -180,7 +185,7 @@ public class Phrase implements Serializable{
         }
     }
 
-    public boolean inLabels(HashSet<String> hashSet){
+    public boolean isInLabels(HashSet<String> hashSet){
 
         if(hashSet!=null){
             if(hashSet.isEmpty())
@@ -195,21 +200,21 @@ public class Phrase implements Serializable{
         }
     }
 
-    public String getPercentChanceView(){
+    /*public String getPercentChanceView(){
 
         System.out.println("indexEnd - indexStart " + indexStart + " - " + indexEnd);
-        System.out.println("returnUnmodified.indexEnd - returnUnmodified.indexStart " + returnUnmodified().indexStart + " - " + returnUnmodified().indexEnd);
+//        System.out.println("returnUnmodified.indexEnd - returnUnmodified.indexStart " + returnUnmodified().indexStart + " - " + returnUnmodified().indexEnd);
         if(!wasAnswered)
             return new BigDecimal(indexEnd - indexStart).divide(new BigDecimal(1.0e+9*100), BigDecimal.ROUND_HALF_UP).setScale(5, RoundingMode.HALF_UP) + "%";
         else {
             BigDecimal currentPercentChance = new BigDecimal(indexEnd - indexStart).divide(new BigDecimal(1.0e+9*100), BigDecimal.ROUND_HALF_UP).setScale(5, RoundingMode.HALF_UP);
-            BigDecimal previousPercentChance = new BigDecimal(returnUnmodified().indexEnd - returnUnmodified().indexStart).divide(new BigDecimal(1.0e+9*100), BigDecimal.ROUND_HALF_UP).setScale(5, RoundingMode.HALF_UP);
-            return previousPercentChance + "% ➩ " + currentPercentChance + "%";
+//            BigDecimal previousPercentChance = new BigDecimal(returnUnmodified().indexEnd - returnUnmodified().indexStart).divide(new BigDecimal(1.0e+9*100), BigDecimal.ROUND_HALF_UP).setScale(5, RoundingMode.HALF_UP);
+//            return previousPercentChance + "% ➩ " + currentPercentChance + "%";
         }
-    }
+    }*/
 
     public String getForWordAndTranscription(){
-        return forWord + (transcr.equalsIgnoreCase("") ? "" : (" [" + transcr + "]"));
+        return foreignWord + (transcription.equalsIgnoreCase("") ? "" : (" [" + transcription + "]"));
     }
 
     public void delete(){
@@ -222,54 +227,58 @@ public class Phrase implements Serializable{
     }
 
     public boolean isLearnt(){
-        return prob.doubleValue()<=3;
+        return probabilityFactor.doubleValue() <= 3;
     }
 
-    public String getForWord(){
-        return forWord;
+    public boolean previousIsLearnt(){
+        return previousProbabilityFactor.doubleValue() <= 3;
+    }
+
+    public String getForeignWord(){
+        return foreignWord;
     }
 
     public String toString(){
-        return forWord + " - " + natWord + " last. accs:" + lastAccessDate;
+        return foreignWord + " - " + nativeWord + " last. accs:" + lastAccessDate;
     }
 
     public int getId() {
         return id;
     }
 
-    public void setForWord(String forWord) {
-        System.out.println("CALL setForWord("+forWord+") from Phrase");
-        this.forWord = forWord;
+    public void setForeignWord(String foreignWord) {
+        System.out.println("CALL setForeignWord("+ foreignWord +") from Phrase");
+        this.foreignWord = foreignWord;
         updatePhrase();
     }
 
-    public String getNatWord() {
-        return natWord;
+    public String getNativeWord() {
+        return nativeWord;
     }
 
-    public void setNatWord(String natWord) {
-        System.out.println("CALL setNatWord("+natWord+") from Phrase");
-        this.natWord = natWord;
+    public void setNativeWord(String nativeWord) {
+        System.out.println("CALL setNativeWord("+ nativeWord +") from Phrase");
+        this.nativeWord = nativeWord;
         updatePhrase();
     }
 
-    public String getTranscr() {
-        return transcr;
+    public String getTranscription() {
+        return transcription;
     }
 
-    public void setTranscr(String transcr) {
-        System.out.println("CALL setTranscr("+transcr+") from Phrase");
-        this.transcr = transcr;
+    public void setTranscription(String transcription) {
+        System.out.println("CALL setTranscription("+ transcription +") from Phrase");
+        this.transcription = transcription;
         updatePhrase();
     }
 
-    public BigDecimal getProb() {
-        return prob;
+    public BigDecimal getProbabilityFactor() {
+        return probabilityFactor;
     }
 
-    public void setProb(BigDecimal prob) {
-        System.out.println("CALL setProb("+prob+") from Phrase");
-        this.prob = prob;
+    public void setProbabilityFactor(BigDecimal probabilityFactor) {
+        System.out.println("CALL setProbabilityFactor("+ probabilityFactor +") from Phrase");
+        this.probabilityFactor = probabilityFactor;
         updatePhrase();
     }
 
