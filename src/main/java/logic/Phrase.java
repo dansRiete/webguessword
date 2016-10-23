@@ -39,7 +39,7 @@ public class Phrase implements Serializable{
 
     public Phrase(int id, String foreignWord, String nativeWord, String transcription, BigDecimal probabilityFactor, Timestamp addingToCollectionDate,
                   String label, Timestamp lastAccessDate, double indexStart, double indexEnd, boolean exactMatch, double multiplier, DAO dao){
-        System.out.println(nativeWord + " - " + foreignWord + " Create indexes: " + indexStart + " - " + indexEnd);
+//        System.out.println(nativeWord + " - " + foreignWord + " Create indexes: " + indexStart + " - " + indexEnd);
         this.dao = dao;
         this.id = id;
         this.foreignWord = foreignWord;
@@ -56,6 +56,23 @@ public class Phrase implements Serializable{
         this.multiplier = multiplier <= 1 ? 1 : multiplier;
         /*this.originalPhrase = new Phrase(foreignWord, nativeWord, transcription, probabilityFactor, addingToCollectionDate, label, lastAccessDate,
                 indexStart, indexEnd, exactMatch, multiplier);*/
+    }
+
+    public Phrase(Phrase givenPhrase){
+        this.dao = givenPhrase.dao;
+        this.id = givenPhrase.id;
+        this.foreignWord = givenPhrase.foreignWord;
+        this.nativeWord = givenPhrase.nativeWord;
+        this.transcription = givenPhrase.transcription;
+        this.probabilityFactor = givenPhrase.probabilityFactor;
+        this.previousProbabilityFactor = givenPhrase.probabilityFactor;
+        this.addingToCollectionDate = givenPhrase.addingToCollectionDate;
+        this.label = givenPhrase.label;
+        this.lastAccessDate = givenPhrase.lastAccessDate;
+        this.indexStart = givenPhrase.indexStart;
+        this.indexEnd = givenPhrase.indexEnd;
+        this.exactMatch = givenPhrase.exactMatch;
+        this.multiplier = givenPhrase.multiplier;
     }
 
     /*public Phrase(String foreignWord, String nativeWord, String transcription, BigDecimal probabilityFactor, Timestamp addingToCollectionDate,

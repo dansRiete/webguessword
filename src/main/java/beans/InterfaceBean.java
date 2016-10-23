@@ -106,8 +106,9 @@ public class InterfaceBean implements Serializable{
     }
 
     public void setTable() {
+        /*new ArrayList<>().
 
-        System.out.println("CALL: setTable() from InterfaceBean");
+        System.out.println("CALL: setTable() from InterfaceBean");*/
 
         if (choosedLabel != null && (!choosedLabel.equalsIgnoreCase(""))){
             if(!choosedLabel.equalsIgnoreCase("all")){
@@ -256,7 +257,7 @@ public class InterfaceBean implements Serializable{
         System.out.println("CALL: newPhrase() from InterfaceBean");
         Phrase phrase = dao.createRandomPhrase();
         if(phrase!=null){
-            listOfPhrases.add(phrase);
+            listOfPhrases.add(new Phrase(phrase));
             currPhrase = phrase;
         }
     }
