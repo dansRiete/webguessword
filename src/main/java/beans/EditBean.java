@@ -7,9 +7,7 @@ import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
-import javax.faces.event.SystemEvent;
 import java.math.BigDecimal;
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,9 +30,9 @@ public class EditBean {
     private ArrayList<Phrase> myList;
 //    private ArrayList<Phrase> currList;
     private List<String> labelsList;
-    private String forWord;
-    private String natWord;
-    private String transcr;
+    private String foreignWord;
+    private String nativeWord;
+    private String transcription;
     private String label;
     private BigDecimal probabilityFactor;
     public EditBean(){
@@ -55,11 +53,11 @@ public class EditBean {
     public void addAction(){
         System.out.println("EDITBEAN CALL START addAction() from editBean mylist.size=" + myList.size());
 
-        if( this.forWord != null && this.natWord != null && !this.forWord.equalsIgnoreCase("") && !this.natWord.equalsIgnoreCase("")){
+        if( this.foreignWord != null && this.nativeWord != null && !this.foreignWord.equalsIgnoreCase("") && !this.nativeWord.equalsIgnoreCase("")){
             Timestamp now = new Timestamp(System.currentTimeMillis());
 
-            Phrase phrase = new Phrase(0, this.forWord, this.natWord, this.transcr, this.probabilityFactor, now, this.label, null, 0, 0, false, 1, dao);
-            this.forWord = this.natWord = this.transcr = this.label = "";
+            Phrase phrase = new Phrase(0, this.foreignWord, this.nativeWord, this.transcription, new BigDecimal(30), now, this.label, null, 0, 0, false, 1, dao);
+            this.foreignWord = this.nativeWord = this.transcription = this.label = "";
             probabilityFactor = null;
             myList.add(0, phrase);
             dao.insertPhrase(phrase);
@@ -103,28 +101,28 @@ public class EditBean {
         this.labelsList = labelsList;
     }
 
-    public String getForWord() {
-        return forWord;
+    public String getForeignWord() {
+        return foreignWord;
     }
 
-    public void setForWord(String forWord) {
-        this.forWord = forWord;
+    public void setForeignWord(String foreignWord) {
+        this.foreignWord = foreignWord;
     }
 
-    public String getNatWord() {
-        return natWord;
+    public String getNativeWord() {
+        return nativeWord;
     }
 
-    public void setNatWord(String natWord) {
-        this.natWord = natWord;
+    public void setNativeWord(String nativeWord) {
+        this.nativeWord = nativeWord;
     }
 
-    public String getTranscr() {
-        return transcr;
+    public String getTranscription() {
+        return transcription;
     }
 
-    public void setTranscr(String transcr) {
-        this.transcr = transcr;
+    public void setTranscription(String transcription) {
+        this.transcription = transcription;
     }
 
     public String getLabel() {

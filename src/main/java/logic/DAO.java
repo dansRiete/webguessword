@@ -483,7 +483,7 @@ public class DAO {
         }
     }
 
-    public Phrase createRandomPhrase() {
+    public Phrase returnRandomPhrase() {
 
         Phrase createdPhrase;
 
@@ -494,6 +494,7 @@ public class DAO {
         } while (doesStackContainPhrase(createdPhrase));
 
         pushToLastSevenPhrasesStack(createdPhrase);
+        createdPhrase.resetPreviousValues();
         return createdPhrase;
     }
 

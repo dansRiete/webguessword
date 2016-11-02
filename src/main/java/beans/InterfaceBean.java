@@ -255,11 +255,9 @@ public class InterfaceBean implements Serializable{
 
     private void newPhrase(){
         System.out.println("CALL: newPhrase() from InterfaceBean");
-        Phrase phrase = dao.createRandomPhrase();
-        if(phrase!=null){
-            listOfPhrases.add(new Phrase(phrase));
-            currPhrase = phrase;
-        }
+        Phrase newPhrase = new Phrase(dao.returnRandomPhrase());
+        listOfPhrases.add(newPhrase);
+        currPhrase = newPhrase;
     }
 
     public void rightAnswer(String answer){
@@ -274,7 +272,7 @@ public class InterfaceBean implements Serializable{
             System.out.println("EXCEPTION: in rightAnswer() from InterfaceBean");
             e.printStackTrace();
         }
-        timeOfLastAccsToDb = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000)).setScale(2, RoundingMode.HALF_UP);
+        timeOfLastAccsToDb = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000), BigDecimal.ROUND_HALF_UP).setScale(2, RoundingMode.HALF_UP);
     }
 
     public void wrongAnswer(String answer){
@@ -289,7 +287,7 @@ public class InterfaceBean implements Serializable{
             System.out.println("EXCEPTION: in wrongAnswer() from InterfaceBean");
             e.printStackTrace();
         }
-        timeOfLastAccsToDb = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000)).setScale(2, RoundingMode.HALF_UP);
+        timeOfLastAccsToDb = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000), BigDecimal.ROUND_HALF_UP).setScale(2, RoundingMode.HALF_UP);
     }
 
     public void previousRight(){
@@ -302,7 +300,7 @@ public class InterfaceBean implements Serializable{
             System.out.println("EXCEPTION: in previousRight() from InterfaceBean");
             e.printStackTrace();
         }
-        timeOfLastAccsToDb = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000)).setScale(2, RoundingMode.HALF_UP);
+        timeOfLastAccsToDb = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000), BigDecimal.ROUND_HALF_UP).setScale(2, RoundingMode.HALF_UP);
     }
 
     public void previousWrong(){
@@ -315,7 +313,7 @@ public class InterfaceBean implements Serializable{
             System.out.println("EXCEPTION: in previousWrong() from InterfaceBean");
             e.printStackTrace();
         }
-        timeOfLastAccsToDb = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000)).setScale(2, RoundingMode.HALF_UP);
+        timeOfLastAccsToDb = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000), BigDecimal.ROUND_HALF_UP).setScale(2, RoundingMode.HALF_UP);
     }
 
     public void checkTheAnswer(){
