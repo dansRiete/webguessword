@@ -45,7 +45,7 @@ public class EditBean {
             dao = loginBean.getDao();
         if(dao!=null){
 //            currList = dao.getCurrList();
-            myList = dao.returnPhrasesList();
+            myList = dao.getActivePhrases();
             labelsList = dao.reloadLabelsList();
         }
     }
@@ -70,7 +70,7 @@ public class EditBean {
 
         System.out.println("EDITBEAN CALL START deleteById(Phrase phr)  mylist.size=" + myList.size() + " deleted phrase is " + phr.foreignWord);
         dao.deletePhrase(phr);
-        myList = dao.returnPhrasesList();
+        myList = dao.getActivePhrases();
         labelsList = dao.reloadLabelsList();
         System.out.println("EDITBEAN CALL END deleteById(Phrase phr)  mylist.size=" + myList.size());
 

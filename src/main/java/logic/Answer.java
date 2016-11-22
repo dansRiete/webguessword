@@ -1,8 +1,7 @@
 package logic;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
+import java.util.*;
+import java.util.regex.*;
 
 /**
  * Created by Aleks on 11.11.2016.
@@ -12,6 +11,7 @@ public class Answer {
     private final String[] givenPhrases;
     private final String[] referencePhrases;
     private final static int SYLLABLE_SIZE = 2;
+    private final static int EXACT_MATCH_WORD_SIZE = 6;
 
     public Answer(String answer, Phrase question) {
         this.givenPhrases = answer.split("[/\\\\]");
@@ -29,18 +29,17 @@ public class Answer {
         return shortAnswer.toString();
     }
 
-    private String[] divideOntoSyllables(String givenPhrase){
-        int syllabelsSize = 2;
-        int positionInWord = 0;
-        int wordsPosition = 0;
-        String[] words = givenPhrase.split(" ");
-        String[] syllables = new String[givenPhrase.length() / syllabelsSize];
-        for(String currentWord : words){
-            if(currentWord.length() <= 3){
-                words[wordsPosition] = currentWord;
-                wordsPosition++;
+    private String[] divideOntoEvenSyllables(String givenPhrase){
+        String[] splitedWords = givenPhrase.split(" ");
+        ArrayList<String> syllables = new ArrayList<>();
+        for(String currentSplitedWord : splitedWords){
+            if(currentSplitedWord.length() <= EXACT_MATCH_WORD_SIZE){
+                syllables.add(currentSplitedWord);
             }else {
-
+                int positionInWord = 0;
+                while (true){
+                    syllables.add(currentSplitedWord.substring(positionInWord, positionInWord += SYLLABLE_SIZE));
+                }
             }
         }
 
@@ -71,7 +70,7 @@ public class Answer {
         }
     }
 
-    private String[] divideOntoEvenSyllables(String givenWord){
+    private String[] divideOntoEvenSyllables(String givenWord, int startDividingPosition){
 
     }
 

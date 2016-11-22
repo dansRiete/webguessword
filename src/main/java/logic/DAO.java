@@ -42,100 +42,9 @@ public class DAO {
         this.loginBean = loginBean;
         mainDbConn = loginBean.getConnection();
         checkDbForExistingAllTables();
-        reloadCollectionOfPhrases();
+        reloadPhrasesCollection();
         reloadLabelsList();
         initThisDayStatistics();
-    }
-
-    private String getSql_CreateMainTable() {
-        return "CREATE TABLE " + loginBean.getUser() + "\n" +
-                "    (id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,\n" +
-                "    for_word VARCHAR(250) NOT NULL,\n" +
-                "    nat_word VARCHAR(250) NOT NULL,\n" +
-                "    transcr VARCHAR(100),\n" +
-                "    prob_factor DOUBLE NOT NULL,\n" +
-                "    label VARCHAR(50),\n" +
-                "    create_date DATETIME,\n" +
-                "    last_accs_date DATETIME,\n" +
-                "    exactmatch BOOLEAN DEFAULT FALSE  NOT NULL,\n" +
-                "    index_start DOUBLE,\n" +
-                "    index_end DOUBLE,\n" +
-                "    rate DOUBLE" +
-                ")";
-    }
-
-    private String getSql_CreateStatTable() {
-
-        return "CREATE TABLE " + loginBean.getUser() + "_stat (date DATETIME NOT NULL, ms INT NOT NULL, event VARCHAR(30) NOT NULL," +
-                " id INT NOT NULL, learnt INT)";
-
-    }
-
-    private void initThisDayStatistics(){
-        try(
-                ResultSet rs1 = mainDbConn.createStatement().executeQuery
-                    ("SELECT COUNT(*) FROM " + loginBean.getUser() + "_stat WHERE date < DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)");
-                ResultSet rs2 = mainDbConn.createStatement().executeQuery
-                    ("SELECT TIMESTAMPDIFF(HOUR, (SELECT MIN(date) FROM " + loginBean.getUser() + "_stat WHERE date < DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)), " +
-                            "DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR))")
-        ){
-            rs1.next();
-            answUntil6amAmount = rs1.getInt(1);
-            rs2.next();
-            totalHoursUntil6am = rs2.getInt(1);
-
-        }catch (SQLException e){
-            e.printStackTrace();
-        }
-    }
-
-    private void createMainDb(){
-        try (Statement statement = mainDbConn.createStatement()) {
-            statement.execute(getSql_CreateMainTable());
-            statement.execute("INSERT INTO " + loginBean.getUser() + " (for_word, nat_word, prob_factor) VALUES ('The', " +
-                    "'The collection is empty, push Show All an add phrases', 30)");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("EXCEPTION: SQLException in checkDbForExistingAllTables() from DAO during create main table in main DB");
-        }
-    }
-
-    private void createStatisticsDb(){
-        try (Statement statement = mainDbConn.createStatement()) {
-            System.out.println("Execute " + getSql_CreateStatTable());
-            statement.execute(getSql_CreateStatTable());
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("EXCEPTION: SQLException in checkDbForExistingAllTables() from DAO during create stat table in main DB");
-        }
-    }
-
-    private void checkDbForExistingAllTables() {
-
-        boolean mainDbExists = false;
-        boolean statDbExists = false;
-        try (ResultSet rs_tables = mainDbConn.createStatement().executeQuery
-                ("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA='guessword'")) {
-            while (rs_tables.next()) {
-                //Check for exisiting the Main DB
-                if (rs_tables.getString("TABLE_NAME").equals(loginBean.getUser()))
-                    mainDbExists = true;
-                //Check for exisiting the Stat DB
-                if (rs_tables.getString("TABLE_NAME").equals(loginBean.getUser() + "_stat"))
-                    statDbExists = true;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("EXCEPTION: SQLException in checkDbForExistingAllTables() from DAO");
-        }
-
-        if (!mainDbExists) {
-            createMainDb();
-        }
-
-        if (!statDbExists) {
-            createStatisticsDb();
-        }
     }
 
     public void setStatistics(Phrase givenPhrase){
@@ -143,15 +52,15 @@ public class DAO {
         int mlseconds = Integer.parseInt(ZonedDateTime.now(ZoneId.of(timezone)).format(DateTimeFormatter.ofPattern("SSS")));
 
         String mode;
-        if(givenPhrase.answeredCorrectly)
+        if(givenPhrase.thisPhraseHadBeenAnsweredCorrectly)
             mode = "r_answ";
         else
             mode = "w_answ";
 
         int learnt = 0;
-        if(givenPhrase.isLearnt() && !givenPhrase.previousIsLearnt())
+        if(givenPhrase.hasThisPhraseBeenLearnt() && !givenPhrase.hadThisPhraseBeenLearntBeforeCurrentAnswer())
             learnt = 1;
-        else if(!givenPhrase.isLearnt() && givenPhrase.previousIsLearnt())
+        else if(!givenPhrase.hasThisPhraseBeenLearnt() && givenPhrase.hadThisPhraseBeenLearntBeforeCurrentAnswer())
             learnt = -1;
 
         try (Statement statement = mainDbConn.createStatement()) {
@@ -171,15 +80,15 @@ public class DAO {
         String dateTime = phr.creationDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
 
         String mode;
-        if(phr.answeredCorrectly)
+        if(phr.thisPhraseHadBeenAnsweredCorrectly)
             mode = "r_answ";
         else
             mode = "w_answ";
 
         int learnt = 0;
-        if(phr.isLearnt() && !phr.previousIsLearnt())
+        if(phr.hasThisPhraseBeenLearnt() && !phr.hadThisPhraseBeenLearntBeforeCurrentAnswer())
             learnt = 1;
-        else if(!phr.isLearnt() && phr.previousIsLearnt())
+        else if(!phr.hasThisPhraseBeenLearnt() && phr.hadThisPhraseBeenLearntBeforeCurrentAnswer())
             learnt = -1;
 
         try (Statement statement = mainDbConn.createStatement()) {
@@ -206,20 +115,12 @@ public class DAO {
                 Phrase currentPhrase = null;
                 try {
                     currentPhrase = getPhraseById(rs.getInt("id"));
-                    currentPhrase.wasAnswered = true;
+                    currentPhrase.thisPhraseHadBeenAnswered = true;
                     if(rs.getString("event").equalsIgnoreCase("r_answ")) {
-                        currentPhrase.answeredCorrectly = true;
+                        currentPhrase.thisPhraseHadBeenAnsweredCorrectly = true;
                     } else {
-                        currentPhrase.answeredCorrectly = false;
+                        currentPhrase.thisPhraseHadBeenAnsweredCorrectly = false;
                     }
-
-                    /*int learnt = rs.getInt("learnt");
-                    if(learnt==1){
-                        currentPhrase.originalPhrase.probabilityFactor = new BigDecimal(6);
-                    }else if(learnt == -1){
-                        currentPhrase.originalPhrase.probabilityFactor = new BigDecimal(1);
-                    }*/
-
                     currentPhrase.creationDate = rs.getTimestamp("date").toLocalDateTime().atZone(ZoneId.of("Europe/Helsinki"));
                     list.add(currentPhrase);
 
@@ -236,9 +137,7 @@ public class DAO {
         return list;
     }
 
-
-
-    public List<String> reloadLabelsList() {
+    private List<String> reloadLabelsList() {
         //Возвращает список возможных меток для фраз + "All"
         System.out.println("CALL: reloadLabelsList() from DAO");
         possibleLabels.clear();
@@ -263,12 +162,12 @@ public class DAO {
 
     }
 
-    public void reloadCollectionOfPhrases() {
+    public void reloadPhrasesCollection() {
         String sql = "SELECT * FROM " + loginBean.getUser() + " ORDER BY create_date DESC, id DESC";
 
         try (Statement mainSt = mainDbConn.createStatement(); ResultSet rs = mainSt.executeQuery(sql)) {
 
-            System.out.println("CALL: reloadCollectionOfPhrases() from DAO");
+            System.out.println("CALL: reloadPhrasesCollection() from DAO");
 
             activePhrases.clear();
             totalPossibleWordsAmount = 0;
@@ -294,14 +193,14 @@ public class DAO {
                 totalPossibleWordsAmount++;
                 listOfAllPhrases.add(addedToCollectionPhrase);
 
-                if (addedToCollectionPhrase.isInLabels(activeChosedLabels)) {
+                if (addedToCollectionPhrase.isThisPhraseInList(activeChosedLabels)) {
                     activePhrases.add(addedToCollectionPhrase);
                 }
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
-            throw new RuntimeException("SQL Exception in reloadCollectionOfPhrases() from DAO, sql was \"" + sql + "\"");
+            throw new RuntimeException("SQL Exception in reloadPhrasesCollection() from DAO, sql was \"" + sql + "\"");
         }
 
         reloadIndices(1);
@@ -310,56 +209,7 @@ public class DAO {
 
     }
 
-    /*public ArrayList<Phrase> sortCollectionByMatches(ArrayList<Phrase> initialListOfPhrases){
-        IntelliFind intelliFind = new IntelliFind();
-        ArrayList<Phrase> listOfSamePhrases = new ArrayList<>();
-
-        for(int i1 = 0; i1 < initialListOfPhrases.size(); i1++){
-            boolean firstPhraseWasAdded = false;
-            Phrase currentPhrase = initialListOfPhrases.get(i1);
-
-            for (Phrase comparedPhrase : initialListOfPhrases) {
-
-                if (currentPhrase.id != comparedPhrase.id && (intelliFind.match(currentPhrase.foreignWord, comparedPhrase.foreignWord, true) || intelliFind.match(currentPhrase.nativeWord, comparedPhrase.nativeWord, true))) {
-
-                    System.out.println(currentPhrase.foreignWord + "-" + currentPhrase.nativeWord + " --- " + comparedPhrase.foreignWord + "-" + comparedPhrase.nativeWord);
-                    if (!firstPhraseWasAdded) {
-                        listOfSamePhrases.add(currentPhrase);
-                        firstPhraseWasAdded = true;
-                    }
-                    listOfSamePhrases.add(comparedPhrase);
-                }
-            }
-        }
-        return listOfSamePhrases;
-    }*/
-
-    private Phrase getPhraseById(int id) throws PhraseNotFoundException{
-        //Возвращает фразу из коллекции по данному id
-
-        for (Phrase phrase : listOfAllPhrases) {
-            if (phrase.id == id)
-                return phrase;
-        }
-
-        throw new PhraseNotFoundException();
-    }
-
-    private Phrase getPhraseByIndex(long index) {
-        // @param index индекс, как правило, рандомный по которому искать фразу в коллекции
-        // @return Возвращает фразу из коллекции
-        long startTime = System.nanoTime();
-        for (Phrase phrase : activePhrases) {
-            if (index >= phrase.indexStart && index <= phrase.indexEnd) {
-                //Записываем время доступа в объект фразы
-                phrase.setTimeOfReturningFromList(System.nanoTime() - startTime);
-                return phrase;
-            }
-        }
-        throw new RuntimeException();
-    }
-
-    public long[] reloadIndices(int id) {
+    private long[] reloadIndices(int id) {
 
         long start = System.currentTimeMillis();
         double temp = 0;
@@ -446,44 +296,7 @@ public class DAO {
         return indexes;
     }
 
-    private boolean doesStackContainPhrase(Phrase givenPhrase){
-        if(givenPhrase == null){
-            throw new IllegalArgumentException("Given phrase was null");
-        }
-        checkLastSevenPhraseSatck();
-        for (Phrase currentPhraseFromStack : lastSevenPhrasesStack) {
-            if (currentPhraseFromStack != null && currentPhraseFromStack.id == givenPhrase.id) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void checkLastSevenPhraseSatck(){
-        if (lastSevenPhrasesStack == null || lastSevenPhrasesStack.length > totalActiveWordsAmount) {
-            if (totalActiveWordsAmount >= 7) {
-                lastSevenPhrasesStack = new Phrase[7];
-                lastSevenStackCurrentPosition = 0;
-            }else {
-                lastSevenPhrasesStack = new Phrase[0];
-            }
-        }
-    }
-
-    private int getCurrentLssPosition(){
-        int position = lastSevenStackCurrentPosition > lastSevenPhrasesStack.length - 1 ? lastSevenStackCurrentPosition = 0 : lastSevenStackCurrentPosition;
-        return position++;
-    }
-    private void pushToLastSevenPhrasesStack(Phrase addedPhrase) {
-
-        checkLastSevenPhraseSatck();
-
-        if (!doesStackContainPhrase(addedPhrase) && lastSevenPhrasesStack != null) {
-            lastSevenPhrasesStack[getCurrentLssPosition()] = addedPhrase;
-        }
-    }
-
-    public Phrase returnRandomPhrase() {
+    public Phrase obtainRandomPhrase() {
 
         Phrase createdPhrase;
 
@@ -519,7 +332,7 @@ public class DAO {
             throw new RuntimeException();
         }
         activePhrases.add(phrase);
-//        reloadCollectionOfPhrases();
+//        reloadPhrasesCollection();
 
     }
 
@@ -538,7 +351,7 @@ public class DAO {
     }
 
     public void updatePhrase(Phrase givenPhrase) {
-        System.out.println("CALL: updatePhrase(Phrase givenPhrase) from DAO with id=" + givenPhrase.id);
+        System.out.println("CALL: updatePhraseInDb(Phrase givenPhrase) from DAO with id=" + givenPhrase.id);
         String dateTime = ZonedDateTime.now(ZoneId.of(timezone)).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
         String updateSql = "UPDATE " + loginBean.getUser() + " SET for_word=?, nat_word=?, transcr=?, last_accs_date=?, " +
                 "exactmatch=?, label=?, prob_factor=?, rate=?  WHERE id =" + givenPhrase.id;
@@ -586,7 +399,7 @@ public class DAO {
             throw new RuntimeException();
         }
 
-//        reloadCollectionOfPhrases();
+//        reloadPhrasesCollection();
 
     }
 
@@ -615,10 +428,164 @@ public class DAO {
         return reloadIndices(phrase.id);
     }
 
-    public ArrayList<Phrase> returnPhrasesList() {
+    public ArrayList<Phrase> getActivePhrases() {
 
         return activePhrases;
 
+    }
+
+    private String getSql_CreateMainTable() {
+        return "CREATE TABLE " + loginBean.getUser() + "\n" +
+                "    (id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,\n" +
+                "    for_word VARCHAR(250) NOT NULL,\n" +
+                "    nat_word VARCHAR(250) NOT NULL,\n" +
+                "    transcr VARCHAR(100),\n" +
+                "    prob_factor DOUBLE NOT NULL,\n" +
+                "    label VARCHAR(50),\n" +
+                "    create_date DATETIME,\n" +
+                "    last_accs_date DATETIME,\n" +
+                "    exactmatch BOOLEAN DEFAULT FALSE  NOT NULL,\n" +
+                "    index_start DOUBLE,\n" +
+                "    index_end DOUBLE,\n" +
+                "    rate DOUBLE" +
+                ")";
+    }
+
+    private String getSql_CreateStatTable() {
+
+        return "CREATE TABLE " + loginBean.getUser() + "_stat (date DATETIME NOT NULL, ms INT NOT NULL, event VARCHAR(30) NOT NULL," +
+                " id INT NOT NULL, learnt INT)";
+
+    }
+
+    private void initThisDayStatistics(){
+        try(
+                ResultSet rs1 = mainDbConn.createStatement().executeQuery
+                        ("SELECT COUNT(*) FROM " + loginBean.getUser() + "_stat WHERE date < DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)");
+                ResultSet rs2 = mainDbConn.createStatement().executeQuery
+                        ("SELECT TIMESTAMPDIFF(HOUR, (SELECT MIN(date) FROM " + loginBean.getUser() + "_stat WHERE date < DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)), " +
+                                "DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR))")
+        ){
+            rs1.next();
+            answUntil6amAmount = rs1.getInt(1);
+            rs2.next();
+            totalHoursUntil6am = rs2.getInt(1);
+
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+    }
+
+    private void createMainDb(){
+        try (Statement statement = mainDbConn.createStatement()) {
+            statement.execute(getSql_CreateMainTable());
+            statement.execute("INSERT INTO " + loginBean.getUser() + " (for_word, nat_word, prob_factor) VALUES ('The', " +
+                    "'The collection is empty, push Show All an add phrases', 30)");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("EXCEPTION: SQLException in checkDbForExistingAllTables() from DAO during create main table in main DB");
+        }
+    }
+
+    private void createStatisticsDb(){
+        try (Statement statement = mainDbConn.createStatement()) {
+            System.out.println("Execute " + getSql_CreateStatTable());
+            statement.execute(getSql_CreateStatTable());
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("EXCEPTION: SQLException in checkDbForExistingAllTables() from DAO during create stat table in main DB");
+        }
+    }
+
+    private void checkDbForExistingAllTables() {
+
+        boolean mainDbExists = false;
+        boolean statDbExists = false;
+        try (ResultSet rs_tables = mainDbConn.createStatement().executeQuery
+                ("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA='guessword'")) {
+            while (rs_tables.next()) {
+                //Check for exisiting the Main DB
+                if (rs_tables.getString("TABLE_NAME").equals(loginBean.getUser()))
+                    mainDbExists = true;
+                //Check for exisiting the Stat DB
+                if (rs_tables.getString("TABLE_NAME").equals(loginBean.getUser() + "_stat"))
+                    statDbExists = true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("EXCEPTION: SQLException in checkDbForExistingAllTables() from DAO");
+        }
+
+        if (!mainDbExists) {
+            createMainDb();
+        }
+
+        if (!statDbExists) {
+            createStatisticsDb();
+        }
+    }
+
+    private Phrase getPhraseById(int id) throws PhraseNotFoundException{
+        //Возвращает фразу из коллекции по данному id
+
+        for (Phrase phrase : listOfAllPhrases) {
+            if (phrase.id == id)
+                return phrase;
+        }
+
+        throw new PhraseNotFoundException();
+    }
+
+    private Phrase getPhraseByIndex(long index) {
+        // @param index индекс, как правило, рандомный по которому искать фразу в коллекции
+        // @return Возвращает фразу из коллекции
+        long startTime = System.nanoTime();
+        for (Phrase phrase : activePhrases) {
+            if (index >= phrase.indexStart && index <= phrase.indexEnd) {
+                //Записываем время доступа в объект фразы
+                phrase.setTimeOfReturningFromList(System.nanoTime() - startTime);
+                return phrase;
+            }
+        }
+        throw new RuntimeException();
+    }
+
+    private void checkLastSevenPhraseSatck(){
+        if (lastSevenPhrasesStack == null || lastSevenPhrasesStack.length > totalActiveWordsAmount) {
+            if (totalActiveWordsAmount >= 7) {
+                lastSevenPhrasesStack = new Phrase[7];
+                lastSevenStackCurrentPosition = 0;
+            }else {
+                lastSevenPhrasesStack = new Phrase[0];
+            }
+        }
+    }
+
+    private int getCurrentLssPosition(){
+        int position = lastSevenStackCurrentPosition > lastSevenPhrasesStack.length - 1 ? lastSevenStackCurrentPosition = 0 : lastSevenStackCurrentPosition;
+        return position++;
+    }
+
+    private void pushToLastSevenPhrasesStack(Phrase addedPhrase) {
+
+        checkLastSevenPhraseSatck();
+
+        if (!doesStackContainPhrase(addedPhrase) && lastSevenPhrasesStack != null) {
+            lastSevenPhrasesStack[getCurrentLssPosition()] = addedPhrase;
+        }
+    }
+
+    private boolean doesStackContainPhrase(Phrase givenPhrase){
+        if(givenPhrase == null){
+            throw new IllegalArgumentException("Given phrase was null");
+        }
+        checkLastSevenPhraseSatck();
+        for (Phrase currentPhraseFromStack : lastSevenPhrasesStack) {
+            if (currentPhraseFromStack != null && currentPhraseFromStack.id == givenPhrase.id) {
+                return true;
+            }
+        }
+        return false;
     }
 
 

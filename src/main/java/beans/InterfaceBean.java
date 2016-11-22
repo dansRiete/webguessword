@@ -132,7 +132,7 @@ public class InterfaceBean implements Serializable{
 
         if(!resultChoosedLabel.equals(previousResultChoosedLabel)){ //If clause was changed
             dao.activeChosedLabels = hshset;
-            dao.reloadCollectionOfPhrases();
+            dao.reloadPhrasesCollection();
             previousResultChoosedLabel = resultChoosedLabel;
             reloadStatTableData();
         }
@@ -144,10 +144,10 @@ public class InterfaceBean implements Serializable{
         System.out.println("CALL: reloadStatTableData() from InterfaceBean");
 
         //After the answer creates String like this - "40.2 ➩ 37.3"
-        if(!currPhrase.wasAnswered){
+        if(!currPhrase.thisPhraseHadBeenAnswered){
             currPhrProb = currPhrase.probabilityFactor.setScale(1, RoundingMode.HALF_UP).toString();
         }else{
-            currPhrProb = currPhrase.previousProbabilityFactor.setScale(1, RoundingMode.HALF_UP) + "➩"
+            currPhrProb = currPhrase.beforeCurrentAnswerProbabilityFactor.setScale(1, RoundingMode.HALF_UP) + "➩"
                     + currPhrase.probabilityFactor.setScale(1, RoundingMode.HALF_UP);
         }
 
@@ -181,9 +181,9 @@ public class InterfaceBean implements Serializable{
         currentPhraseRate = currPhrase.multiplier;
 
         for(Phrase phrs : listOfPhrases){
-            if(!phrs.wasAnswered)
+            if(!phrs.thisPhraseHadBeenAnswered)
                 numOfNonAnswForSession++;
-            else if(phrs.answeredCorrectly)
+            else if(phrs.thisPhraseHadBeenAnsweredCorrectly)
                 numOfRightAnswForSession++;
         }
 
@@ -212,30 +212,30 @@ public class InterfaceBean implements Serializable{
 
         for (int i = listOfPhrases.size() - 1; i >= 0; i--) {
             //If the phrase has been learnt and had not been learnt before then increase the counter of learnt phrases per current session
-            if (listOfPhrases.get(i).isLearnt() && !listOfPhrases.get(i).previousIsLearnt()) {
+            if (listOfPhrases.get(i).hasThisPhraseBeenLearnt() && !listOfPhrases.get(i).hadThisPhraseBeenLearntBeforeCurrentAnswer()) {
                 countOfLearnedPhrases++;
             }
             //If vice-versa --
-            if (!listOfPhrases.get(i).isLearnt() && listOfPhrases.get(i).previousIsLearnt()) {
+            if (!listOfPhrases.get(i).hasThisPhraseBeenLearnt() && listOfPhrases.get(i).hadThisPhraseBeenLearntBeforeCurrentAnswer()) {
                 countOfLearnedPhrases--;
             }
-            if (!listOfPhrases.get(i).wasAnswered)
+            if (!listOfPhrases.get(i).thisPhraseHadBeenAnswered)
                 str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).creationDate.format(DateTimeFormatter.ofPattern("HH:mm:ss"))).append(NONANSWERED_MESSAGE).append("] ")
-                        .append(listOfPhrases.get(i).isLearnt() ? "<font color=\"green\">" : "")
-                        .append(listOfPhrases.get(i).nativeWord).append(listOfPhrases.get(i).isLearnt() ? "</font>" : "")
+                        .append(listOfPhrases.get(i).hasThisPhraseBeenLearnt() ? "<font color=\"green\">" : "")
+                        .append(listOfPhrases.get(i).nativeWord).append(listOfPhrases.get(i).hasThisPhraseBeenLearnt() ? "</font>" : "")
                         .append((i == index ? "</strong>" : "")).append("</br>");
-            else if (listOfPhrases.get(i).answeredCorrectly)
+            else if (listOfPhrases.get(i).thisPhraseHadBeenAnsweredCorrectly)
                 str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).creationDate.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
-                        .append(RIGHT_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt() ? "<font color=\"green\">" : "")
+                        .append(RIGHT_MESSAGE).append("] ").append(listOfPhrases.get(i).hasThisPhraseBeenLearnt() ? "<font color=\"green\">" : "")
                         .append(listOfPhrases.get(i).nativeWord).append(" - ")
                         .append(listOfPhrases.get(i).getForWordAndTranscription())
-                        .append(listOfPhrases.get(i).isLearnt() ? "</font>" : "").append((i == index ? "</strong>" : "")).append("</br>");
-            else if (!listOfPhrases.get(i).answeredCorrectly)
+                        .append(listOfPhrases.get(i).hasThisPhraseBeenLearnt() ? "</font>" : "").append((i == index ? "</strong>" : "")).append("</br>");
+            else if (!listOfPhrases.get(i).thisPhraseHadBeenAnsweredCorrectly)
                 str.append(i == index ? "<strong>" : "").append("[").append(listOfPhrases.get(i).creationDate.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
-                        .append(WRONG_MESSAGE).append("] ").append(listOfPhrases.get(i).isLearnt() ? "<font color=\"green\">" : "")
+                        .append(WRONG_MESSAGE).append("] ").append(listOfPhrases.get(i).hasThisPhraseBeenLearnt() ? "<font color=\"green\">" : "")
                         .append(listOfPhrases.get(i).nativeWord).append(" - ")
                         .append(listOfPhrases.get(i).getForWordAndTranscription())
-                        .append(listOfPhrases.get(i).isLearnt() ? "</font>" : "").append((i == index ? "</strong>" : "")).append("</br>");
+                        .append(listOfPhrases.get(i).hasThisPhraseBeenLearnt() ? "</font>" : "").append((i == index ? "</strong>" : "")).append("</br>");
 
         }
 
@@ -248,14 +248,14 @@ public class InterfaceBean implements Serializable{
         currPhrLabel = currentPhrase.label;
         currentPhraseRate = currentPhrase.multiplier;
         if (currPhrase.isModified){
-            currPhrase.updatePhrase();
+            currPhrase.updatePhraseInDb();
         }
 
     }
 
     private void newPhrase(){
         System.out.println("CALL: newPhrase() from InterfaceBean");
-        Phrase newPhrase = new Phrase(dao.returnRandomPhrase());
+        Phrase newPhrase = new Phrase(dao.obtainRandomPhrase());
         listOfPhrases.add(newPhrase);
         currPhrase = newPhrase;
     }
@@ -266,7 +266,7 @@ public class InterfaceBean implements Serializable{
         try {
             index = listOfPhrases.size() - 1 - shift;
             currPhrase = listOfPhrases.get(index);
-            currPhrase.rightAnswer(answer);
+            currPhrase.rightAnswer();
             nextQuestion();
         }catch (NullPointerException e){
             System.out.println("EXCEPTION: in rightAnswer() from InterfaceBean");
@@ -281,7 +281,7 @@ public class InterfaceBean implements Serializable{
         try{
             index = listOfPhrases.size() - 1 - shift;
             currPhrase = listOfPhrases.get(index);
-            currPhrase.wrongAnswer(answer);
+            currPhrase.wrongAnswer();
             nextQuestion();
         }catch (NullPointerException e){
             System.out.println("EXCEPTION: in wrongAnswer() from InterfaceBean");
@@ -294,7 +294,7 @@ public class InterfaceBean implements Serializable{
         System.out.println("CALL: previousRight() from InterfaceBean");
         long starTime = System.nanoTime();
         try{
-            listOfPhrases.get(index-1).rightAnswer(null);
+            listOfPhrases.get(index-1).rightAnswer();
             resultProcessing();
         }catch (NullPointerException e){
             System.out.println("EXCEPTION: in previousRight() from InterfaceBean");
@@ -307,7 +307,7 @@ public class InterfaceBean implements Serializable{
         System.out.println("CALL: previousWrong() from InterfaceBean");
         long starTime = System.nanoTime();
         try{
-            listOfPhrases.get(index -1).wrongAnswer(null);
+            listOfPhrases.get(index -1).wrongAnswer();
             resultProcessing();
         }catch (NullPointerException e){
             System.out.println("EXCEPTION: in previousWrong() from InterfaceBean");
@@ -370,8 +370,8 @@ public class InterfaceBean implements Serializable{
     }
 
     public void delete(){
-        System.out.println("CALL: delete() from InterfaceBean");
-        currPhrase.delete();
+        System.out.println("CALL: deleteThisPhrase() from InterfaceBean");
+        currPhrase.deleteThisPhrase();
     }
 
     public void exit(){
