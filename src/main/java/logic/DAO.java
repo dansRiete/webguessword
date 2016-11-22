@@ -137,7 +137,7 @@ public class DAO {
         return list;
     }
 
-    private List<String> reloadLabelsList() {
+    public List<String> reloadLabelsList() {
         //Возвращает список возможных меток для фраз + "All"
         System.out.println("CALL: reloadLabelsList() from DAO");
         possibleLabels.clear();

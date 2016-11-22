@@ -37,7 +37,6 @@ public class Phrase implements Serializable{
 
     public Phrase(int id, String foreignWord, String nativeWord, String transcription, BigDecimal probabilityFactor, Timestamp addingToCollectionDate,
                   String label, Timestamp lastAccessDate, double indexStart, double indexEnd, boolean exactMatch, double multiplier, DAO dao){
-        this.dao = dao;
         this.id = id;
         this.foreignWord = foreignWord;
         this.nativeWord = nativeWord;
@@ -52,10 +51,10 @@ public class Phrase implements Serializable{
         this.exactMatch = exactMatch;
         this.multiplier = multiplier <= 1 ? 1 : multiplier;
         this.beforeCurrentAnswerMultiplier = multiplier <= 1 ? 1 : multiplier;
+        this.dao = dao;
     }
 
     public Phrase(Phrase givenPhrase){
-        this.dao = givenPhrase.dao;
         this.id = givenPhrase.id;
         this.foreignWord = givenPhrase.foreignWord;
         this.nativeWord = givenPhrase.nativeWord;
@@ -70,6 +69,14 @@ public class Phrase implements Serializable{
         this.exactMatch = givenPhrase.exactMatch;
         this.multiplier = givenPhrase.multiplier;
         this.beforeCurrentAnswerMultiplier = multiplier <= 1 ? 1 : multiplier;
+        this.dao = givenPhrase.dao;
+    }
+
+    //This construcor is used for tests only
+    public Phrase(String foreignWord, String nativeWord){
+        this.id = 0;
+        this.foreignWord = foreignWord;
+        this.nativeWord = nativeWord;
     }
 
 
@@ -91,7 +98,6 @@ public class Phrase implements Serializable{
                         multiplier *= RIGHT_ANSWER_MULTIPLIER;
                     }
                 }
-
             }
 
             dao.setStatistics(this);

@@ -1,6 +1,5 @@
 package logic;
 
-import java.util.*;
 import java.util.regex.*;
 
 /**
@@ -8,14 +7,16 @@ import java.util.regex.*;
  */
 public class Answer {
     private boolean answerIsCorrect;
-    private final String[] givenPhrases;
-    private final String[] referencePhrases;
+    private final String givenAnswer;
+    private final String referenceAnswer;
     private final static int SYLLABLE_SIZE = 2;
     private final static int EXACT_MATCH_WORD_SIZE = 6;
 
-    public Answer(String answer, Phrase question) {
-        this.givenPhrases = answer.split("[/\\\\]");
-        this.referencePhrases = question.getForeignWord().split("[/\\\\]");
+    public Answer(String answer, Phrase referencePhrase) {
+//        this.givenAnswer = answer.split("[/\\\\]");
+//        this.referenceAnswer = referenceAnswer.getForeignWord().split("[/\\\\]");
+        this.givenAnswer = answer;
+        this.referenceAnswer = referencePhrase.getForeignWord();
     }
 
     private String removeDoubleLetters(String givenWord){
@@ -29,8 +30,34 @@ public class Answer {
         return shortAnswer.toString();
     }
 
-    private String[] divideOntoEvenSyllables(String givenPhrase){
-        String[] splitedWords = givenPhrase.split(" ");
+    private boolean equalsIgnoreDoubleLetters(String givenSentence, String referenceSentence){
+        return removeDoubleLetters(givenSentence).equalsIgnoreCase(removeDoubleLetters(referenceSentence));
+    }
+
+    private boolean checkTheAnswerOnCorrectness(){
+        if(!referenceAnswer.contains("\\") && !referenceAnswer.contains("/")){
+            if(referenceAnswer.length() > 6){
+                return equalsIgnoreDoubleLetters(givenAnswer, referenceAnswer);
+            }else {
+                return givenAnswer.equalsIgnoreCase(referenceAnswer);
+            }
+
+        }else {
+            String [] givenAnswers = givenAnswer.split("[/\\\\]");
+            String [] referenceAnswers = referenceAnswer.split("[/\\\\]");
+        }
+    }
+
+    private boolean equalsBySyllables(String givenWord, String referenceWord){
+        if(referenceWord.length() <= 5 && !givenWord.equalsIgnoreCase(referenceWord)){
+            return false;
+        }else {
+
+        }
+    }
+
+    /*private String[] divideOntoEvenSyllables(String givenAnswer){
+        String[] splitedWords = givenAnswer.split(" ");
         ArrayList<String> syllables = new ArrayList<>();
         for(String currentSplitedWord : splitedWords){
             if(currentSplitedWord.length() <= EXACT_MATCH_WORD_SIZE){
@@ -42,33 +69,7 @@ public class Answer {
                 }
             }
         }
-
-
-    }
-
-    private boolean checkPhrase(String givenPhrase, String referencePhrase){
-        String shortedGivenPhrase = removeDoubleLetters(givenPhrase);
-        String shortedReferencePhrase = removeDoubleLetters(referencePhrase);
-        String[] referenceWords = shortedReferencePhrase.split(" ");
-        String[] givenWords = shortedGivenPhrase.split(" ");
-        if(referenceWords.length != givenWords.length){
-            return false;
-        }else {
-            for (int i = 0; i < givenWords.length; i++){
-                if(!givenWords[i].equalsIgnoreCase(referenceWords[i])){
-                    return false;
-                }
-            }
-        }
-    }
-
-    private boolean equalsBySyllables(String givenWord, String referenceWord){
-        if(referenceWord.length() <= 5 && !givenWord.equalsIgnoreCase(referenceWord)){
-            return false;
-        }else {
-
-        }
-    }
+    }*/
 
     private String[] divideOntoEvenSyllables(String givenWord, int startDividingPosition){
 
@@ -115,6 +116,10 @@ public class Answer {
         }
         return false;
 
+    }
+
+    public boolean isTheAnswerCorrect(){
+        return answerIsCorrect;
     }
 
 

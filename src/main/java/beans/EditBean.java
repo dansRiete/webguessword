@@ -20,15 +20,14 @@ import java.util.List;
 @RequestScoped
 public class EditBean {
 
-    @ManagedProperty(value="#{login}")
+    /*@ManagedProperty(value="#{login}")
     private LoginBean loginBean;
     public void setLoginBean(LoginBean loginBean) {
         this.loginBean = loginBean;
-    }
+    }*/
 
     private DAO dao;
     private ArrayList<Phrase> myList;
-//    private ArrayList<Phrase> currList;
     private List<String> labelsList;
     private String foreignWord;
     private String nativeWord;
@@ -41,8 +40,8 @@ public class EditBean {
     @PostConstruct
     private void init(){
         System.out.println("EDITBEAN CALL init()");
-        if(loginBean!=null)
-            dao = loginBean.getDao();
+        /*if(loginBean!=null)
+            dao = loginBean.getDao();*/
         if(dao!=null){
 //            currList = dao.getCurrList();
             myList = dao.getActivePhrases();
@@ -140,12 +139,4 @@ public class EditBean {
     public void setProbabilityFactor(double probabilityFactor) {
         this.probabilityFactor = new BigDecimal(probabilityFactor);
     }
-
-    /*public ArrayList<Phrase> getCurrList() {
-        return currList;
-    }
-
-    public void setCurrList(ArrayList currList) {
-        this.currList = currList;
-    }*/
 }
