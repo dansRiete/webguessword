@@ -7,17 +7,63 @@ import java.util.regex.*;
  */
 public class Answer {
     private boolean answerIsCorrect;
-    private final String givenAnswer;
-    private final String referenceAnswer;
+//    private final String givenAnswerLiteral;
+//    private final String referenceAnswerLiteral;
     private final static int SYLLABLE_SIZE = 2;
     private final static int EXACT_MATCH_WORD_SIZE = 6;
 
-    public Answer(String answer, Phrase referencePhrase) {
-//        this.givenAnswer = answer.split("[/\\\\]");
-//        this.referenceAnswer = referenceAnswer.getForeignWord().split("[/\\\\]");
-        this.givenAnswer = answer;
-        this.referenceAnswer = referencePhrase.getForeignWord();
+    public Answer(String answerLiteral, Phrase referencePhrase) {
+//        this.givenAnswerLiteral = answerLiteral == null ? "" : answerLiteral.replaceAll("\\W|_", "");
+//        this.referenceAnswerLiteral = referencePhrase.getForeignWord().replaceAll("\\W|_", "");
+        this.answerIsCorrect = literalEquals(answerLiteral, referencePhrase.getForeignWord());
     }
+
+    private boolean literalEquals(String givenLiteral, String referenceLiteral){
+        if(givenLiteral == null){
+            return false;
+        }else if(!givenLiteral.contains("\\") && !givenLiteral.contains("/")){
+            return phraseEquals(givenLiteral, referenceLiteral);
+        }else {
+            String [] givenLiteralPhrases = givenLiteral.split("[/\\\\]");
+            String [] referenceLiteralPhrases = referenceLiteral.split("[/\\\\]");
+            int matchesAmount = 0;
+            for (int i1 = 0; i1 < referenceLiteralPhrases.length; i1++){
+                for (int i2 = 0; i2 < givenLiteralPhrases.length; i2++){
+                    if(phraseEquals(referenceLiteralPhrases[i1], givenLiteralPhrases[i2])){
+                        matchesAmount++;
+                    }
+                }
+                /*if(!phraseEquals(givenLiteralPhrases[i1], referenceLiteralPhrases[i1])){
+                    return false;
+                }*/
+            }
+            return matchesAmount == referenceLiteralPhrases.length;
+        }
+    }
+
+    private boolean phraseEquals(String givenPhrase, String referencePhrase){
+        String [] givenPhraseWords = givenPhrase.split(" ");
+        String [] referencePhraseWords = referencePhrase.split(" ");
+        if(givenPhraseWords.length != referencePhraseWords.length){
+            return false;
+        }else {
+            for (int i = 0; i < referencePhraseWords.length; i++){
+                if(!wordEquals(givenPhraseWords[i], referencePhraseWords[i])){
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    private boolean wordEquals(String givenWord, String referenceWord){
+        if(givenWord.length() <= 6){
+            return givenWord.replaceAll("\\W|_", "").equalsIgnoreCase(referenceWord.replaceAll("\\W|_", ""));
+        }else {
+            return removeDoubleLetters(givenWord.replaceAll("\\W|_", "")).equalsIgnoreCase(removeDoubleLetters(referenceWord.replaceAll("\\W|_", "")));
+        }
+    }
+
 
     private String removeDoubleLetters(String givenWord){
         StringBuilder shortAnswer = new StringBuilder().append(givenWord.charAt(0));
@@ -30,21 +76,21 @@ public class Answer {
         return shortAnswer.toString();
     }
 
-    private boolean equalsIgnoreDoubleLetters(String givenSentence, String referenceSentence){
+    /*private boolean equalsIgnoreDoubleLetters(String givenSentence, String referenceSentence){
         return removeDoubleLetters(givenSentence).equalsIgnoreCase(removeDoubleLetters(referenceSentence));
     }
 
     private boolean checkTheAnswerOnCorrectness(){
-        if(!referenceAnswer.contains("\\") && !referenceAnswer.contains("/")){
-            if(referenceAnswer.length() > 6){
-                return equalsIgnoreDoubleLetters(givenAnswer, referenceAnswer);
+        if(!referenceAnswerLiteral.contains("\\") && !referenceAnswerLiteral.contains("/")){
+            if(referenceAnswerLiteral.length() > 6){
+                return equalsIgnoreDoubleLetters(givenAnswerLiteral, referenceAnswerLiteral);
             }else {
-                return givenAnswer.equalsIgnoreCase(referenceAnswer);
+                return givenAnswerLiteral.equalsIgnoreCase(referenceAnswerLiteral);
             }
 
         }else {
-            String [] givenAnswers = givenAnswer.split("[/\\\\]");
-            String [] referenceAnswers = referenceAnswer.split("[/\\\\]");
+            String [] givenAnswers = givenAnswerLiteral.split("[/\\\\]");
+            String [] referenceAnswers = referenceAnswerLiteral.split("[/\\\\]");
         }
     }
 
@@ -56,8 +102,8 @@ public class Answer {
         }
     }
 
-    /*private String[] divideOntoEvenSyllables(String givenAnswer){
-        String[] splitedWords = givenAnswer.split(" ");
+    *//*private String[] divideOntoEvenSyllables(String givenAnswerLiteral){
+        String[] splitedWords = givenAnswerLiteral.split(" ");
         ArrayList<String> syllables = new ArrayList<>();
         for(String currentSplitedWord : splitedWords){
             if(currentSplitedWord.length() <= EXACT_MATCH_WORD_SIZE){
@@ -69,7 +115,7 @@ public class Answer {
                 }
             }
         }
-    }*/
+    }*//*
 
     private String[] divideOntoEvenSyllables(String givenWord, int startDividingPosition){
 
@@ -116,7 +162,7 @@ public class Answer {
         }
         return false;
 
-    }
+    }*/
 
     public boolean isTheAnswerCorrect(){
         return answerIsCorrect;

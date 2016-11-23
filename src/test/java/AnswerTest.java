@@ -63,9 +63,9 @@ public class AnswerTest {
 
     @org.junit.Test
     public void testBothSlashesAreAcceptable(){
-        assertThat(new Answer("Hi all\\Hello World/Hello everyone", new Phrase("Hello World/Hello everyone/Hi all", "")).isTheAnswerCorrect(), is(true));
-        assertThat(new Answer("Hi all\\Hello World\\Hello everyone", new Phrase("Hello World/Hello everyone\\Hi all", "")).isTheAnswerCorrect(), is(true));
-        assertThat(new Answer("Hi all\\Hello World/Hello everyone", new Phrase("Hello World\\Hello everyone\\Hi all", "")).isTheAnswerCorrect(), is(true));
+        assertThat(new Answer("Hello World\\Hello everyone/Hi all", new Phrase("Hello World/Hello everyone/Hi all", "")).isTheAnswerCorrect(), is(true));
+        assertThat(new Answer("Hello World\\Hello everyone\\Hi all", new Phrase("Hello World/Hello everyone\\Hi all", "")).isTheAnswerCorrect(), is(true));
+        assertThat(new Answer("Hello World\\Hello everyone/Hi all", new Phrase("Hello World\\Hello everyone\\Hi all", "")).isTheAnswerCorrect(), is(true));
     }
 
     @org.junit.Test
