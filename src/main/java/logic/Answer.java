@@ -1,62 +1,55 @@
 package logic;
 
-import java.util.regex.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Aleks on 11.11.2016.
  */
 public class Answer {
     private boolean answerIsCorrect;
-//    private final String givenAnswerLiteral;
-//    private final String referenceAnswerLiteral;
-    private final static int SYLLABLE_SIZE = 2;
-    private final static int EXACT_MATCH_WORD_SIZE = 6;
 
     public Answer(String answerLiteral, Phrase referencePhrase) {
-//        this.givenAnswerLiteral = answerLiteral == null ? "" : answerLiteral.replaceAll("\\W|_", "");
-//        this.referenceAnswerLiteral = referencePhrase.getForeignWord().replaceAll("\\W|_", "");
-        this.answerIsCorrect = literalEquals(answerLiteral, referencePhrase.getForeignWord());
+        this.answerIsCorrect = literalsEquals(answerLiteral, referencePhrase.getForeignWord());
     }
 
-    private boolean literalEquals(String givenLiteral, String referenceLiteral){
-        if(givenLiteral == null){
+    public boolean isCorrect(){
+        return answerIsCorrect;
+    }
+
+    private boolean literalsEquals(String givenLiteral, String referenceLiteral){
+        if(givenLiteral == null || givenLiteral.equals("")){
             return false;
         }else if(!givenLiteral.contains("\\") && !givenLiteral.contains("/")){
-            return phraseEquals(givenLiteral, referenceLiteral);
+            return phrasesEquals(givenLiteral, referenceLiteral);
         }else {
             String [] givenLiteralPhrases = givenLiteral.split("[/\\\\]");
             String [] referenceLiteralPhrases = referenceLiteral.split("[/\\\\]");
             int matchesAmount = 0;
-            for (int i1 = 0; i1 < referenceLiteralPhrases.length; i1++){
-                for (int i2 = 0; i2 < givenLiteralPhrases.length; i2++){
-                    if(phraseEquals(referenceLiteralPhrases[i1], givenLiteralPhrases[i2])){
+            for (String referenceLiteralPhrase : referenceLiteralPhrases) {
+                for (String givenLiteralPhrase : givenLiteralPhrases) {
+                    if (phrasesEquals(referenceLiteralPhrase, givenLiteralPhrase)) {
                         matchesAmount++;
                     }
                 }
-                /*if(!phraseEquals(givenLiteralPhrases[i1], referenceLiteralPhrases[i1])){
-                    return false;
-                }*/
             }
             return matchesAmount == referenceLiteralPhrases.length;
         }
     }
 
-    private boolean phraseEquals(String givenPhrase, String referencePhrase){
-        String [] givenPhraseWords = givenPhrase.split(" ");
-        String [] referencePhraseWords = referencePhrase.split(" ");
-        if(givenPhraseWords.length != referencePhraseWords.length){
-            return false;
-        }else {
-            for (int i = 0; i < referencePhraseWords.length; i++){
-                if(!wordEquals(givenPhraseWords[i], referencePhraseWords[i])){
-                    return false;
-                }
+    private boolean phrasesEquals(String givenPhrase, String referencePhrase){
+        List<String> givenPhraseWords = splitPhraseToWords(givenPhrase);
+        List<String> referencePhraseWords = splitPhraseToWords(referencePhrase);
+
+        for (int i = 0; i < referencePhraseWords.size(); i++){
+            if(!wordsEquals(referencePhraseWords.get(i), givenPhraseWords.get(i))){
+                return false;
             }
-            return true;
         }
+        return true;
     }
 
-    private boolean wordEquals(String givenWord, String referenceWord){
+    private boolean wordsEquals(String givenWord, String referenceWord){
         if(givenWord.length() <= 6){
             return givenWord.replaceAll("\\W|_", "").equalsIgnoreCase(referenceWord.replaceAll("\\W|_", ""));
         }else {
@@ -64,6 +57,15 @@ public class Answer {
         }
     }
 
+    private List<String> splitPhraseToWords(String givenPhrase){
+        ArrayList<String> words = new ArrayList<>();
+        for(String currentWord : givenPhrase.split(" ")){
+            if(isWord(currentWord)){
+                words.add(currentWord);
+            }
+        }
+        return words;
+    }
 
     private String removeDoubleLetters(String givenWord){
         StringBuilder shortAnswer = new StringBuilder().append(givenWord.charAt(0));
@@ -76,52 +78,16 @@ public class Answer {
         return shortAnswer.toString();
     }
 
-    /*private boolean equalsIgnoreDoubleLetters(String givenSentence, String referenceSentence){
-        return removeDoubleLetters(givenSentence).equalsIgnoreCase(removeDoubleLetters(referenceSentence));
-    }
-
-    private boolean checkTheAnswerOnCorrectness(){
-        if(!referenceAnswerLiteral.contains("\\") && !referenceAnswerLiteral.contains("/")){
-            if(referenceAnswerLiteral.length() > 6){
-                return equalsIgnoreDoubleLetters(givenAnswerLiteral, referenceAnswerLiteral);
-            }else {
-                return givenAnswerLiteral.equalsIgnoreCase(referenceAnswerLiteral);
-            }
-
-        }else {
-            String [] givenAnswers = givenAnswerLiteral.split("[/\\\\]");
-            String [] referenceAnswers = referenceAnswerLiteral.split("[/\\\\]");
-        }
-    }
-
-    private boolean equalsBySyllables(String givenWord, String referenceWord){
-        if(referenceWord.length() <= 5 && !givenWord.equalsIgnoreCase(referenceWord)){
-            return false;
-        }else {
-
-        }
-    }
-
-    *//*private String[] divideOntoEvenSyllables(String givenAnswerLiteral){
-        String[] splitedWords = givenAnswerLiteral.split(" ");
-        ArrayList<String> syllables = new ArrayList<>();
-        for(String currentSplitedWord : splitedWords){
-            if(currentSplitedWord.length() <= EXACT_MATCH_WORD_SIZE){
-                syllables.add(currentSplitedWord);
-            }else {
-                int positionInWord = 0;
-                while (true){
-                    syllables.add(currentSplitedWord.substring(positionInWord, positionInWord += SYLLABLE_SIZE));
-                }
+    private boolean isWord(String givenWord){
+        for(char currentChar : givenWord.toCharArray()){
+            if(Character.isLetter(currentChar)){
+                return true;
             }
         }
-    }*//*
-
-    private String[] divideOntoEvenSyllables(String givenWord, int startDividingPosition){
-
+        return false;
     }
 
-    private boolean checkOnMatch(String givenWord, String referenceWord) {
+    /*private boolean checkOnMatch(String givenWord, String referenceWord) {
 
         if(givenWord.equalsIgnoreCase(referenceWord)){
             return true;
@@ -163,11 +129,4 @@ public class Answer {
         return false;
 
     }*/
-
-    public boolean isTheAnswerCorrect(){
-        return answerIsCorrect;
-    }
-
-
-
 }

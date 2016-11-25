@@ -188,7 +188,7 @@ public class Phrase implements Serializable{
             return false;
 
         } else {
-            throw new IllegalArgumentException("Given list was null");
+            return true;
         }
     }
 
