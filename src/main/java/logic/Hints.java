@@ -12,7 +12,7 @@ public class Hints {
      * @return Если в фразе встречается слеш (например: car\my auto) возвращает
      * подсказку типа ***\** ****, если фраза не содержит слеш("/") возвращает ""
      */
-    public String getFullLettersHint(String engWord){
+    public String getLongHint(String engWord){
         if(engWord.contains("/")||engWord.contains("\\")||engWord.contains(" ")||engWord.contains("-")||
                 engWord.contains("`")||engWord.contains("'")||engWord.contains(",")){
             char[] hintAr = engWord.toCharArray();

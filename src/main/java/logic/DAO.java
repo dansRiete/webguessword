@@ -52,15 +52,15 @@ public class DAO {
         int mlseconds = Integer.parseInt(ZonedDateTime.now(ZoneId.of(timezone)).format(DateTimeFormatter.ofPattern("SSS")));
 
         String mode;
-        if(givenPhrase.thisPhraseHadBeenAnsweredCorrectly)
+        if(givenPhrase.hasBeenAnsweredCorrectly)
             mode = "r_answ";
         else
             mode = "w_answ";
 
         int learnt = 0;
-        if(givenPhrase.hasThisPhraseBeenLearnt() && !givenPhrase.hadThisPhraseBeenLearntBeforeCurrentAnswer())
+        if(givenPhrase.isTrained() && !givenPhrase.wasTrainedBeforeAnswer())
             learnt = 1;
-        else if(!givenPhrase.hasThisPhraseBeenLearnt() && givenPhrase.hadThisPhraseBeenLearntBeforeCurrentAnswer())
+        else if(!givenPhrase.isTrained() && givenPhrase.wasTrainedBeforeAnswer())
             learnt = -1;
 
         try (Statement statement = mainDbConn.createStatement()) {
@@ -80,15 +80,16 @@ public class DAO {
         String dateTime = phr.creationDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
 
         String mode;
-        if(phr.thisPhraseHadBeenAnsweredCorrectly)
+        if(phr.hasBeenAnsweredCorrectly){
             mode = "r_answ";
-        else
+        }else{
             mode = "w_answ";
+        }
 
         int learnt = 0;
-        if(phr.hasThisPhraseBeenLearnt() && !phr.hadThisPhraseBeenLearntBeforeCurrentAnswer())
+        if(phr.isTrained() && !phr.wasTrainedBeforeAnswer())
             learnt = 1;
-        else if(!phr.hasThisPhraseBeenLearnt() && phr.hadThisPhraseBeenLearntBeforeCurrentAnswer())
+        else if(!phr.isTrained() && phr.wasTrainedBeforeAnswer())
             learnt = -1;
 
         try (Statement statement = mainDbConn.createStatement()) {
@@ -115,11 +116,11 @@ public class DAO {
                 Phrase currentPhrase = null;
                 try {
                     currentPhrase = getPhraseById(rs.getInt("id"));
-                    currentPhrase.thisPhraseHadBeenAnswered = true;
+                    currentPhrase.hasBeenAnswered = true;
                     if(rs.getString("event").equalsIgnoreCase("r_answ")) {
-                        currentPhrase.thisPhraseHadBeenAnsweredCorrectly = true;
+                        currentPhrase.hasBeenAnsweredCorrectly = true;
                     } else {
-                        currentPhrase.thisPhraseHadBeenAnsweredCorrectly = false;
+                        currentPhrase.hasBeenAnsweredCorrectly = false;
                     }
                     currentPhrase.creationDate = rs.getTimestamp("date").toLocalDateTime().atZone(ZoneId.of("Europe/Helsinki"));
                     list.add(currentPhrase);

@@ -91,6 +91,11 @@ public class AnswerTest {
     }
 
     @org.junit.Test
+    public void testDashAndSpaceAreTheSame(){
+        assertThat(new Answer("dining room", new Phrase("dining-room", "")).isCorrect(), is(true));
+
+    }
+    @org.junit.Test
     public void testLetterCaseDoesNotMatter(){
         assertThat(new Answer("YOU ARE GOOD", new Phrase("You are good", "")).isCorrect(), is(true));
         assertThat(new Answer("YoU ArE GOod", new Phrase("YOU ARE GOOD", "")).isCorrect(), is(true));

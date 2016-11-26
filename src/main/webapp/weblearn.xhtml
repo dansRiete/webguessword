@@ -62,7 +62,7 @@
                 <h:form>
                     <h:panelGroup id="myblock" layout="block" escape="false" style="height:70%; width:100%">
                         <h:outputText id="list" escape="false" style="font-size: 130%"
-                                      value="#{interfaceBean.result}"> </h:outputText>
+                                      value="#{interfaceBean.trainingLog}"> </h:outputText>
                     </h:panelGroup>
                 </h:form>
             </div>
@@ -138,7 +138,7 @@
     </p:dialog>
 
     <p:dialog id="deleteDialog" widgetVar="deleteDialog" hideEffect="highlight" modal="true" resizable="false" header="Delete the current phrase">
-        <p:commandButton type="submit" value="Yes" action="#{interfaceBean.delete()}" oncomplete="PF('deleteDialog').hide();">
+        <p:commandButton type="submit" value="Yes" action="#{interfaceBean.deletePhrase()}" oncomplete="PF('deleteDialog').hide();">
 
         </p:commandButton>
         <p:commandButton type="button" value="No" onclick="PF('deleteDialog').hide();">
@@ -156,11 +156,11 @@
                     <tbody>
                     <tr>
                         <td>Number of answers</td>
-                        <td>#{interfaceBean.numOfAnswForSession}</td>
+                        <td>#{interfaceBean.answersForSessionNumber}</td>
                     </tr>
                     <tr>
                         <td>Percent of right answers</td>
-                        <td>#{interfaceBean.percentOfRightAnswers}</td>
+                        <td>#{interfaceBean.rightAnswersPercentage}</td>
                     </tr>
                     <tr>
                         <td>Words've been learnt</td>
@@ -168,19 +168,19 @@
                     </tr>
                     <tr>
                         <td>Number of learned phrases</td>
-                        <td>#{interfaceBean.learnedWords}</td>
+                        <td>#{interfaceBean.trainedPhrasesNumber}</td>
                     </tr>
                     <tr>
                         <td>Number of unlearned phrases</td>
-                        <td>#{interfaceBean.nonLearnedWords}</td>
+                        <td>#{interfaceBean.nonLearnedWordsNumber}</td>
                     </tr>
                     <tr>
                         <td>Total number of phrases</td>
-                        <td>#{interfaceBean.totalNumberOfPhrases}</td>
+                        <td>#{interfaceBean.totalPhrasesNumber}</td>
                     </tr>
                     <tr>
                         <td>Time to access to the DB</td>
-                        <td>#{interfaceBean.timeOfLastAccsToDb}ms.</td>
+                        <td>#{interfaceBean.currentPhraseLastAccessDate}ms.</td>
                     </tr>
                     </tbody>
 

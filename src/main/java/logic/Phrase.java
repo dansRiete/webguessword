@@ -25,8 +25,8 @@ public class Phrase implements Serializable{
     public Timestamp addingToCollectionDate;
     public Timestamp lastAccessDate;
     public boolean exactMatch;
-    public boolean thisPhraseHadBeenAnsweredCorrectly;
-    public boolean thisPhraseHadBeenAnswered;
+    public boolean hasBeenAnsweredCorrectly;
+    public boolean hasBeenAnswered;
     public double indexStart;
     public double indexEnd;
     public double multiplier;
@@ -83,9 +83,9 @@ public class Phrase implements Serializable{
     public void rightAnswer(){
         long[] indexes;
 
-        if(!thisPhraseHadBeenAnswered){
+        if(!hasBeenAnswered){
 
-            if(!hasThisPhraseBeenLearnt()){
+            if(!isTrained()){
 
                 double activeWordsAmountRatio = Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWordsAmount);
                 BigDecimal subtrahendForProb = new BigDecimal(3 * activeWordsAmountRatio * multiplier);
@@ -103,9 +103,9 @@ public class Phrase implements Serializable{
             dao.setStatistics(this);
 
 
-        }else if(!thisPhraseHadBeenAnsweredCorrectly){
+        }else if(!hasBeenAnsweredCorrectly){
 
-            if(!hadThisPhraseBeenLearntBeforeCurrentAnswer()){
+            if(!wasTrainedBeforeAnswer()){
 
                 probabilityFactor = beforeCurrentAnswerProbabilityFactor;
                 double rateDepandableOnNumberOfWords = Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWordsAmount);
@@ -129,8 +129,8 @@ public class Phrase implements Serializable{
             dao.setStatistics(this);
         }
 
-        thisPhraseHadBeenAnsweredCorrectly = true;
-        thisPhraseHadBeenAnswered = true;
+        hasBeenAnsweredCorrectly = true;
+        hasBeenAnswered = true;
         indexes = dao.updateProb(this);
 
         if(indexes!=null){
@@ -143,17 +143,17 @@ public class Phrase implements Serializable{
 
         long[] indexes = null;
 
-        if(!thisPhraseHadBeenAnswered){
+        if(!hasBeenAnswered){
             multiplier = 1;
             probabilityFactor = probabilityFactor.add(new BigDecimal(6 * Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWordsAmount)));
-            thisPhraseHadBeenAnsweredCorrectly = false;
+            hasBeenAnsweredCorrectly = false;
             indexes = dao.updateProb(this);
             dao.setStatistics(this);
             dao.updateStatistics(this);
 
-        }else if(thisPhraseHadBeenAnsweredCorrectly){
+        }else if(hasBeenAnsweredCorrectly){
 
-            if(!hadThisPhraseBeenLearntBeforeCurrentAnswer()) {
+            if(!wasTrainedBeforeAnswer()) {
                 multiplier = 1;
                 probabilityFactor = probabilityFactor.add(new BigDecimal(9 * Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWordsAmount)));
             }else{
@@ -163,8 +163,8 @@ public class Phrase implements Serializable{
             dao.updateStatistics(this);
         }
 
-        thisPhraseHadBeenAnsweredCorrectly = false;
-        thisPhraseHadBeenAnswered = true;
+        hasBeenAnsweredCorrectly = false;
+        hasBeenAnswered = true;
         indexes = dao.updateProb(this);
 
         if(indexes!=null){
@@ -210,11 +210,11 @@ public class Phrase implements Serializable{
         dao.updatePhrase(this);
     }
 
-    public boolean hasThisPhraseBeenLearnt(){
+    public boolean isTrained(){
         return probabilityFactor.doubleValue() <= 3;
     }
 
-    public boolean hadThisPhraseBeenLearntBeforeCurrentAnswer(){
+    public boolean wasTrainedBeforeAnswer(){
         return beforeCurrentAnswerProbabilityFactor.doubleValue() <= 3;
     }
 

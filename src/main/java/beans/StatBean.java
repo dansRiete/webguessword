@@ -30,9 +30,9 @@ public class StatBean/* implements Serializable*/{
         int numOfRightAnswForSession = 0;
         numOfPhrForSession = interfaceBean.returnListOfPhrases().size();
         for(Phrase phrs : interfaceBean.returnListOfPhrases()){
-            if(phrs.thisPhraseHadBeenAnsweredCorrectly==null)
+            if(phrs.hasBeenAnsweredCorrectly==null)
                 numOfNonAnswForSession++;
-            else if(phrs.thisPhraseHadBeenAnsweredCorrectly)
+            else if(phrs.hasBeenAnsweredCorrectly)
                 numOfRightAnswForSession++;
         }
         numOfAnswForSession = numOfPhrForSession-numOfNonAnswForSession;

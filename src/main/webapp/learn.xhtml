@@ -50,14 +50,14 @@
 
     <div>
         <h:form>
-            <h:inputText size="50" id="answer" value="#{interfaceBean.answer}" lang="en" autocomplete="off"> </h:inputText>
+            <h:inputText size="50" id="answerField" value="#{interfaceBean.answerField}" lang="en" autocomplete="off"> </h:inputText>
             <h:commandButton style="margin-left: 3px" type="submit" id="answerAction" value="Answer"
                              action="#{interfaceBean.checkTheAnswer()}">
-                <f:ajax execute="answer" render="@all"> </f:ajax>
+                <f:ajax execute="answerField" render="@all"> </f:ajax>
             </h:commandButton>
 
             <script type="text/javascript">
-                document.getElementsByName('j_idt7:answer')[0].focus();
+                document.getElementsByName('j_idt7:answerField')[0].focus();
             </script>
         </h:form>
     </div>
@@ -77,12 +77,12 @@
             </h:commandButton>
 
             <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="know" value="I know it"
-                             action="#{interfaceBean.rightAnswer(null)}">
+                             action="#{interfaceBean.rightAnswer()}">
                 <f:ajax render="@all"> </f:ajax>
             </h:commandButton>
 
             <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="donotknow" value="I don't know it"
-                             action="#{interfaceBean.wrongAnswer(null)}">
+                             action="#{interfaceBean.wrongAnswer()}">
                 <f:ajax render="@all"> </f:ajax>
             </h:commandButton>
 
@@ -117,7 +117,7 @@
 
 
             <h:form style="display: inline-block">
-            <h:commandButton id="exit" type="submit" value="Exit" action="#{interfaceBean.exit()}"> </h:commandButton>
+            <h:commandButton id="exit" type="submit" value="Exit" action="#{interfaceBean.exitCurrentSession()}"> </h:commandButton>
             </h:form>
 
             <p:dialog id="modDialog" widgetVar="modDialog" modal="true" resizable="false" position="center top" header="Edit the current phrase">
@@ -146,7 +146,7 @@
             </p:dialog>
 
             <p:dialog id="deleteDialog" widgetVar="deleteDialog" hideEffect="highlight" modal="true" resizable="false" header="Delete the current phrase">
-                <p:commandButton type="submit" value="Yes" action="#{interfaceBean.delete()}" oncomplete="PF('deleteDialog').hide();">
+                <p:commandButton type="submit" value="Yes" action="#{interfaceBean.deletePhrase()}" oncomplete="PF('deleteDialog').hide();">
 
                 </p:commandButton>
                 <p:commandButton type="button" value="No" onclick="PF('deleteDialog').hide();">
@@ -165,7 +165,7 @@
         <h:form>
             <h:panelGroup id="myblock" layout="block" escape="false" style="height:70%; width:100%">
                 <h:outputText id="list" escape="false" style="font-size: 130%"
-                              value="#{interfaceBean.result}"> </h:outputText>
+                              value="#{interfaceBean.trainingLog}"> </h:outputText>
             </h:panelGroup>
         </h:form>
     </div>
@@ -180,39 +180,39 @@
             <tbody>
                 <tr>
                     <td>Number of answers</td>
-                    <td>#{interfaceBean.numOfAnswForSession}</td>
+                    <td>#{interfaceBean.answersForSessionNumber}</td>
                 </tr>
                 <tr>
                     <td>Percent of right answers</td>
-                    <td>#{interfaceBean.percentOfRightAnswers}</td>
+                    <td>#{interfaceBean.rightAnswersPercentage}</td>
                 </tr>
                 <tr>
                     <td>Words've been learnt</td>
-                    <td>#{interfaceBean.numberOfLearnedPhrasePerSession}</td>
+                    <td>#{interfaceBean.trainedPhrasesPerSessionNumber}</td>
                 </tr>
                 <tr>
                     <td>Number of learned phrases</td>
-                    <td>#{interfaceBean.learnedWords}</td>
+                    <td>#{interfaceBean.trainedPhrasesNumber}</td>
                 </tr>
                 <tr>
                     <td>Number of unlearned phrases</td>
-                    <td>#{interfaceBean.nonLearnedWords}</td>
+                    <td>#{interfaceBean.nonLearnedWordsNumber}</td>
                 </tr>
                 <tr>
                     <td>Total number of phrases</td>
-                    <td>#{interfaceBean.totalNumberOfPhrases}</td>
+                    <td>#{interfaceBean.totalPhrasesNumber}</td>
                 </tr>
                 <tr>
                     <td>Percent of completion of learning</td>
-                    <td>#{interfaceBean.percentOfCompleteLearning}</td>
+                    <td>#{interfaceBean.trainingCompletionPercent}</td>
                 </tr>
                 <tr>
                     <td>Average answers per day</td>
-                    <td>#{interfaceBean.avgAnswersPerDay}</td>
+                    <td>#{interfaceBean.averageAnswersPerDayNumber}</td>
                 </tr>
                 <tr>
                     <td>Time to access to the DB</td>
-                    <td>#{interfaceBean.timeOfLastAccsToDb}ms.</td>
+                    <td>#{interfaceBean.currentPhraseLastAccessDate}ms.</td>
                 </tr>
             </tbody>
 
