@@ -327,7 +327,7 @@ public class InterfaceBean implements Serializable{
             }else if(!(answerField.equals("") || answerField.equals("+") || answerField.equals("-") ||
                     answerField.equals("++") || answerField.equals("--"))){
 
-                Answer givenAnswer = new Answer(answerField, selectedPhrase/*answeredPhrases.get(answeredPhrases.size() - 1 - shift)*/);
+                Answer givenAnswer = Answer.compose(selectedPhrase.id, answerField, selectedPhrase.foreignWord, selectedPhrase.nativeWord);
                 if(givenAnswer.isCorrect()){
                     rightAnswer();
                 } else {

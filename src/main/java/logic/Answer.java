@@ -25,8 +25,8 @@ public class Answer {
 
     }
 
-    public static Answer compose(int phrasesId, String phrasesForeignLiteral, String phrasesNativeLiteral, String givenAnswerLiteral){
-        if(phrasesForeignLiteral == null || phrasesNativeLiteral == null){
+    public static Answer compose(int phrasesId, String givenAnswerLiteral, String phrasesForeignLiteral, String phrasesNativeLiteral){
+        if(phrasesForeignLiteral == null || phrasesNativeLiteral == null|| givenAnswerLiteral == null){
             throw new IllegalArgumentException("Phrases foreign and native literals can not be null");
         }
         Answer composedAnswer = new Answer(phrasesId, phrasesForeignLiteral, phrasesNativeLiteral, givenAnswerLiteral);
@@ -39,7 +39,7 @@ public class Answer {
     }
 
     private void checkTheAnswer(){
-        if(givenAnswerLiteral == null || givenAnswerLiteral.equals("")){
+        if(givenAnswerLiteral.equals("")){
             answerIsCorrect = false;
         }else if(!givenAnswerLiteral.contains("\\") && !givenAnswerLiteral.contains("/")){
             answerIsCorrect = phrasesEquals(givenAnswerLiteral, phrasesForeignLiteral);
