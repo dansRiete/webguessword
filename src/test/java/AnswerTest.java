@@ -9,7 +9,7 @@ public class AnswerTest {
 
     @org.junit.Test
     public void testCorrectBehavior_WithNullAndEmptyAnswer(){
-        assertThat(new Answer("", new Phrase("Hello", "Привет")).isCorrect(), is(false));
+        assertThat(Answer.compose(0, "Hello", "Привет", "Hello").isCorrect(), is(false));
         assertThat(new Answer("", new Phrase("Hello World", "Привет мир")).isCorrect(), is(false));
         assertThat(new Answer("", new Phrase("Hello World/Hello everyone", "Привет мир/Привет всем")).isCorrect(), is(false));
         assertThat(new Answer(null, new Phrase("Hello", "Привет")).isCorrect(), is(false));
@@ -28,7 +28,7 @@ public class AnswerTest {
 
     @org.junit.Test
     public void testRecognizingSpellingErrorsWithDoubleLetters_InSinglePhrase(){
-        //In only words which have more than six total letters spelling errors are ignored
+        //In the only words which have more than six total letters spelling errors are ignored
         assertThat(new Answer("Pretty", new Phrase("Pretty", "Красивый")).isCorrect(), is(true));
         assertThat(new Answer("Prety", new Phrase("Pretty", "Красивый")).isCorrect(), is(false));
         assertThat(new Answer("Intelligent", new Phrase("intelligent", "Умный")).isCorrect(), is(true));

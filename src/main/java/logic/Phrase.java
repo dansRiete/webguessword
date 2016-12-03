@@ -167,7 +167,7 @@ public class Phrase implements Serializable{
         hasBeenAnswered = true;
         indexes = dao.updateProb(this);
 
-        if(indexes!=null){
+        if(indexes != null){
             this.indexStart = indexes[0];
             this.indexEnd = indexes[1];
         }

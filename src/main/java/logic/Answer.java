@@ -1,5 +1,7 @@
 package logic;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,23 +10,42 @@ import java.util.List;
  */
 public class Answer {
 
+    private final int phrasesId;
     private boolean answerIsCorrect;
-    public Answer(String answerLiteral, Phrase referencePhrase) {
-        this.answerIsCorrect = literalsEquals(answerLiteral, referencePhrase.getForeignWord());
+    private final ZonedDateTime answersDate = ZonedDateTime.now(ZoneId.of("UTC"));
+    private final String phrasesForeignLiteral;
+    private final String phrasesNativeLiteral;
+    private final String givenAnswerLiteral;
+
+    private Answer(int phrasesId, String phrasesForeignLiteral, String phrasesNativeLiteral, String givenAnswerLiteral) {
+        this.phrasesId = phrasesId;
+        this.phrasesForeignLiteral = phrasesForeignLiteral;
+        this.phrasesNativeLiteral = phrasesNativeLiteral;
+        this.givenAnswerLiteral = givenAnswerLiteral;
+
+    }
+
+    public static Answer compose(int phrasesId, String phrasesForeignLiteral, String phrasesNativeLiteral, String givenAnswerLiteral){
+        if(phrasesForeignLiteral == null || phrasesNativeLiteral == null){
+            throw new IllegalArgumentException("Phrases foreign and native literals can not be null");
+        }
+        Answer composedAnswer = new Answer(phrasesId, phrasesForeignLiteral, phrasesNativeLiteral, givenAnswerLiteral);
+        composedAnswer.checkTheAnswer();
+        return composedAnswer;
     }
 
     public boolean isCorrect(){
         return answerIsCorrect;
     }
 
-    private boolean literalsEquals(String givenLiteral, String referenceLiteral){
-        if(givenLiteral == null || givenLiteral.equals("")){
-            return false;
-        }else if(!givenLiteral.contains("\\") && !givenLiteral.contains("/")){
-            return phrasesEquals(givenLiteral, referenceLiteral);
+    private void checkTheAnswer(){
+        if(givenAnswerLiteral == null || givenAnswerLiteral.equals("")){
+            answerIsCorrect = false;
+        }else if(!givenAnswerLiteral.contains("\\") && !givenAnswerLiteral.contains("/")){
+            answerIsCorrect = phrasesEquals(givenAnswerLiteral, phrasesForeignLiteral);
         }else {
-            String [] givenLiteralPhrases = givenLiteral.split("[/\\\\]");
-            String [] referenceLiteralPhrases = referenceLiteral.split("[/\\\\]");
+            String [] givenLiteralPhrases = givenAnswerLiteral.split("[/\\\\]");
+            String [] referenceLiteralPhrases = phrasesForeignLiteral.split("[/\\\\]");
             int matchesAmount = 0;
             for (String referenceLiteralPhrase : referenceLiteralPhrases) {
                 for (String givenLiteralPhrase : givenLiteralPhrases) {
@@ -33,7 +54,7 @@ public class Answer {
                     }
                 }
             }
-            return matchesAmount == referenceLiteralPhrases.length;
+            answerIsCorrect = matchesAmount == referenceLiteralPhrases.length;
         }
     }
 
@@ -85,5 +106,13 @@ public class Answer {
             }
         }
         return false;
+    }
+
+    public boolean isAnswerIsCorrect() {
+        return answerIsCorrect;
+    }
+
+    public void setAnswerIsCorrect(boolean answerIsCorrect) {
+        this.answerIsCorrect = answerIsCorrect;
     }
 }
