@@ -1,5 +1,6 @@
 package logic;
 
+import javax.persistence.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -11,46 +12,70 @@ import java.util.HashSet;
 /**
  * Created by Aleks on 11.05.2016.
  */
-public class Phrase implements Serializable{
+
+@Entity
+@Table(name = "aleks")
+public class Phrase/* implements Serializable*/{
+
+    @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    public int id;
 
     private static final double RIGHT_ANSWER_MULTIPLIER = 1.2;
-    public final int id;
+
+    @Column(name = "for_word")
     public String foreignWord;
+
+    @Column(name = "nat_word")
     public String nativeWord;
+
+    @Column(name = "transcr")
     public String transcription;
+
+    @Column(name = "prob_factor")
     public BigDecimal probabilityFactor;
-    public BigDecimal beforeCurrentAnswerProbabilityFactor;
+
+    public BigDecimal previousProbabilityFactor;
+
+    @Column
     public String label;
-    public ZonedDateTime creationDate = ZonedDateTime.now(ZoneId.of("Europe/Helsinki"));
-    public Timestamp addingToCollectionDate;
-    public Timestamp lastAccessDate;
+
+    public ZonedDateTime phraseAppearingTime = ZonedDateTime.now(ZoneId.of("Europe/Helsinki"));
+
+    @Column(name = "create_date")
+    public Timestamp collectionAddingDateTime;
+
+    @Column(name = "last_accs_date")
+    public Timestamp lastAccessDateTime;
+
+    @Column
     public boolean exactMatch;
+
     public boolean hasBeenAnsweredCorrectly;
     public boolean hasBeenAnswered;
     public double indexStart;
     public double indexEnd;
     public double multiplier;
-    public double beforeCurrentAnswerMultiplier;
+    public double previousMultiplier;
     public DAO dao;
     public boolean isModified;
     public String timeOfReturningFromList;
 
-    public Phrase(int id, String foreignWord, String nativeWord, String transcription, BigDecimal probabilityFactor, Timestamp addingToCollectionDate,
-                  String label, Timestamp lastAccessDate, double indexStart, double indexEnd, boolean exactMatch, double multiplier, DAO dao){
+    public Phrase(int id, String foreignWord, String nativeWord, String transcription, BigDecimal probabilityFactor, Timestamp collectionAddingDateTime, String label, Timestamp lastAccessDateTime, double indexStart, double indexEnd, boolean exactMatch, double multiplier, DAO dao){
         this.id = id;
         this.foreignWord = foreignWord;
         this.nativeWord = nativeWord;
         this.transcription = transcription == null ? "" : transcription;
         this.probabilityFactor = probabilityFactor.setScale(1, RoundingMode.HALF_UP);
-        this.beforeCurrentAnswerProbabilityFactor = probabilityFactor.setScale(1, RoundingMode.HALF_UP);
-        this.addingToCollectionDate = addingToCollectionDate;
+        this.previousProbabilityFactor = probabilityFactor.setScale(1, RoundingMode.HALF_UP);
+        this.collectionAddingDateTime = collectionAddingDateTime;
         this.label = (label == null ? "" : label);
-        this.lastAccessDate = lastAccessDate;
+        this.lastAccessDateTime = lastAccessDateTime;
         this.indexStart = indexStart;
         this.indexEnd = indexEnd;
         this.exactMatch = exactMatch;
         this.multiplier = multiplier <= 1 ? 1 : multiplier;
-        this.beforeCurrentAnswerMultiplier = multiplier <= 1 ? 1 : multiplier;
+        this.previousMultiplier = multiplier <= 1 ? 1 : multiplier;
         this.dao = dao;
     }
 
@@ -60,15 +85,15 @@ public class Phrase implements Serializable{
         this.nativeWord = givenPhrase.nativeWord;
         this.transcription = givenPhrase.transcription;
         this.probabilityFactor = givenPhrase.probabilityFactor;
-        this.beforeCurrentAnswerProbabilityFactor = givenPhrase.probabilityFactor;
-        this.addingToCollectionDate = givenPhrase.addingToCollectionDate;
+        this.previousProbabilityFactor = givenPhrase.probabilityFactor;
+        this.collectionAddingDateTime = givenPhrase.collectionAddingDateTime;
         this.label = givenPhrase.label;
-        this.lastAccessDate = givenPhrase.lastAccessDate;
+        this.lastAccessDateTime = givenPhrase.lastAccessDateTime;
         this.indexStart = givenPhrase.indexStart;
         this.indexEnd = givenPhrase.indexEnd;
         this.exactMatch = givenPhrase.exactMatch;
         this.multiplier = givenPhrase.multiplier;
-        this.beforeCurrentAnswerMultiplier = multiplier <= 1 ? 1 : multiplier;
+        this.previousMultiplier = multiplier <= 1 ? 1 : multiplier;
         this.dao = givenPhrase.dao;
     }
 
@@ -107,9 +132,9 @@ public class Phrase implements Serializable{
 
             if(!wasTrainedBeforeAnswer()){
 
-                probabilityFactor = beforeCurrentAnswerProbabilityFactor;
+                probabilityFactor = previousProbabilityFactor;
                 double rateDepandableOnNumberOfWords = Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWordsAmount);
-                multiplier = beforeCurrentAnswerMultiplier;
+                multiplier = previousMultiplier;
                 BigDecimal probFactorSubtrahend = new BigDecimal(3 * rateDepandableOnNumberOfWords * multiplier);
                 probabilityFactor = probabilityFactor.subtract(probFactorSubtrahend);
 
@@ -122,8 +147,8 @@ public class Phrase implements Serializable{
                 }
 
             } else {
-                probabilityFactor = beforeCurrentAnswerProbabilityFactor;
-                multiplier = beforeCurrentAnswerMultiplier;
+                probabilityFactor = previousProbabilityFactor;
+                multiplier = previousMultiplier;
             }
 
             dao.setStatistics(this);
@@ -193,8 +218,8 @@ public class Phrase implements Serializable{
     }
 
     public void resetPreviousValues(){
-        this.beforeCurrentAnswerMultiplier = multiplier;
-        this.beforeCurrentAnswerProbabilityFactor = probabilityFactor;
+        this.previousMultiplier = multiplier;
+        this.previousProbabilityFactor = probabilityFactor;
     }
 
     public String getForWordAndTranscription(){
@@ -215,7 +240,7 @@ public class Phrase implements Serializable{
     }
 
     public boolean wasTrainedBeforeAnswer(){
-        return beforeCurrentAnswerProbabilityFactor.doubleValue() <= 3;
+        return previousProbabilityFactor.doubleValue() <= 3;
     }
 
     public String getForeignWord(){
@@ -261,14 +286,14 @@ public class Phrase implements Serializable{
         this.label = label;
         updatePhraseInDb();
     }
-    public Timestamp getAddingToCollectionDate() {
-        return addingToCollectionDate;
+    public Timestamp getCollectionAddingDateTime() {
+        return collectionAddingDateTime;
     }
-    public Timestamp getLastAccessDate() {
-        return lastAccessDate;
+    public Timestamp getLastAccessDateTime() {
+        return lastAccessDateTime;
     }
-    public void setLastAccessDate(Timestamp lastAccessDate) {
-        this.lastAccessDate = lastAccessDate;
+    public void setLastAccessDateTime(Timestamp lastAccessDateTime) {
+        this.lastAccessDateTime = lastAccessDateTime;
     }
     public void setTimeOfReturningFromList(long time){
         timeOfReturningFromList = Double.toString((double) time / 1000000d);

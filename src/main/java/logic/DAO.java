@@ -43,12 +43,12 @@ public class DAO {
         mainDbConn = loginBean.getConnection();
         checkDbForExistingAllTables();
         reloadPhrasesCollection();
-        reloadLabelsList();
+        retievePossibleLabels();
         initThisDayStatistics();
     }
 
     public void setStatistics(Phrase givenPhrase){
-        String dateTime = givenPhrase.creationDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+        String dateTime = givenPhrase.phraseAppearingTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
         int mlseconds = Integer.parseInt(ZonedDateTime.now(ZoneId.of(timezone)).format(DateTimeFormatter.ofPattern("SSS")));
 
         String mode;
@@ -77,7 +77,7 @@ public class DAO {
     }
 
     public void updateStatistics(Phrase phr){
-        String dateTime = phr.creationDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+        String dateTime = phr.phraseAppearingTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
 
         String mode;
         if(phr.hasBeenAnsweredCorrectly){
@@ -122,7 +122,7 @@ public class DAO {
                     } else {
                         currentPhrase.hasBeenAnsweredCorrectly = false;
                     }
-                    currentPhrase.creationDate = rs.getTimestamp("date").toLocalDateTime().atZone(ZoneId.of("Europe/Helsinki"));
+                    currentPhrase.phraseAppearingTime = rs.getTimestamp("date").toLocalDateTime().atZone(ZoneId.of("Europe/Helsinki"));
                     list.add(currentPhrase);
 
                 } catch (PhraseNotFoundException e) {
@@ -138,9 +138,9 @@ public class DAO {
         return list;
     }
 
-    public List<String> reloadLabelsList() {
+    public List<String> retievePossibleLabels() {
         //Возвращает список возможных меток для фраз + "All"
-        System.out.println("CALL: reloadLabelsList() from DAO");
+        System.out.println("CALL: retievePossibleLabels() from DAO");
         possibleLabels.clear();
         possibleLabels.add("All");
         String temp;
@@ -154,7 +154,7 @@ public class DAO {
             }
 
         } catch (SQLException e) {
-            System.out.println("EXCEPTION: in reloadLabelsList() from DAO");
+            System.out.println("EXCEPTION: in retievePossibleLabels() from DAO");
             e.printStackTrace();
             throw new RuntimeException();
         }
@@ -322,9 +322,9 @@ public class DAO {
             ps.setString(2, phrase.nativeWord);
             ps.setString(3, phrase.transcription);
             ps.setDouble(4, phrase.probabilityFactor.doubleValue());
-            ps.setTimestamp(5, phrase.addingToCollectionDate);
+            ps.setTimestamp(5, phrase.collectionAddingDateTime);
             ps.setString(6, phrase.label);
-            ps.setTimestamp(7, phrase.lastAccessDate);
+            ps.setTimestamp(7, phrase.lastAccessDateTime);
             ps.setBoolean(8, phrase.exactMatch);
             ps.execute();
         } catch (SQLException e) {
@@ -368,7 +368,7 @@ public class DAO {
         phraseInTheCollection.foreignWord = givenPhrase.foreignWord;
         phraseInTheCollection.nativeWord = givenPhrase.nativeWord;
         phraseInTheCollection.transcription = givenPhrase.transcription;
-        phraseInTheCollection.lastAccessDate = givenPhrase.lastAccessDate;
+        phraseInTheCollection.lastAccessDateTime = givenPhrase.lastAccessDateTime;
         phraseInTheCollection.exactMatch = givenPhrase.exactMatch;
         phraseInTheCollection.label = givenPhrase.label;
         phraseInTheCollection.probabilityFactor = givenPhrase.probabilityFactor;

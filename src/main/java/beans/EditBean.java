@@ -5,7 +5,6 @@ import logic.Phrase;
 
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -45,7 +44,7 @@ public class EditBean {
         if(dao!=null){
 //            currList = dao.getCurrList();
             myList = dao.getActivePhrases();
-            labelsList = dao.reloadLabelsList();
+            labelsList = dao.retievePossibleLabels();
         }
     }
 
@@ -70,7 +69,7 @@ public class EditBean {
         System.out.println("EDITBEAN CALL START deleteById(Phrase phr)  mylist.size=" + myList.size() + " deleted phrase is " + phr.foreignWord);
         dao.deletePhrase(phr);
         myList = dao.getActivePhrases();
-        labelsList = dao.reloadLabelsList();
+        labelsList = dao.retievePossibleLabels();
         System.out.println("EDITBEAN CALL END deleteById(Phrase phr)  mylist.size=" + myList.size());
 
     }

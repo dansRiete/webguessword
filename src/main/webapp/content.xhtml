@@ -109,14 +109,14 @@
             </p:cellEditor>
         </p:column>
 
-        <p:column sortBy="#{v.addingToCollectionDate}">
+        <p:column sortBy="#{v.collectionAddingDateTime}">
             <f:facet name="header">Create date</f:facet>
-            <h:outputText value="#{v.addingToCollectionDate}"> </h:outputText>
+            <h:outputText value="#{v.collectionAddingDateTime}"> </h:outputText>
         </p:column>
 
-        <p:column sortBy="#{v.lastAccessDate}">
+        <p:column sortBy="#{v.lastAccessDateTime}">
             <f:facet name="header">Last access date</f:facet>
-            <h:outputText value="#{v.lastAccessDate}"> </h:outputText>
+            <h:outputText value="#{v.lastAccessDateTime}"> </h:outputText>
         </p:column>
 
         <p:column sortBy="#{v.indexStart}">

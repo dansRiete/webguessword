@@ -24,41 +24,52 @@ public class LoginBean implements Serializable {
     private String remoteHost = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     private String localHost3306 = "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     private String localHost3307 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
+    private static boolean USE_LOCAL_DB = true;
 
-    private void getMainConn(){
+    private void connectToDatabase() {
 
-        if(mainDbConn==null){
-            System.out.println("CALL: getMainConn() from LoginBean");
-            String dbConnected = "EXCEPTION: in getMainConn() from LoginBean";
-            try{
-                mainDbConn = DriverManager.getConnection(remoteHost, "adminLtuHq9R", "d-AUIKakd1Br");
-                dbConnected = "- Remote DB was connected";
-            }catch (SQLException e){
-                try{
-                    mainDbConn = DriverManager.getConnection(localHost3306, "adminLtuHq9R", "d-AUIKakd1Br");
-                    dbConnected = "- Local DB 3306 was connected";
-                }catch (SQLException e1){
-                    try{
-                        mainDbConn = DriverManager.getConnection(localHost3307, "adminLtuHq9R", "d-AUIKakd1Br");
-                        dbConnected = "- Local DB 3307 was connected";
-                    }catch (SQLException e2){
-                        e2.printStackTrace();
-                        System.out.println("EXCEPTION: in getMainConn() from LoginBean");
-                        throw new DataBaseConnectionException();
-                    }
-                }
-            }finally {
-                System.out.println(dbConnected);
+        System.out.println("CALL: connectToDatabase() from LoginBean");
+        String dbConnected = "EXCEPTION: in connectToDatabase() from LoginBean";
+        if(USE_LOCAL_DB){
+            try {
+                mainDbConn = DriverManager.getConnection(localHost3306, "root", "root");
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
+            dbConnected = "Local DB connected without port forwarding";
+            System.out.println(dbConnected);
+            return;
+        }
+        try {
+            mainDbConn = DriverManager.getConnection(remoteHost, "adminLtuHq9R", "d-AUIKakd1Br");
+            dbConnected = "- Remote DB was connected";
+        } catch (SQLException e) {
+            try {
+                mainDbConn = DriverManager.getConnection(localHost3306, "adminLtuHq9R", "d-AUIKakd1Br");
+                dbConnected = "- Local DB 3306 was connected";
+            } catch (SQLException e1) {
+                try {
+                    mainDbConn = DriverManager.getConnection(localHost3307, "adminLtuHq9R", "d-AUIKakd1Br");
+                    dbConnected = "- Local DB 3307 was connected";
+                } catch (SQLException e2) {
+                    e2.printStackTrace();
+                    System.out.println("EXCEPTION: in connectToDatabase() from LoginBean");
+                    throw new DataBaseConnectionException();
+                }
+            }
+        } finally {
+            System.out.println(dbConnected);
         }
     }
+
+
 
     public Connection getConnection(){
         return mainDbConn;
     }
 
     public LoginBean(){
-        getMainConn();
+        connectToDatabase();
         ResultSet rs = null;
 
         //>>Создаём список юзеров ArrayList<User> usersList

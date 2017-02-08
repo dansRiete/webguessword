@@ -49,7 +49,7 @@ public class InterfaceBean implements Serializable{
     private int totalPhrasesNumber;
     private int trainedPhrasesPerSessionNumber;
     private String rightAnswersPercentage;
-    private BigDecimal currentPhraseLastAccessDate;
+//    private BigDecimal currentPhraseLastAccessDate;
     //<<
 
 
@@ -73,7 +73,7 @@ public class InterfaceBean implements Serializable{
     private Phrase selectedPhrase;
     private String question ="";
     private String answerField = "";
-    private String trainingLog = "";
+    private StringBuilder trainingLog = new StringBuilder("");
     private final static String WRONG_MESSAGE = " <strong><font color=\"#BBBBB9\">right</font>/<font color=\"#ff0000\">wrong</font></strong>";
     private final static String RIGHT_MESSAGE = " <strong><font color=\"green\">right</font>/<font color=\"#BBBBB9\">wrong</font></strong>";
     private final static String NONANSWERED_MESSAGE = " <strong><font color=\"#BBBBB9\">right</font>/<font color=\"#BBBBB9\">wrong</font></strong>";
@@ -82,7 +82,7 @@ public class InterfaceBean implements Serializable{
     private String choosedLabel;
     private String resultChoosedLabel;
     private String previousResultChoosedLabel = "";
-    private HashSet<String> hshset = new HashSet<>();
+    private HashSet<String> choosedLabelsForLearningWords = new HashSet<>();
     private int shift = 0;
     private int index;
     private int beforeCurrentSessionPhrasesNumber;
@@ -110,28 +110,27 @@ public class InterfaceBean implements Serializable{
     public void setTable() {
         System.out.println("CALL: setTable() from InterfaceBean");
 
-        if (choosedLabel != null && (!choosedLabel.equalsIgnoreCase(""))){
-            if(!choosedLabel.equalsIgnoreCase("all")){
-                hshset.add(choosedLabel);
+        if (choosedLabel != null && !choosedLabel.equalsIgnoreCase("")){
+            if(choosedLabel.equalsIgnoreCase("all")){
+                choosedLabelsForLearningWords.clear();
             }else{
-                hshset.clear();
+                choosedLabelsForLearningWords.add(choosedLabel);
             }
         }
-
         resultChoosedLabel = "";
-        boolean temp = true;
 
-        for(String str : hshset){   //Makes a "WHERE LABEL IN" clause
-            if(temp){
-                resultChoosedLabel += "'" + str + "'";
-                temp = false;
+        boolean firstLoop = true;
+        for(String currentLabel : choosedLabelsForLearningWords){   //Makes a "WHERE LABEL IN" clause
+            if(firstLoop){
+                resultChoosedLabel += "'" + currentLabel + "'";
+                firstLoop = false;
             }else {
-                resultChoosedLabel += ",'" + str + "'";
+                resultChoosedLabel += ",'" + currentLabel + "'";
             }
         }
 
         if(!resultChoosedLabel.equals(previousResultChoosedLabel)){ //If clause was changed
-            dao.activeChosedLabels = hshset;
+            dao.activeChosedLabels = choosedLabelsForLearningWords;
             dao.reloadPhrasesCollection();
             previousResultChoosedLabel = resultChoosedLabel;
             reloadStatTableData();
@@ -147,7 +146,7 @@ public class InterfaceBean implements Serializable{
         if(!selectedPhrase.hasBeenAnswered){
             currPhrProb = selectedPhrase.probabilityFactor.setScale(1, RoundingMode.HALF_UP).toString();
         }else{
-            currPhrProb = selectedPhrase.beforeCurrentAnswerProbabilityFactor.setScale(1, RoundingMode.HALF_UP) + "➩"
+            currPhrProb = selectedPhrase.previousProbabilityFactor.setScale(1, RoundingMode.HALF_UP) + "➩"
                     + selectedPhrase.probabilityFactor.setScale(1, RoundingMode.HALF_UP);
         }
 
@@ -155,20 +154,20 @@ public class InterfaceBean implements Serializable{
          currPhrPercentOfAppearance = /*selectedPhrase.getPercentChanceView();*/ "NOT YET IMPLEMENTED";
 
 
-        if(selectedPhrase.lastAccessDate != null){
+        if(selectedPhrase.lastAccessDateTime != null){
 
-            currPhrAbsLastAccsDate = LocalDateTime.ofInstant(selectedPhrase.lastAccessDate.toInstant(),
+            currPhrAbsLastAccsDate = LocalDateTime.ofInstant(selectedPhrase.lastAccessDateTime.toInstant(),
                     ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
 
-            currPhrRelLastAccsDate = retDiff.retDiffInTime(System.currentTimeMillis() - selectedPhrase.lastAccessDate.getTime());
+            currPhrRelLastAccsDate = retDiff.retDiffInTime(System.currentTimeMillis() - selectedPhrase.lastAccessDateTime.getTime());
         }
 
-        if(selectedPhrase.addingToCollectionDate != null){
+        if(selectedPhrase.collectionAddingDateTime != null){
 
-            currPhrAbsCreateDate = LocalDateTime.ofInstant(selectedPhrase.addingToCollectionDate.toInstant(),
+            currPhrAbsCreateDate = LocalDateTime.ofInstant(selectedPhrase.collectionAddingDateTime.toInstant(),
                     ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
 
-            currPhrRelCreateDate = retDiff.retDiffInTime(System.currentTimeMillis() - selectedPhrase.addingToCollectionDate.getTime());
+            currPhrRelCreateDate = retDiff.retDiffInTime(System.currentTimeMillis() - selectedPhrase.collectionAddingDateTime.getTime());
         }
 
         currPhrLabel = selectedPhrase.label;
@@ -206,8 +205,8 @@ public class InterfaceBean implements Serializable{
     private void reloadTrainingLog(){
 
         System.out.println("CALL: reloadTrainingLog() from InterfaceBean");
-        reloadStatTableData();
-        StringBuilder str = new StringBuilder();
+
+//        StringBuilder trainingLog = new StringBuilder();
         trainedPhrasesPerSessionNumber = 0;
 
         for (int i = answeredPhrases.size() - 1; i >= 0; i--) {
@@ -218,21 +217,21 @@ public class InterfaceBean implements Serializable{
                 trainedPhrasesPerSessionNumber--;
             }
             if(i == beforeCurrentSessionPhrasesNumber - 1){
-                str.append("—————————————————————————————————————</br>");
+                trainingLog.append("—————————————————————————————————————</br>");
             }
             if (!currentPhrase.hasBeenAnswered){
-                str.append(i == index ? "<strong>" : "").append("[").append(currentPhrase.creationDate.format(DateTimeFormatter.ofPattern("HH:mm:ss"))).append(NONANSWERED_MESSAGE).append("] ")
+                trainingLog.append(i == index ? "<strong>" : "").append("[").append(currentPhrase.phraseAppearingTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))).append(NONANSWERED_MESSAGE).append("] ")
                         .append(currentPhrase.isTrained() ? "<font color=\"green\">" : "")
                         .append(currentPhrase.nativeWord).append(currentPhrase.isTrained() ? "</font>" : "")
                         .append((i == index ? "</strong>" : "")).append("</br>");
             } else if (currentPhrase.hasBeenAnsweredCorrectly){
-                str.append(i == index ? "<strong>" : "").append("[").append(currentPhrase.creationDate.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
+                trainingLog.append(i == index ? "<strong>" : "").append("[").append(currentPhrase.phraseAppearingTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
                         .append(RIGHT_MESSAGE).append("] ").append(currentPhrase.isTrained() ? "<font color=\"green\">" : "")
                         .append(currentPhrase.nativeWord).append(" - ")
                         .append(currentPhrase.getForWordAndTranscription())
                         .append(currentPhrase.isTrained() ? "</font>" : "").append((i == index ? "</strong>" : "")).append("</br>");
             } else if (!currentPhrase.hasBeenAnsweredCorrectly){
-                str.append(i == index ? "<strong>" : "").append("[").append(currentPhrase.creationDate.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
+                trainingLog.append(i == index ? "<strong>" : "").append("[").append(currentPhrase.phraseAppearingTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
                         .append(WRONG_MESSAGE).append("] ").append(currentPhrase.isTrained() ? "<font color=\"green\">" : "")
                         .append(currentPhrase.nativeWord).append(" - ")
                         .append(currentPhrase.getForWordAndTranscription())
@@ -241,7 +240,7 @@ public class InterfaceBean implements Serializable{
 
         }
 
-        trainingLog = str.toString();
+//        this.trainingLog = trainingLog.toString();
 //        Phrase currentPhrase = answeredPhrases.get(index);
         currPhrForWord = selectedPhrase.foreignWord;
         currPhrNatWord = selectedPhrase.nativeWord;
@@ -257,37 +256,41 @@ public class InterfaceBean implements Serializable{
 
     public void rightAnswer(){
         System.out.println("CALL: rightAnswer() from InterfaceBean");
-        long starTime = System.nanoTime();
+//        long starTime = System.nanoTime();
         try {
             index = answeredPhrases.size() - 1 - shift;
             selectedPhrase = answeredPhrases.get(index);
             selectedPhrase.rightAnswer();
             nextQuestion();
+            reloadStatTableData();
+            reloadTrainingLog();
         }catch (NullPointerException e){
             System.out.println("EXCEPTION: in rightAnswer() from InterfaceBean");
             e.printStackTrace();
         }
-        currentPhraseLastAccessDate = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000), BigDecimal.ROUND_HALF_UP).setScale(2, RoundingMode.HALF_UP);
+//        currentPhraseLastAccessDate = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000), BigDecimal.ROUND_HALF_UP).setScale(2, RoundingMode.HALF_UP);
     }
 
     public void wrongAnswer(){
         System.out.println("CALL: wrongAnswer() from InterfaceBean");
-        long starTime = System.nanoTime();
+//        long starTime = System.nanoTime();
         try{
             index = answeredPhrases.size() - 1 - shift;
             selectedPhrase = answeredPhrases.get(index);
             selectedPhrase.wrongAnswer();
             nextQuestion();
+            reloadStatTableData();
+            reloadTrainingLog();
         }catch (NullPointerException e){
             System.out.println("EXCEPTION: in wrongAnswer() from InterfaceBean");
             e.printStackTrace();
         }
-        currentPhraseLastAccessDate = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000), BigDecimal.ROUND_HALF_UP).setScale(2, RoundingMode.HALF_UP);
+//        currentPhraseLastAccessDate = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000), BigDecimal.ROUND_HALF_UP).setScale(2, RoundingMode.HALF_UP);
     }
 
     public void previousRight(){
         System.out.println("CALL: previousRight() from InterfaceBean");
-        long starTime = System.nanoTime();
+//        long starTime = System.nanoTime();
         try{
             answeredPhrases.get(index-1).rightAnswer();
             reloadTrainingLog();
@@ -295,49 +298,52 @@ public class InterfaceBean implements Serializable{
             System.out.println("EXCEPTION: in previousRight() from InterfaceBean");
             e.printStackTrace();
         }
-        currentPhraseLastAccessDate = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000), BigDecimal.ROUND_HALF_UP).setScale(2, RoundingMode.HALF_UP);
+//        currentPhraseLastAccessDate = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000), BigDecimal.ROUND_HALF_UP).setScale(2, RoundingMode.HALF_UP);
     }
 
     public void previousWrong(){
         System.out.println("CALL: previousWrong() from InterfaceBean");
-        long starTime = System.nanoTime();
+//        long starTime = System.nanoTime();
         try{
             answeredPhrases.get(index -1).wrongAnswer();
+            reloadStatTableData();
             reloadTrainingLog();
         }catch (NullPointerException e){
             System.out.println("EXCEPTION: in previousWrong() from InterfaceBean");
             e.printStackTrace();
         }
-        currentPhraseLastAccessDate = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000), BigDecimal.ROUND_HALF_UP).setScale(2, RoundingMode.HALF_UP);
+//        currentPhraseLastAccessDate = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000), BigDecimal.ROUND_HALF_UP).setScale(2, RoundingMode.HALF_UP);
     }
 
     public void checkTheAnswer(){
         System.out.println("CALL: checkTheAnswer() from InterfaceBean");
 
-        if(answerField != null){
-
-            if (answerField.equals("+")){
-                rightAnswer();
-            }else if (answerField.equals("-") || answerField.equals("")){
-                wrongAnswer();
-            }else if (answerField.equals("++")){
-                previousRight();
-            }else if (answerField.equals("--")){
-                previousWrong();
-            }else if(!(answerField.equals("") || answerField.equals("+") || answerField.equals("-") ||
-                    answerField.equals("++") || answerField.equals("--"))){
-
-                Answer givenAnswer = Answer.compose(selectedPhrase.id, answerField, selectedPhrase.foreignWord, selectedPhrase.nativeWord);
-                if(givenAnswer.isCorrect()){
-                    rightAnswer();
-                } else {
-                    wrongAnswer();
-                }
-
-            }
-            answerField = "";
+        if(answerField == null) {
+            return;
         }
+
+        if (answerField.equals("+")){
+            rightAnswer();
+        }else if (answerField.equals("-") || answerField.equals("")){
+            wrongAnswer();
+        }else if (answerField.equals("++")){
+            previousRight();
+        }else if (answerField.equals("--")){
+            previousWrong();
+        }else /*if(!(answerField.equals("") || answerField.equals("+") || answerField.equals("-") ||
+                answerField.equals("++") || answerField.equals("--")))*/{
+
+            Answer givenAnswer = Answer.compose(selectedPhrase.id, answerField, selectedPhrase.foreignWord, selectedPhrase.nativeWord);
+            if(givenAnswer.isCorrect()){
+                rightAnswer();
+            } else {
+                wrongAnswer();
+            }
+
+        }
+        answerField = "";
     }
+
 
     public void nextQuestion(){
         System.out.println("CALL: nextQuestion() from InterfaceBean");
@@ -351,9 +357,6 @@ public class InterfaceBean implements Serializable{
             selectedPhrase = answeredPhrases.get(index);
             question = selectedPhrase.nativeWord + " " + hint.getShortHint(selectedPhrase.foreignWord);
         }
-
-        reloadTrainingLog();
-
     }
 
     private void newPhrase(){
@@ -374,6 +377,7 @@ public class InterfaceBean implements Serializable{
         }
         selectedPhrase = answeredPhrases.get(index);
         question = selectedPhrase.nativeWord;
+        reloadStatTableData();
         reloadTrainingLog();
     }
 
@@ -415,10 +419,10 @@ public class InterfaceBean implements Serializable{
         this.answerField = answerField;
     }
 
-    public String getTrainingLog() {
+    public StringBuilder getTrainingLog() {
         return trainingLog;
     }
-    public void setTrainingLog(String res) {
+    public void setTrainingLog(StringBuilder res) {
         this.trainingLog = res;
     }
 
@@ -457,12 +461,12 @@ public class InterfaceBean implements Serializable{
         this.currPhrAbsLastAccsDate = pdLastAccs;
     }
 
-    public BigDecimal getCurrentPhraseLastAccessDate() {
+    /*public BigDecimal getCurrentPhraseLastAccessDate() {
         return currentPhraseLastAccessDate;
     }
     public void setCurrentPhraseLastAccessDate(BigDecimal currentPhraseLastAccessDate) {
         this.currentPhraseLastAccessDate = currentPhraseLastAccessDate;
-    }
+    }*/
 
     public String getCurrPhrAbsCreateDate() {
         return currPhrAbsCreateDate;
