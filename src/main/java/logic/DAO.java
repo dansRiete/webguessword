@@ -1,8 +1,10 @@
 package logic;
 
 import Exceptions.*;
+import Utils.HibernateUtils;
 import beans.*;
-import java.math.*;
+import org.hibernate.query.Query;
+
 import java.sql.*;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -13,27 +15,25 @@ import java.util.*;
  */
 @SuppressWarnings("SqlResolve")
 public class DAO {
-    private Random random = new Random();
-    private final String timezone = "Europe/Kiev";
-//    public static final String remoteHost = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
-//    public static final String localHost3306 = "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
-//    public static final String localHost3307 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
-    public HashSet<String> activeChosedLabels;
+
+    private final static String TIMEZONE = "Europe/Kiev";
+    public static final double CHANCE_OF_APPEARING_LEARNT_WORDS = 1d / 15d;
+
+    public HashSet<String> chosedLabels;
     public ArrayList<String> possibleLabels = new ArrayList<>();
     public double learnedWords;
     public double nonLearnedWords;
     public double totalActiveWordsAmount;
-    public double totalPossibleWordsAmount;
     public int nonLearnedWordsProbSumm;
     public int learnedWordsProbSumm;
     private int maxPossibleAppearingIndex;
-    public static final double CHANCE_OF_APPEARING_LEARNED_WORDS = 1d / 15d;
+    private Random random = new Random();
     private Phrase[] lastSevenPhrasesStack;
     private int lastSevenStackCurrentPosition;
     public Connection mainDbConn;
     private LoginBean loginBean;
     private ArrayList<Phrase> activePhrases = new ArrayList<>();
-    private ArrayList<Phrase> listOfAllPhrases = new ArrayList<>();
+    private List<Phrase> allPhrases = new ArrayList<>();
     public int answUntil6amAmount; //Number of replies to 6 am of the current day
     public int totalHoursUntil6am; // Number of hours spent from the very begining till 6am of the current day
 
@@ -49,7 +49,7 @@ public class DAO {
 
     public void setStatistics(Phrase givenPhrase){
         String dateTime = givenPhrase.phraseAppearingTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
-        int mlseconds = Integer.parseInt(ZonedDateTime.now(ZoneId.of(timezone)).format(DateTimeFormatter.ofPattern("SSS")));
+        int mlseconds = Integer.parseInt(ZonedDateTime.now(ZoneId.of(TIMEZONE)).format(DateTimeFormatter.ofPattern("SSS")));
 
         String mode;
         if(givenPhrase.hasBeenAnsweredCorrectly)
@@ -163,51 +163,23 @@ public class DAO {
 
     }
 
+    public int totalWordsNumber(){
+        return allPhrases.size();
+    }
+
     public void reloadPhrasesCollection() {
-        String sql = "SELECT * FROM " + loginBean.getUser() + " ORDER BY create_date DESC, id DESC";
 
-        try (Statement mainSt = mainDbConn.createStatement(); ResultSet rs = mainSt.executeQuery(sql)) {
-
-            System.out.println("CALL: reloadPhrasesCollection() from DAO");
-
-            activePhrases.clear();
-            totalPossibleWordsAmount = 0;
-
-            while (rs.next()) {
-
-                int id = rs.getInt("id");
-                String for_word = rs.getString("for_word");
-                String nat_word = rs.getString("nat_word");
-                String transcr = rs.getString("transcr");
-                BigDecimal prob = new BigDecimal(rs.getDouble("prob_factor"));
-                Timestamp create_date = rs.getTimestamp("create_date");
-                String label = rs.getString("label");
-                Timestamp last_accs_date = rs.getTimestamp("last_accs_date");
-                double index_start = rs.getDouble("index_start");
-                double index_end = rs.getDouble("index_end");
-                double rate = rs.getDouble("rate");
-                boolean exactmatch = rs.getBoolean("exactmatch");
-
-                Phrase addedToCollectionPhrase = new Phrase(id, for_word, nat_word, transcr, prob, create_date, label,
-                        last_accs_date, index_start, index_end, exactmatch, rate, this);
-
-                totalPossibleWordsAmount++;
-                listOfAllPhrases.add(addedToCollectionPhrase);
-
-                if (addedToCollectionPhrase.isThisPhraseInList(activeChosedLabels)) {
-                    activePhrases.add(addedToCollectionPhrase);
-                }
+        activePhrases.clear();
+        allPhrases.clear();
+        Query<Phrase> allPhrasesQuery = HibernateUtils.getSessionFactory().openSession().createQuery("from Phrase");
+        allPhrases = allPhrasesQuery.list();
+        for(Phrase currentPhrase : allPhrases){
+            currentPhrase.setDao(this);
+            if(currentPhrase.isThisPhraseInList(chosedLabels)){
+                activePhrases.add(currentPhrase);
             }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new RuntimeException("SQL Exception in reloadPhrasesCollection() from DAO, sql was \"" + sql + "\"");
         }
-
         reloadIndices(1);
-//        System.out.println("SAME PHRASES = " + sortCollectionByMatches(listOfAllPhrases).size());
-
-
     }
 
     private long[] reloadIndices(int id) {
@@ -238,8 +210,8 @@ public class DAO {
 
         //Считаем изученные (learnedWords)
         learnedWords = totalActiveWordsAmount - nonLearnedWords;
-        indOfLW = CHANCE_OF_APPEARING_LEARNED_WORDS / learnedWords;
-        rangeOfNLW = learnedWords > 0 ? 1 - CHANCE_OF_APPEARING_LEARNED_WORDS : 1;
+        indOfLW = CHANCE_OF_APPEARING_LEARNT_WORDS / learnedWords;
+        rangeOfNLW = learnedWords > 0 ? 1 - CHANCE_OF_APPEARING_LEARNT_WORDS : 1;
         scaleOf1prob = rangeOfNLW / nonLearnedWordsProbSumm;
 
         if (nonLearnedWords == 0) {
@@ -258,7 +230,7 @@ public class DAO {
 
                 indexStart = Math.round(temp * 1000000000);
                 phrase.indexStart = indexStart;
-                temp += CHANCE_OF_APPEARING_LEARNED_WORDS / learnedWords;
+                temp += CHANCE_OF_APPEARING_LEARNT_WORDS / learnedWords;
                 indexEnd = Math.round((temp * 1000000000) - 1);
                 phrase.indexEnd = indexEnd;
 
@@ -353,7 +325,7 @@ public class DAO {
 
     public void updatePhrase(Phrase givenPhrase) {
         System.out.println("CALL: updatePhraseInDb(Phrase givenPhrase) from DAO with id=" + givenPhrase.id);
-        String dateTime = ZonedDateTime.now(ZoneId.of(timezone)).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+        String dateTime = ZonedDateTime.now(ZoneId.of(TIMEZONE)).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
         String updateSql = "UPDATE " + loginBean.getUser() + " SET for_word=?, nat_word=?, transcr=?, last_accs_date=?, " +
                 "exactmatch=?, label=?, prob_factor=?, rate=?  WHERE id =" + givenPhrase.id;
         Phrase phraseInTheCollection = null;
@@ -406,7 +378,7 @@ public class DAO {
 
     public long[] updateProb(Phrase phrase) {
         System.out.println("CALL: updateProb(Phrase phrase) with id=" + phrase.id + " from DAO");
-        String dateTime = ZonedDateTime.now(ZoneId.of(timezone)).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+        String dateTime = ZonedDateTime.now(ZoneId.of(TIMEZONE)).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
 
         try {
             getPhraseById(phrase.id).probabilityFactor = phrase.probabilityFactor;
@@ -529,7 +501,7 @@ public class DAO {
     private Phrase getPhraseById(int id) throws PhraseNotFoundException{
         //Возвращает фразу из коллекции по данному id
 
-        for (Phrase phrase : listOfAllPhrases) {
+        for (Phrase phrase : allPhrases) {
             if (phrase.id == id)
                 return phrase;
         }

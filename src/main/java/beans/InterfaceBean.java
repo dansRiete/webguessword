@@ -49,7 +49,7 @@ public class InterfaceBean implements Serializable{
     private int totalPhrasesNumber;
     private int trainedPhrasesPerSessionNumber;
     private String rightAnswersPercentage;
-//    private BigDecimal currentPhraseLastAccessDate;
+    private BigDecimal currentPhraseLastAccessDate;
     //<<
 
 
@@ -96,7 +96,7 @@ public class InterfaceBean implements Serializable{
 
     @PostConstruct
     private void init(){
-
+        System.out.println("CALL: init() from InterfaceBean");
         if(loginBean != null)
             dao = loginBean.getDao();
         if(dao != null){
@@ -130,7 +130,7 @@ public class InterfaceBean implements Serializable{
         }
 
         if(!resultChoosedLabel.equals(previousResultChoosedLabel)){ //If clause was changed
-            dao.activeChosedLabels = choosedLabelsForLearningWords;
+            dao.chosedLabels = choosedLabelsForLearningWords;
             dao.reloadPhrasesCollection();
             previousResultChoosedLabel = resultChoosedLabel;
             reloadStatTableData();
@@ -206,7 +206,7 @@ public class InterfaceBean implements Serializable{
 
         System.out.println("CALL: reloadTrainingLog() from InterfaceBean");
 
-//        StringBuilder trainingLog = new StringBuilder();
+        trainingLog = new StringBuilder();
         trainedPhrasesPerSessionNumber = 0;
 
         for (int i = answeredPhrases.size() - 1; i >= 0; i--) {
@@ -293,6 +293,7 @@ public class InterfaceBean implements Serializable{
 //        long starTime = System.nanoTime();
         try{
             answeredPhrases.get(index-1).rightAnswer();
+            reloadStatTableData();
             reloadTrainingLog();
         }catch (NullPointerException e){
             System.out.println("EXCEPTION: in previousRight() from InterfaceBean");
@@ -348,7 +349,9 @@ public class InterfaceBean implements Serializable{
     public void nextQuestion(){
         System.out.println("CALL: nextQuestion() from InterfaceBean");
         if(shift == 0) {
-            newPhrase();
+            Phrase newPhrase = new Phrase(dao.obtainRandomPhrase());
+            answeredPhrases.add(newPhrase);
+            selectedPhrase = newPhrase;
             index = answeredPhrases.size() - 1;
             selectedPhrase = answeredPhrases.get(index);
             question = selectedPhrase.nativeWord + " " + hint.getShortHint(selectedPhrase.foreignWord);
@@ -357,13 +360,8 @@ public class InterfaceBean implements Serializable{
             selectedPhrase = answeredPhrases.get(index);
             question = selectedPhrase.nativeWord + " " + hint.getShortHint(selectedPhrase.foreignWord);
         }
-    }
-
-    private void newPhrase(){
-        System.out.println("CALL: newPhrase() from InterfaceBean");
-        Phrase newPhrase = new Phrase(dao.obtainRandomPhrase());
-        answeredPhrases.add(newPhrase);
-        selectedPhrase = newPhrase;
+        reloadStatTableData();
+        reloadTrainingLog();
     }
 
     public void previousQuestion(){

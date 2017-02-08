@@ -15,12 +15,13 @@ import java.util.HashSet;
 
 @Entity
 @Table(name = "aleks")
-public class Phrase/* implements Serializable*/{
+public class Phrase implements Serializable{
 
-    @Id
+    @javax.persistence.Id
     @GeneratedValue(strategy=GenerationType.AUTO)
     public int id;
 
+    @Transient
     private static final double RIGHT_ANSWER_MULTIPLIER = 1.2;
 
     @Column(name = "for_word")
@@ -35,11 +36,13 @@ public class Phrase/* implements Serializable*/{
     @Column(name = "prob_factor")
     public BigDecimal probabilityFactor;
 
+    @Transient
     public BigDecimal previousProbabilityFactor;
 
     @Column
     public String label;
 
+    @Transient
     public ZonedDateTime phraseAppearingTime = ZonedDateTime.now(ZoneId.of("Europe/Helsinki"));
 
     @Column(name = "create_date")
@@ -51,15 +54,36 @@ public class Phrase/* implements Serializable*/{
     @Column
     public boolean exactMatch;
 
+    @Transient
     public boolean hasBeenAnsweredCorrectly;
+
+    @Transient
     public boolean hasBeenAnswered;
+
+    @Transient
     public double indexStart;
+
+    @Transient
     public double indexEnd;
+
+    @Column(name = "rate")
     public double multiplier;
+
+    @Transient
     public double previousMultiplier;
+
+    @Transient
+
     public DAO dao;
+
+    @Transient
     public boolean isModified;
+
+    @Transient
     public String timeOfReturningFromList;
+
+    public Phrase() {
+    }
 
     public Phrase(int id, String foreignWord, String nativeWord, String transcription, BigDecimal probabilityFactor, Timestamp collectionAddingDateTime, String label, Timestamp lastAccessDateTime, double indexStart, double indexEnd, boolean exactMatch, double multiplier, DAO dao){
         this.id = id;
@@ -105,6 +129,8 @@ public class Phrase/* implements Serializable*/{
     }
 
 
+
+
     public void rightAnswer(){
         long[] indexes;
 
@@ -112,7 +138,7 @@ public class Phrase/* implements Serializable*/{
 
             if(!isTrained()){
 
-                double activeWordsAmountRatio = Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWordsAmount);
+                double activeWordsAmountRatio = Math.sqrt(dao.nonLearnedWords / dao.totalWordsNumber());
                 BigDecimal subtrahendForProb = new BigDecimal(3 * activeWordsAmountRatio * multiplier);
                 probabilityFactor = probabilityFactor.subtract(subtrahendForProb);
 
@@ -133,7 +159,7 @@ public class Phrase/* implements Serializable*/{
             if(!wasTrainedBeforeAnswer()){
 
                 probabilityFactor = previousProbabilityFactor;
-                double rateDepandableOnNumberOfWords = Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWordsAmount);
+                double rateDepandableOnNumberOfWords = Math.sqrt(dao.nonLearnedWords / dao.totalWordsNumber());
                 multiplier = previousMultiplier;
                 BigDecimal probFactorSubtrahend = new BigDecimal(3 * rateDepandableOnNumberOfWords * multiplier);
                 probabilityFactor = probabilityFactor.subtract(probFactorSubtrahend);
@@ -170,7 +196,7 @@ public class Phrase/* implements Serializable*/{
 
         if(!hasBeenAnswered){
             multiplier = 1;
-            probabilityFactor = probabilityFactor.add(new BigDecimal(6 * Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWordsAmount)));
+            probabilityFactor = probabilityFactor.add(new BigDecimal(6 * Math.sqrt(dao.nonLearnedWords / dao.totalWordsNumber())));
             hasBeenAnsweredCorrectly = false;
             indexes = dao.updateProb(this);
             dao.setStatistics(this);
@@ -180,9 +206,9 @@ public class Phrase/* implements Serializable*/{
 
             if(!wasTrainedBeforeAnswer()) {
                 multiplier = 1;
-                probabilityFactor = probabilityFactor.add(new BigDecimal(9 * Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWordsAmount)));
+                probabilityFactor = probabilityFactor.add(new BigDecimal(9 * Math.sqrt(dao.nonLearnedWords / dao.totalWordsNumber())));
             }else{
-                probabilityFactor = probabilityFactor.add(new BigDecimal(6 * Math.sqrt(dao.nonLearnedWords / dao.totalPossibleWordsAmount) * multiplier));
+                probabilityFactor = probabilityFactor.add(new BigDecimal(6 * Math.sqrt(dao.nonLearnedWords / dao.totalWordsNumber()) * multiplier));
                 multiplier = 1;
             }
             dao.updateStatistics(this);
@@ -242,6 +268,17 @@ public class Phrase/* implements Serializable*/{
     public boolean wasTrainedBeforeAnswer(){
         return previousProbabilityFactor.doubleValue() <= 3;
     }
+
+    @Override
+    public String toString() {
+        return "Phrase{" +
+                "id=" + id +
+                ", foreignWord='" + foreignWord + '\'' +
+                ", nativeWord='" + nativeWord + '\'' +
+                '}';
+    }
+
+//Setters and getters
 
     public String getForeignWord(){
         return foreignWord;
@@ -309,6 +346,12 @@ public class Phrase/* implements Serializable*/{
     }
     public void setIndexEnd(long indexEnd) {
         this.indexEnd = indexEnd;
+    }
+    public DAO getDao() {
+        return dao;
+    }
+    public void setDao(DAO dao) {
+        this.dao = dao;
     }
 
 

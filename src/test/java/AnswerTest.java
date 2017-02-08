@@ -9,13 +9,10 @@ import static org.junit.Assert.*;
 public class AnswerTest {
 
     @org.junit.Test
-    public void testCorrectBehavior_WithNullAndEmptyAnswer(){
+    public void testCorrectBehavior_WithEmptyAnswer(){
         assertThat(Answer.compose(0, "", "Привет", "Hello").isCorrect(), is(false));
         assertThat(Answer.compose(0, "", "Hello World", "Привет мир").isCorrect(), is(false));
         assertThat(Answer.compose(0, "", "Hello World/Hello everyone", "Привет мир/Привет всем").isCorrect(), is(false));
-//        assertThat(Answer.compose(0, null, "Hello", "Привет").isCorrect(), is(false));
-//        assertThat(Answer.compose(0, null, "Hello World", "Привет мир").isCorrect(), is(false));
-//        assertThat(Answer.compose(0, null, "Hello World/Hello everyone", "Привет мир/Привет всем").isCorrect(), is(false));
     }
 
     @org.junit.Test
@@ -53,7 +50,7 @@ public class AnswerTest {
     }
 
     @org.junit.Test
-    public void testRecognizingSpellingErrorsWithDoubleLetters_InMultiplePhrase(){
+    public void testRecognizingSpellingErrorsWithDoubleLetters_InMultiplePhrases(){
         assertThat(Answer.compose(0, "all are pointless/all are intelligent", "all are pointless/all are intelligent", "").isCorrect(), is(true));
         assertThat(Answer.compose(0, "al are pointless/all are intelligent", "all are pointless/all are intelligent", "").isCorrect(), is(false));
         assertThat(Answer.compose(0, "all ar pointless/all are intelligent", "all are pointless/all are intelligent", "").isCorrect(), is(false));
