@@ -249,7 +249,11 @@ public class Phrase implements Serializable{
     }
 
     public String getForWordAndTranscription(){
-        return foreignWord + (transcription.equalsIgnoreCase("") ? "" : (" [" + transcription + "]"));
+        if(transcription == null){
+            return foreignWord;
+        }else {
+            return foreignWord + (transcription.equalsIgnoreCase("") ? "" : (" [" + transcription + "]"));
+        }
     }
 
     public void deleteThisPhrase(){
@@ -258,7 +262,8 @@ public class Phrase implements Serializable{
     }
 
     public void updatePhraseInDb(){
-        dao.updatePhrase(this);
+        if(dao != null)
+            dao.updatePhrase(this);
     }
 
     public boolean isTrained(){
@@ -266,7 +271,11 @@ public class Phrase implements Serializable{
     }
 
     public boolean wasTrainedBeforeAnswer(){
-        return previousProbabilityFactor.doubleValue() <= 3;
+        if(previousProbabilityFactor == null){
+            return false;
+        }else {
+            return previousProbabilityFactor.doubleValue() <= 3;
+        }
     }
 
     @Override
@@ -280,24 +289,26 @@ public class Phrase implements Serializable{
 
 //Setters and getters
 
-    public String getForeignWord(){
-        return foreignWord;
-    }
     public int getId() {
         return id;
     }
-    public void setForeignWord(String foreignWord) {
+    public String getForeignWord(){
+        return foreignWord;
+    }
+    public Phrase setForeignWord(String foreignWord) {
         System.out.println("CALL setForeignWord("+ foreignWord +") from Phrase");
         this.foreignWord = foreignWord;
         updatePhraseInDb();
+        return this;
     }
     public String getNativeWord() {
         return nativeWord;
     }
-    public void setNativeWord(String nativeWord) {
+    public Phrase setNativeWord(String nativeWord) {
         System.out.println("CALL setNativeWord("+ nativeWord +") from Phrase");
         this.nativeWord = nativeWord;
         updatePhraseInDb();
+        return this;
     }
     public String getTranscription() {
         return transcription;

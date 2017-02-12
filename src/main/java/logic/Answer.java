@@ -10,26 +10,22 @@ import java.util.List;
  */
 public class Answer {
 
-    private final int phrasesId;
     private boolean answerIsCorrect;
     private final ZonedDateTime answersDate = ZonedDateTime.now(ZoneId.of("UTC"));
-    private final String phrasesForeignLiteral;
-    private final String phrasesNativeLiteral;
     private final String givenAnswerLiteral;
+    private final Phrase answeredPhrase;
 
-    private Answer(int phrasesId, String phrasesForeignLiteral, String phrasesNativeLiteral, String givenAnswerLiteral) {
-        this.phrasesId = phrasesId;
-        this.phrasesForeignLiteral = phrasesForeignLiteral;
-        this.phrasesNativeLiteral = phrasesNativeLiteral;
+    private Answer(Phrase answeredPhrase, String givenAnswerLiteral) {
+        this.answeredPhrase = answeredPhrase;
         this.givenAnswerLiteral = givenAnswerLiteral;
 
     }
 
-    public static Answer compose(int phrasesId, String givenAnswerLiteral, String phrasesForeignLiteral, String phrasesNativeLiteral){
-        if(phrasesForeignLiteral == null || phrasesNativeLiteral == null|| givenAnswerLiteral == null){
+    public static Answer compose(Phrase answeredPhrase, String givenAnswerLiteral){
+        if(answeredPhrase == null|| givenAnswerLiteral == null){
             throw new IllegalArgumentException("Phrases foreign and native literals can not be null");
         }
-        Answer composedAnswer = new Answer(phrasesId, phrasesForeignLiteral, phrasesNativeLiteral, givenAnswerLiteral);
+        Answer composedAnswer = new Answer(answeredPhrase, givenAnswerLiteral);
         composedAnswer.checkTheAnswer();
         return composedAnswer;
     }
@@ -39,13 +35,13 @@ public class Answer {
     }
 
     private void checkTheAnswer(){
-        if(givenAnswerLiteral.equals("")){
+        if(givenAnswerLiteral.equals("") || answeredPhrase.getForeignWord().equals("")){
             answerIsCorrect = false;
         }else if(!givenAnswerLiteral.contains("\\") && !givenAnswerLiteral.contains("/")){
-            answerIsCorrect = phrasesEquals(givenAnswerLiteral, phrasesForeignLiteral);
+            answerIsCorrect = phrasesEquals(givenAnswerLiteral, answeredPhrase.getForeignWord());
         }else {
             String [] givenLiteralPhrases = givenAnswerLiteral.split("[/\\\\]");
-            String [] referenceLiteralPhrases = phrasesForeignLiteral.split("[/\\\\]");
+            String [] referenceLiteralPhrases = answeredPhrase.getForeignWord().split("[/\\\\]");
             int matchesAmount = 0;
             for (String referenceLiteralPhrase : referenceLiteralPhrases) {
                 for (String givenLiteralPhrase : givenLiteralPhrases) {

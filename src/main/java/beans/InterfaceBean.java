@@ -84,7 +84,7 @@ public class InterfaceBean implements Serializable{
     private String previousResultChoosedLabel = "";
     private HashSet<String> choosedLabelsForLearningWords = new HashSet<>();
     private int shift = 0;
-    private int index;
+    private int currentlySelectedPhraseIndex;
     private int beforeCurrentSessionPhrasesNumber;
     private Hints hint = new Hints();
 
@@ -211,6 +211,7 @@ public class InterfaceBean implements Serializable{
 
         for (int i = answeredPhrases.size() - 1; i >= 0; i--) {
             Phrase currentPhrase = answeredPhrases.get(i);
+            System.out.println(currentPhrase);
             if (currentPhrase.isTrained() && !currentPhrase.wasTrainedBeforeAnswer()) {
                 trainedPhrasesPerSessionNumber++;
             } else if (!currentPhrase.isTrained() && currentPhrase.wasTrainedBeforeAnswer()) {
@@ -220,28 +221,28 @@ public class InterfaceBean implements Serializable{
                 trainingLog.append("—————————————————————————————————————</br>");
             }
             if (!currentPhrase.hasBeenAnswered){
-                trainingLog.append(i == index ? "<strong>" : "").append("[").append(currentPhrase.phraseAppearingTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))).append(NONANSWERED_MESSAGE).append("] ")
+                trainingLog.append(i == currentlySelectedPhraseIndex ? "<strong>" : "").append("[").append(currentPhrase.phraseAppearingTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))).append(NONANSWERED_MESSAGE).append("] ")
                         .append(currentPhrase.isTrained() ? "<font color=\"green\">" : "")
                         .append(currentPhrase.nativeWord).append(currentPhrase.isTrained() ? "</font>" : "")
-                        .append((i == index ? "</strong>" : "")).append("</br>");
+                        .append((i == currentlySelectedPhraseIndex ? "</strong>" : "")).append("</br>");
             } else if (currentPhrase.hasBeenAnsweredCorrectly){
-                trainingLog.append(i == index ? "<strong>" : "").append("[").append(currentPhrase.phraseAppearingTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
+                trainingLog.append(i == currentlySelectedPhraseIndex ? "<strong>" : "").append("[").append(currentPhrase.phraseAppearingTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
                         .append(RIGHT_MESSAGE).append("] ").append(currentPhrase.isTrained() ? "<font color=\"green\">" : "")
                         .append(currentPhrase.nativeWord).append(" - ")
                         .append(currentPhrase.getForWordAndTranscription())
-                        .append(currentPhrase.isTrained() ? "</font>" : "").append((i == index ? "</strong>" : "")).append("</br>");
+                        .append(currentPhrase.isTrained() ? "</font>" : "").append((i == currentlySelectedPhraseIndex ? "</strong>" : "")).append("</br>");
             } else if (!currentPhrase.hasBeenAnsweredCorrectly){
-                trainingLog.append(i == index ? "<strong>" : "").append("[").append(currentPhrase.phraseAppearingTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
+                trainingLog.append(i == currentlySelectedPhraseIndex ? "<strong>" : "").append("[").append(currentPhrase.phraseAppearingTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
                         .append(WRONG_MESSAGE).append("] ").append(currentPhrase.isTrained() ? "<font color=\"green\">" : "")
                         .append(currentPhrase.nativeWord).append(" - ")
                         .append(currentPhrase.getForWordAndTranscription())
-                        .append(currentPhrase.isTrained() ? "</font>" : "").append((i == index ? "</strong>" : "")).append("</br>");
+                        .append(currentPhrase.isTrained() ? "</font>" : "").append((i == currentlySelectedPhraseIndex ? "</strong>" : "")).append("</br>");
             }
 
         }
 
 //        this.trainingLog = trainingLog.toString();
-//        Phrase currentPhrase = answeredPhrases.get(index);
+//        Phrase currentPhrase = answeredPhrases.get(currentlySelectedPhraseIndex);
         currPhrForWord = selectedPhrase.foreignWord;
         currPhrNatWord = selectedPhrase.nativeWord;
         currPhrTransc = selectedPhrase.transcription;
@@ -258,8 +259,8 @@ public class InterfaceBean implements Serializable{
         System.out.println("CALL: rightAnswer() from InterfaceBean");
 //        long starTime = System.nanoTime();
         try {
-            index = answeredPhrases.size() - 1 - shift;
-            selectedPhrase = answeredPhrases.get(index);
+            currentlySelectedPhraseIndex = answeredPhrases.size() - 1 - shift;
+            selectedPhrase = answeredPhrases.get(currentlySelectedPhraseIndex);
             selectedPhrase.rightAnswer();
             nextQuestion();
             reloadStatTableData();
@@ -275,8 +276,8 @@ public class InterfaceBean implements Serializable{
         System.out.println("CALL: wrongAnswer() from InterfaceBean");
 //        long starTime = System.nanoTime();
         try{
-            index = answeredPhrases.size() - 1 - shift;
-            selectedPhrase = answeredPhrases.get(index);
+            currentlySelectedPhraseIndex = answeredPhrases.size() - 1 - shift;
+            selectedPhrase = answeredPhrases.get(currentlySelectedPhraseIndex);
             selectedPhrase.wrongAnswer();
             nextQuestion();
             reloadStatTableData();
@@ -292,7 +293,7 @@ public class InterfaceBean implements Serializable{
         System.out.println("CALL: previousRight() from InterfaceBean");
 //        long starTime = System.nanoTime();
         try{
-            answeredPhrases.get(index-1).rightAnswer();
+            answeredPhrases.get(currentlySelectedPhraseIndex -1).rightAnswer();
             reloadStatTableData();
             reloadTrainingLog();
         }catch (NullPointerException e){
@@ -306,7 +307,7 @@ public class InterfaceBean implements Serializable{
         System.out.println("CALL: previousWrong() from InterfaceBean");
 //        long starTime = System.nanoTime();
         try{
-            answeredPhrases.get(index -1).wrongAnswer();
+            answeredPhrases.get(currentlySelectedPhraseIndex -1).wrongAnswer();
             reloadStatTableData();
             reloadTrainingLog();
         }catch (NullPointerException e){
@@ -334,7 +335,7 @@ public class InterfaceBean implements Serializable{
         }else /*if(!(answerField.equals("") || answerField.equals("+") || answerField.equals("-") ||
                 answerField.equals("++") || answerField.equals("--")))*/{
 
-            Answer givenAnswer = Answer.compose(selectedPhrase.id, answerField, selectedPhrase.foreignWord, selectedPhrase.nativeWord);
+            Answer givenAnswer = Answer.compose(selectedPhrase, answerField);
             if(givenAnswer.isCorrect()){
                 rightAnswer();
             } else {
@@ -352,12 +353,12 @@ public class InterfaceBean implements Serializable{
             Phrase newPhrase = new Phrase(dao.obtainRandomPhrase());
             answeredPhrases.add(newPhrase);
             selectedPhrase = newPhrase;
-            index = answeredPhrases.size() - 1;
-            selectedPhrase = answeredPhrases.get(index);
+            currentlySelectedPhraseIndex = answeredPhrases.size() - 1;
+            selectedPhrase = answeredPhrases.get(currentlySelectedPhraseIndex);
             question = selectedPhrase.nativeWord + " " + hint.getShortHint(selectedPhrase.foreignWord);
         }else {
-            index = answeredPhrases.size() - 1 - --shift;
-            selectedPhrase = answeredPhrases.get(index);
+            currentlySelectedPhraseIndex = answeredPhrases.size() - 1 - --shift;
+            selectedPhrase = answeredPhrases.get(currentlySelectedPhraseIndex);
             question = selectedPhrase.nativeWord + " " + hint.getShortHint(selectedPhrase.foreignWord);
         }
         reloadStatTableData();
@@ -369,11 +370,11 @@ public class InterfaceBean implements Serializable{
         if(shift < (answeredPhrases.size() - 1)){
             shift++;
         }
-        index = answeredPhrases.size() - 1 - shift;
-        if(index < 0){
-            index = 0;
+        currentlySelectedPhraseIndex = answeredPhrases.size() - 1 - shift;
+        if(currentlySelectedPhraseIndex < 0){
+            currentlySelectedPhraseIndex = 0;
         }
-        selectedPhrase = answeredPhrases.get(index);
+        selectedPhrase = answeredPhrases.get(currentlySelectedPhraseIndex);
         question = selectedPhrase.nativeWord;
         reloadStatTableData();
         reloadTrainingLog();

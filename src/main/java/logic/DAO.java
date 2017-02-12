@@ -65,7 +65,7 @@ public class DAO {
 
         try (Statement statement = mainDbConn.createStatement()) {
             String sql = "INSERT INTO " + loginBean.getUser() + "_stat" + " VALUES ('" + dateTime + "', " + mlseconds +
-                    ", '" + mode + "', " + givenPhrase.id + (learnt!=0?(", " + learnt):", NULL") + ")";
+                    ", '" + mode + "', " + givenPhrase.id + ", " + learnt + ")";
 
             System.out.println(sql);
             statement.execute(sql);
@@ -94,7 +94,7 @@ public class DAO {
 
         try (Statement statement = mainDbConn.createStatement()) {
             String sql = "UPDATE " + loginBean.getUser() + "_stat" + " SET event='" + mode + "' WHERE date='" + dateTime +"' AND id=" + phr.id
-                    + (learnt!=0?(", " + learnt):", NULL");
+                    + ", " + learnt;
             System.out.println("SQL from updateStatistics() is " + sql);
             System.out.println(sql);
             statement.execute(sql);
