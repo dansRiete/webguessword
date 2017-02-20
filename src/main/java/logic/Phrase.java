@@ -132,13 +132,15 @@ public class Phrase implements Serializable{
 
 
     public void rightAnswer(){
-        long[] indexes;
 
         if(!hasBeenAnswered){
 
+            hasBeenAnsweredCorrectly = true;
+            hasBeenAnswered = true;
+
             if(!isTrained()){
 
-                double activeWordsAmountRatio = Math.sqrt(dao.nonLearnedWords / dao.totalWordsNumber());
+                double activeWordsAmountRatio = Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber());
                 BigDecimal subtrahendForProb = new BigDecimal(3 * activeWordsAmountRatio * multiplier);
                 probabilityFactor = probabilityFactor.subtract(subtrahendForProb);
 
@@ -149,20 +151,21 @@ public class Phrase implements Serializable{
                         multiplier *= RIGHT_ANSWER_MULTIPLIER;
                     }
                 }
+                dao.updateProb(this);
             }
-
             dao.setStatistics(this);
-
 
         }else if(!hasBeenAnsweredCorrectly){
 
+            hasBeenAnsweredCorrectly = true;
+
             if(!wasTrainedBeforeAnswer()){
 
-                probabilityFactor = previousProbabilityFactor;
-                double rateDepandableOnNumberOfWords = Math.sqrt(dao.nonLearnedWords / dao.totalWordsNumber());
+//                probabilityFactor = previousProbabilityFactor;
+                double rateDepandableOnNumberOfWords = Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber());
                 multiplier = previousMultiplier;
                 BigDecimal probFactorSubtrahend = new BigDecimal(3 * rateDepandableOnNumberOfWords * multiplier);
-                probabilityFactor = probabilityFactor.subtract(probFactorSubtrahend);
+                probabilityFactor = previousProbabilityFactor.subtract(probFactorSubtrahend);
 
                 if(rateDepandableOnNumberOfWords > 0.6) {
                     if (multiplier <= 1) {
@@ -177,50 +180,39 @@ public class Phrase implements Serializable{
                 multiplier = previousMultiplier;
             }
 
-            dao.setStatistics(this);
-        }
-
-        hasBeenAnsweredCorrectly = true;
-        hasBeenAnswered = true;
-        indexes = dao.updateProb(this);
-
-        if(indexes!=null){
-            this.indexStart = indexes[0];
-            this.indexEnd = indexes[1];
+            dao.updateStatistics(this);
+            dao.updateProb(this);
         }
     }
 
     public void wrongAnswer(){
 
-        long[] indexes = null;
-
         if(!hasBeenAnswered){
-            multiplier = 1;
-            probabilityFactor = probabilityFactor.add(new BigDecimal(6 * Math.sqrt(dao.nonLearnedWords / dao.totalWordsNumber())));
+
+            hasBeenAnswered = true;
             hasBeenAnsweredCorrectly = false;
-            indexes = dao.updateProb(this);
+
+            multiplier = 1;
+            System.out.println(probabilityFactor.setScale(1, BigDecimal.ROUND_HALF_UP) + "+=" + 6 + "*" + "Math.sqrt(" + dao.activePhrasesNumber() + "/" + dao.totalWordsNumber() + ")");
+            probabilityFactor = probabilityFactor.add(new BigDecimal(6 * Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber())));
             dao.setStatistics(this);
-            dao.updateStatistics(this);
+            dao.updateProb(this);
 
         }else if(hasBeenAnsweredCorrectly){
 
+            hasBeenAnsweredCorrectly = false;
+
             if(!wasTrainedBeforeAnswer()) {
                 multiplier = 1;
-                probabilityFactor = probabilityFactor.add(new BigDecimal(9 * Math.sqrt(dao.nonLearnedWords / dao.totalWordsNumber())));
+                System.out.println(previousProbabilityFactor.setScale(1, BigDecimal.ROUND_HALF_UP) + "+=" + 6 + "*" + "Math.sqrt(" + dao.activePhrasesNumber() + "/" + dao.totalWordsNumber() + ")");
+                probabilityFactor = previousProbabilityFactor.add(new BigDecimal(6 * Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber())));
             }else{
-                probabilityFactor = probabilityFactor.add(new BigDecimal(6 * Math.sqrt(dao.nonLearnedWords / dao.totalWordsNumber()) * multiplier));
+                System.out.println(previousProbabilityFactor.setScale(1, BigDecimal.ROUND_HALF_UP) + "+=" + 6 + "*" + "Math.sqrt(" + dao.activePhrasesNumber() + "/" + dao.totalWordsNumber() + ")*" + multiplier);
+                probabilityFactor = previousProbabilityFactor.add(new BigDecimal(6 * Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber()) * multiplier));
                 multiplier = 1;
             }
             dao.updateStatistics(this);
-        }
-
-        hasBeenAnsweredCorrectly = false;
-        hasBeenAnswered = true;
-        indexes = dao.updateProb(this);
-
-        if(indexes != null){
-            this.indexStart = indexes[0];
-            this.indexEnd = indexes[1];
+            dao.updateProb(this);
         }
     }
 

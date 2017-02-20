@@ -67,7 +67,7 @@ public class DAO {
             String sql = "INSERT INTO " + loginBean.getUser() + "_stat" + " VALUES ('" + dateTime + "', " + mlseconds +
                     ", '" + mode + "', " + givenPhrase.id + ", " + learnt + ")";
 
-            System.out.println(sql);
+//            System.out.println(sql);
             statement.execute(sql);
 
         } catch (SQLException e) {
@@ -94,8 +94,8 @@ public class DAO {
 
         try (Statement statement = mainDbConn.createStatement()) {
             String sql = "UPDATE " + loginBean.getUser() + "_stat" + " SET event='" + mode +", learnt=" + learnt +  "' WHERE date='" + dateTime +"' AND id=" + phr.id;
-            System.out.println("SQL from updateStatistics() is " + sql);
-            System.out.println(sql);
+//            System.out.println("SQL from updateStatistics() is " + sql);
+//            System.out.println(sql);
             statement.execute(sql);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -164,6 +164,10 @@ public class DAO {
 
     public int totalWordsNumber(){
         return allPhrases.size();
+    }
+
+    public int activePhrasesNumber(){
+        return activePhrases.size();
     }
 
     public void reloadPhrasesCollection() {
@@ -419,7 +423,7 @@ public class DAO {
                 "    exactmatch BOOLEAN DEFAULT FALSE  NOT NULL,\n" +
                 "    index_start DOUBLE,\n" +
                 "    index_end DOUBLE,\n" +
-                "    rate DOUBLE" +
+                "    rate DOUBLE DEFAULT 1 NOT NULL" +
                 ")";
     }
 

@@ -76,7 +76,7 @@ public class InterfaceBean implements Serializable{
     private StringBuilder trainingLog = new StringBuilder("");
     private final static String WRONG_MESSAGE = " <strong><font color=\"#BBBBB9\">right</font>/<font color=\"#ff0000\">wrong</font></strong>";
     private final static String RIGHT_MESSAGE = " <strong><font color=\"green\">right</font>/<font color=\"#BBBBB9\">wrong</font></strong>";
-    private final static String NONANSWERED_MESSAGE = " <strong><font color=\"#BBBBB9\">right</font>/<font color=\"#BBBBB9\">wrong</font></strong>";
+    private final static String NON_ANSWERED_MESSAGE = " <strong><font color=\"#BBBBB9\">right</font>/<font color=\"#BBBBB9\">wrong</font></strong>";
     private ArrayList<Phrase> answeredPhrases = new ArrayList<>();
     private ArrayList<String> listOfChooses;
     private String choosedLabel;
@@ -85,7 +85,6 @@ public class InterfaceBean implements Serializable{
     private HashSet<String> choosedLabelsForLearningWords = new HashSet<>();
     private int shift = 0;
     private int currentlySelectedPhraseIndex;
-    private int beforeCurrentSessionPhrasesNumber;
     private Hints hint = new Hints();
 
 
@@ -102,7 +101,6 @@ public class InterfaceBean implements Serializable{
         if(dao != null){
             listOfChooses = dao.possibleLabels;
             answeredPhrases = dao.getTodaysPhrasesCollection();
-            beforeCurrentSessionPhrasesNumber = answeredPhrases.size();
             nextQuestion();
         }
     }
@@ -194,7 +192,7 @@ public class InterfaceBean implements Serializable{
         totalPhrasesNumber = trainedPhrasesNumber + nonLearnedWordsNumber;
 
          try{
-             averageAnswersPerDayNumber = (int) ( (float) (dao.answUntil6amAmount + answersForSessionNumber)/ (float) (dao.totalHoursUntil6am + ZonedDateTime.now(ZoneId.of("Europe/Kiev")).getHour()-6) * 24);
+             averageAnswersPerDayNumber = (int) ( (float) (dao.answUntil6amAmount + answersForSessionNumber) / (float) (dao.totalHoursUntil6am + ZonedDateTime.now(ZoneId.of("Europe/Kiev")).getHour() - 6) * 24);
          }catch (ArithmeticException e){
              averageAnswersPerDayNumber = 0;
          }
@@ -211,17 +209,16 @@ public class InterfaceBean implements Serializable{
 
         for (int i = answeredPhrases.size() - 1; i >= 0; i--) {
             Phrase currentPhrase = answeredPhrases.get(i);
-            System.out.println(currentPhrase);
+
             if (currentPhrase.isTrained() && !currentPhrase.wasTrainedBeforeAnswer()) {
                 trainedPhrasesPerSessionNumber++;
             } else if (!currentPhrase.isTrained() && currentPhrase.wasTrainedBeforeAnswer()) {
                 trainedPhrasesPerSessionNumber--;
             }
-            if(i == beforeCurrentSessionPhrasesNumber - 1){
-                trainingLog.append("—————————————————————————————————————</br>");
-            }
+
             if (!currentPhrase.hasBeenAnswered){
-                trainingLog.append(i == currentlySelectedPhraseIndex ? "<strong>" : "").append("[").append(currentPhrase.phraseAppearingTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))).append(NONANSWERED_MESSAGE).append("] ")
+                trainingLog.append(i == currentlySelectedPhraseIndex ? "<strong>" : "")
+                        .append("[").append(currentPhrase.phraseAppearingTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))).append(NON_ANSWERED_MESSAGE).append("] ")
                         .append(currentPhrase.isTrained() ? "<font color=\"green\">" : "")
                         .append(currentPhrase.nativeWord).append(currentPhrase.isTrained() ? "</font>" : "")
                         .append((i == currentlySelectedPhraseIndex ? "</strong>" : "")).append("</br>");
@@ -231,18 +228,15 @@ public class InterfaceBean implements Serializable{
                         .append(currentPhrase.nativeWord).append(" - ")
                         .append(currentPhrase.getForWordAndTranscription())
                         .append(currentPhrase.isTrained() ? "</font>" : "").append((i == currentlySelectedPhraseIndex ? "</strong>" : "")).append("</br>");
-            } else if (!currentPhrase.hasBeenAnsweredCorrectly){
+            } else {
                 trainingLog.append(i == currentlySelectedPhraseIndex ? "<strong>" : "").append("[").append(currentPhrase.phraseAppearingTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")))
                         .append(WRONG_MESSAGE).append("] ").append(currentPhrase.isTrained() ? "<font color=\"green\">" : "")
                         .append(currentPhrase.nativeWord).append(" - ")
                         .append(currentPhrase.getForWordAndTranscription())
                         .append(currentPhrase.isTrained() ? "</font>" : "").append((i == currentlySelectedPhraseIndex ? "</strong>" : "")).append("</br>");
             }
-
         }
 
-//        this.trainingLog = trainingLog.toString();
-//        Phrase currentPhrase = answeredPhrases.get(currentlySelectedPhraseIndex);
         currPhrForWord = selectedPhrase.foreignWord;
         currPhrNatWord = selectedPhrase.nativeWord;
         currPhrTransc = selectedPhrase.transcription;
@@ -257,7 +251,7 @@ public class InterfaceBean implements Serializable{
 
     public void rightAnswer(){
         System.out.println("CALL: rightAnswer() from InterfaceBean");
-//        long starTime = System.nanoTime();
+
         try {
             currentlySelectedPhraseIndex = answeredPhrases.size() - 1 - shift;
             selectedPhrase = answeredPhrases.get(currentlySelectedPhraseIndex);
@@ -269,12 +263,11 @@ public class InterfaceBean implements Serializable{
             System.out.println("EXCEPTION: in rightAnswer() from InterfaceBean");
             e.printStackTrace();
         }
-//        currentPhraseLastAccessDate = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000), BigDecimal.ROUND_HALF_UP).setScale(2, RoundingMode.HALF_UP);
     }
 
     public void wrongAnswer(){
         System.out.println("CALL: wrongAnswer() from InterfaceBean");
-//        long starTime = System.nanoTime();
+
         try{
             currentlySelectedPhraseIndex = answeredPhrases.size() - 1 - shift;
             selectedPhrase = answeredPhrases.get(currentlySelectedPhraseIndex);
@@ -286,12 +279,11 @@ public class InterfaceBean implements Serializable{
             System.out.println("EXCEPTION: in wrongAnswer() from InterfaceBean");
             e.printStackTrace();
         }
-//        currentPhraseLastAccessDate = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000), BigDecimal.ROUND_HALF_UP).setScale(2, RoundingMode.HALF_UP);
     }
 
     public void previousRight(){
         System.out.println("CALL: previousRight() from InterfaceBean");
-//        long starTime = System.nanoTime();
+
         try{
             answeredPhrases.get(currentlySelectedPhraseIndex -1).rightAnswer();
             reloadStatTableData();
@@ -300,12 +292,10 @@ public class InterfaceBean implements Serializable{
             System.out.println("EXCEPTION: in previousRight() from InterfaceBean");
             e.printStackTrace();
         }
-//        currentPhraseLastAccessDate = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000), BigDecimal.ROUND_HALF_UP).setScale(2, RoundingMode.HALF_UP);
     }
 
     public void previousWrong(){
         System.out.println("CALL: previousWrong() from InterfaceBean");
-//        long starTime = System.nanoTime();
         try{
             answeredPhrases.get(currentlySelectedPhraseIndex -1).wrongAnswer();
             reloadStatTableData();
@@ -314,7 +304,6 @@ public class InterfaceBean implements Serializable{
             System.out.println("EXCEPTION: in previousWrong() from InterfaceBean");
             e.printStackTrace();
         }
-//        currentPhraseLastAccessDate = new BigDecimal(System.nanoTime()-starTime).divide(new BigDecimal(1000000), BigDecimal.ROUND_HALF_UP).setScale(2, RoundingMode.HALF_UP);
     }
 
     public void checkTheAnswer(){
@@ -332,23 +321,20 @@ public class InterfaceBean implements Serializable{
             previousRight();
         }else if (answerField.equals("--")){
             previousWrong();
-        }else /*if(!(answerField.equals("") || answerField.equals("+") || answerField.equals("-") ||
-                answerField.equals("++") || answerField.equals("--")))*/{
-
+        }else {
             Answer givenAnswer = Answer.compose(selectedPhrase, answerField);
             if(givenAnswer.isCorrect()){
                 rightAnswer();
             } else {
                 wrongAnswer();
             }
-
         }
         answerField = "";
     }
 
 
     public void nextQuestion(){
-        System.out.println("CALL: nextQuestion() from InterfaceBean");
+        System.out.print("\nCALL: nextQuestion() from InterfaceBean");
         if(shift == 0) {
             Phrase newPhrase = new Phrase(dao.obtainRandomPhrase());
             answeredPhrases.add(newPhrase);
@@ -361,17 +347,19 @@ public class InterfaceBean implements Serializable{
             selectedPhrase = answeredPhrases.get(currentlySelectedPhraseIndex);
             question = selectedPhrase.nativeWord + " " + hint.getShortHint(selectedPhrase.foreignWord);
         }
+        System.out.println(" " + question);
         reloadStatTableData();
         reloadTrainingLog();
+
     }
 
-    public void previousQuestion(){
+    public void previousQuestion() {
         System.out.println("CALL: previousQuestion() from InterfaceBean");
-        if(shift < (answeredPhrases.size() - 1)){
+        if (shift < (answeredPhrases.size() - 1)) {
             shift++;
         }
         currentlySelectedPhraseIndex = answeredPhrases.size() - 1 - shift;
-        if(currentlySelectedPhraseIndex < 0){
+        if (currentlySelectedPhraseIndex < 0) {
             currentlySelectedPhraseIndex = 0;
         }
         selectedPhrase = answeredPhrases.get(currentlySelectedPhraseIndex);
