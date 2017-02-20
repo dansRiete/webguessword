@@ -100,7 +100,7 @@ public class DAO {
             statement.execute(sql);
         } catch (SQLException e) {
             e.printStackTrace();
-            System.out.println("EXCEPTION: SQLException in updateStatistics from DAO");
+            System.out.println("EXCEPTION: SQLException in updateStatistics from DAO ");
         }
     }
 
