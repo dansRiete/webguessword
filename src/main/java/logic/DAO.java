@@ -93,8 +93,7 @@ public class DAO {
             learnt = -1;
 
         try (Statement statement = mainDbConn.createStatement()) {
-            String sql = "UPDATE " + loginBean.getUser() + "_stat" + " SET event='" + mode + "' WHERE date='" + dateTime +"' AND id=" + phr.id
-                    + ", " + learnt;
+            String sql = "UPDATE " + loginBean.getUser() + "_stat" + " SET event='" + mode +", learnt=" + learnt +  "' WHERE date='" + dateTime +"' AND id=" + phr.id;
             System.out.println("SQL from updateStatistics() is " + sql);
             System.out.println(sql);
             statement.execute(sql);

@@ -1,5 +1,6 @@
 package Utils;
 
+import beans.LoginBean;
 import logic.Phrase;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -15,11 +16,12 @@ public class HibernateUtils {
         try {
             Configuration configuration = new Configuration().configure();
             configuration.addAnnotatedClass(Phrase.class);
-            configuration.setProperty("hibernate.connection.username", "root");
-            configuration.setProperty("hibernate.connection.password", "root");
+
             configuration.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
             configuration.setProperty("hibernate.connection.driver_class", "com.mysql.jdbc.Driver");
-            configuration.setProperty("hibernate.connection.url", "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false");
+            configuration.setProperty("hibernate.connection.username", LoginBean.activeUser);
+            configuration.setProperty("hibernate.connection.password", LoginBean.activePassword);
+            configuration.setProperty("hibernate.connection.url", LoginBean.activeRemoteHost);
 
             return configuration.buildSessionFactory(
                     new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build()

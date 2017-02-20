@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.StringJoiner;
 
 @ManagedBean(name="login")
 @SessionScoped
@@ -21,18 +22,24 @@ public class LoginBean implements Serializable {
     Connection mainDbConn;
 
     private ArrayList<User> usersList = new ArrayList<>();
+    public static String activeRemoteHost;
+    public static String activeUser;
+    public static String activePassword;
     private String remoteHost = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     private String localHost3306 = "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     private String localHost3307 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
-    private static boolean USE_LOCAL_DB = true;
+    public final static boolean USE_LOCAL_DB = true;
 
     private void connectToDatabase() {
 
         System.out.println("CALL: connectToDatabase() from LoginBean");
         String dbConnected = "EXCEPTION: in connectToDatabase() from LoginBean";
         if(USE_LOCAL_DB){
+            activeRemoteHost = localHost3306;
+            activeUser = "root";
+            activePassword = "root";
             try {
-                mainDbConn = DriverManager.getConnection(localHost3306, "root", "root");
+                mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -41,15 +48,24 @@ public class LoginBean implements Serializable {
             return;
         }
         try {
-            mainDbConn = DriverManager.getConnection(remoteHost, "adminLtuHq9R", "d-AUIKakd1Br");
+            activeRemoteHost = remoteHost;
+            activeUser = "adminLtuHq9R";
+            activePassword = "d-AUIKakd1Br";
+            mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
             dbConnected = "- Remote DB was connected";
         } catch (SQLException e) {
             try {
-                mainDbConn = DriverManager.getConnection(localHost3306, "adminLtuHq9R", "d-AUIKakd1Br");
+                activeRemoteHost = localHost3306;
+                activeUser = "adminLtuHq9R";
+                activePassword = "d-AUIKakd1Br";
+                mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
                 dbConnected = "- Local DB 3306 was connected";
             } catch (SQLException e1) {
                 try {
-                    mainDbConn = DriverManager.getConnection(localHost3307, "adminLtuHq9R", "d-AUIKakd1Br");
+                    activeRemoteHost = localHost3307;
+                    activeUser = "adminLtuHq9R";
+                    activePassword = "d-AUIKakd1Br";
+                    mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
                     dbConnected = "- Local DB 3307 was connected";
                 } catch (SQLException e2) {
                     e2.printStackTrace();
