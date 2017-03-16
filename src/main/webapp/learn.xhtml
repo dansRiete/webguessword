@@ -5,179 +5,183 @@
 <html
         xmlns="http://www.w3.org/1999/xhtml"
         xmlns:h="http://xmlns.jcp.org/jsf/html"
-        xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
         xmlns:f="http://xmlns.jcp.org/jsf/core"
-        xmlns:a="http://xmlns.jcp.org/jsf/passthrough"
         xmlns:p="http://primefaces.org/ui"
-        xmlns:jsf="http://xmlns.jcp.org/jsf"
-        >
+>
 
 <h:head>
     <meta content="charset=UTF-8"/>
     <title>GuessWord</title>
     <style type="text/css">
-        html{
+
+        html {
             height: 100%;
         }
-        body{
+
+        body {
             height: 100%;
         }
+
         th {
             background-color: #4CAF50;
             color: white;
         }
-        tr:nth-child(even) {background-color: #f2f2f2}
-    </style>
 
-    <!--<script type='text/javascript'>
-        if(window.innerWidth&ldt;1280)
-            location.href='http://site.ru/mobile/';
-    </script>-->
+        tr:nth-child(even) {
+            background-color: #f2f2f2
+        }
+    </style>
 </h:head>
 
 <h:body>
-
-    <!--<p:ajaxStatus>
-        <f:facet name="start">
-            <p:graphicImage value="ajax-loading.gif" />
-        </f:facet>
-    </p:ajaxStatus>-->
-<h:outputLabel style="color: #2a2a2a;font-size: 200%; font-weight: bold" id="out1"
-               value="#{interfaceBean.question}"> </h:outputLabel>
-<br> </br>
-
-<div>
-
-    <div>
-        <h:form>
-            <h:inputText size="50" id="answerField" value="#{interfaceBean.answerField}" lang="en" autocomplete="off"> </h:inputText>
-            <h:commandButton style="margin-left: 3px" type="submit" id="answerAction" value="Answer"
-                             action="#{interfaceBean.checkTheAnswer()}">
-                <f:ajax execute="answerField" render="@all"> </f:ajax>
-            </h:commandButton>
-
-            <script type="text/javascript">
-                document.getElementsByName('j_idt7:answerField')[0].focus();
-            </script>
-        </h:form>
-    </div>
+    <h:outputLabel style="color: #2a2a2a;font-size: 200%; font-weight: bold" id="out1"
+                   value="#{interfaceBean.question}"> </h:outputLabel>
+    <br> </br>
 
     <div>
 
-        <h:panelGroup>
-            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="previous" value="Previous"
-                             action="#{interfaceBean.previousQuestion()}">
-                <f:ajax render="@all"> </f:ajax>
-            </h:commandButton>
-
-            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="next" value="Next"
-                             action="#{interfaceBean.nextQuestion()}">
-
-                <f:ajax render="@all"> </f:ajax>
-            </h:commandButton>
-
-            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="know" value="I know it"
-                             action="#{interfaceBean.rightAnswer()}">
-                <f:ajax render="@all"> </f:ajax>
-            </h:commandButton>
-
-            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="donotknow" value="I don't know it"
-                             action="#{interfaceBean.wrongAnswer()}">
-                <f:ajax render="@all"> </f:ajax>
-            </h:commandButton>
-
-            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevWrong" value="Prev.Wrong"
-                             action="#{interfaceBean.previousWrong()}">
-                <f:ajax render="@all"> </f:ajax>
-            </h:commandButton>
-            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevRight" value="Prev.Right"
-                             action="#{interfaceBean.previousRight()}">
-                <f:ajax render="@all"> </f:ajax>
-            </h:commandButton>
-
-            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="dialogButton" value="Modificate"
-                             onclick="PF('modDialog').show();">
-            </h:commandButton>
-
-            <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="deleteButton" value="Delete"
-                             onclick="PF('deleteDialog').show();">
-            </h:commandButton>
-
-            <h:form style="display: inline-block">
-                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="submit" id="content" value="Show All"
-                                 action="content">
+        <div>
+            <h:form>
+                <h:inputText size="50" id="answerField" value="#{interfaceBean.answerField}" lang="en"
+                             autocomplete="off"> </h:inputText>
+                <h:commandButton style="margin-left: 3px" type="submit" id="answerAction" value="Answer"
+                                 action="#{interfaceBean.checkTheAnswer()}">
+                    <f:ajax execute="answerField" render="@all"> </f:ajax>
                 </h:commandButton>
-            </h:form>
 
-            <h:form style="display: inline-block">
-                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="submit" id="mobile" value="Mobile"
-                                 action="weblearn?faces-redirect=true">
+                <script type="text/javascript">
+                    document.getElementsByName('j_idt7:answerField')[0].focus();
+                </script>
+            </h:form>
+        </div>
+
+        <div>
+
+            <h:panelGroup>
+                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="previous" value="Previous"
+                                 action="#{interfaceBean.previousQuestion()}">
+                    <f:ajax render="@all"> </f:ajax>
                 </h:commandButton>
-            </h:form>
 
+                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="next" value="Next"
+                                 action="#{interfaceBean.nextQuestion()}">
 
-            <h:form style="display: inline-block">
-            <h:commandButton id="exit" type="submit" value="Exit" action="#{interfaceBean.exitCurrentSession()}"> </h:commandButton>
-            </h:form>
+                    <f:ajax render="@all"> </f:ajax>
+                </h:commandButton>
 
-            <p:dialog id="modDialog" widgetVar="modDialog" modal="true" resizable="false" position="center top" header="Edit the current phrase">
-                <h:form id="red">
-                    <h:panelGrid columns="2" layout="grid">
-                        <p:outputLabel value="Native word"/>
-                        <p:inputText size="40" value="#{interfaceBean.currPhrNatWord}" title="Native word"
-                                     label="Native word"> </p:inputText>
+                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="know" value="I know it"
+                                 action="#{interfaceBean.rightAnswer()}">
+                    <f:ajax render="@all"> </f:ajax>
+                </h:commandButton>
 
-                        <p:outputLabel value="Foreign word"/>
-                        <p:inputText size="40" value="#{interfaceBean.currPhrForWord}" title="Foreign word"
-                                     label="Foreign word"> </p:inputText>
+                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="donotknow"
+                                 value="I don't know it"
+                                 action="#{interfaceBean.wrongAnswer()}">
+                    <f:ajax render="@all"> </f:ajax>
+                </h:commandButton>
 
-                        <p:outputLabel value="Transcription"/>
-                        <p:inputText size="40" value="#{interfaceBean.currPhrTransc}" title="Transcription"
-                                     label="Transcription"> </p:inputText>
+                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevWrong"
+                                 value="Prev.Wrong"
+                                 action="#{interfaceBean.previousWrong()}">
+                    <f:ajax render="@all"> </f:ajax>
+                </h:commandButton>
+                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevRight"
+                                 value="Prev.Right"
+                                 action="#{interfaceBean.previousRight()}">
+                    <f:ajax render="@all"> </f:ajax>
+                </h:commandButton>
 
-                        <p:outputLabel value="Label"/>
-                        <p:inputText size="40" value="#{interfaceBean.currPhrLabel}" title="Label"
-                                     label="Label"> </p:inputText>
-                    </h:panelGrid>
-                    <p:commandButton type="submit" value="Submit" actionListener="#{messagesView.info}">
-                    </p:commandButton>
-                    <p:messages id="messages" showDetail="true" autoUpdate="true" closable="true"/>
+                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="dialogButton"
+                                 value="Modificate"
+                                 onclick="PF('modDialog').show();">
+                </h:commandButton>
+
+                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="deleteButton"
+                                 value="Delete"
+                                 onclick="PF('deleteDialog').show();">
+                </h:commandButton>
+
+                <h:form style="display: inline-block">
+                    <h:commandButton style="margin-right: 3px; margin-top: 3px" type="submit" id="content"
+                                     value="Show All"
+                                     action="content">
+                    </h:commandButton>
                 </h:form>
-            </p:dialog>
 
-            <p:dialog id="deleteDialog" widgetVar="deleteDialog" hideEffect="highlight" modal="true" resizable="false" header="Delete the current phrase">
-                <p:commandButton type="submit" value="Yes" action="#{interfaceBean.deletePhrase()}" oncomplete="PF('deleteDialog').hide();">
-
-                </p:commandButton>
-                <p:commandButton type="button" value="No" onclick="PF('deleteDialog').hide();">
-
-                </p:commandButton>
-
-            </p:dialog>
-        </h:panelGroup>
-
-    </div>
-</div>
+                <h:form style="display: inline-block">
+                    <h:commandButton style="margin-right: 3px; margin-top: 3px" type="submit" id="mobile" value="Mobile"
+                                     action="weblearn?faces-redirect=true">
+                    </h:commandButton>
+                </h:form>
 
 
-<div style="height: 80%">
-    <div style="display:inline-block; width: 71%">
-        <h:form>
-            <h:panelGroup id="myblock" layout="block" escape="false" style="height:70%; width:100%">
-                <h:outputText id="list" escape="false" style="font-size: 130%"
-                              value="#{interfaceBean.trainingLog}"> </h:outputText>
+                <h:form style="display: inline-block">
+                    <h:commandButton id="exit" type="submit" value="Exit" action="#{interfaceBean.exitCurrentSession()}">
+                        <f:actionListener binding="logout?faces-redirect=true"/>
+                    </h:commandButton>
+                </h:form>
+
+                <p:dialog id="modDialog" widgetVar="modDialog" modal="true" resizable="false" position="center top"
+                          header="Edit the current phrase">
+                    <h:form id="red">
+                        <h:panelGrid columns="2" layout="grid">
+                            <p:outputLabel value="Native word"/>
+                            <p:inputText size="40" value="#{interfaceBean.currPhrNatWord}" title="Native word"
+                                         label="Native word"> </p:inputText>
+
+                            <p:outputLabel value="Foreign word"/>
+                            <p:inputText size="40" value="#{interfaceBean.currPhrForWord}" title="Foreign word"
+                                         label="Foreign word"> </p:inputText>
+
+                            <p:outputLabel value="Transcription"/>
+                            <p:inputText size="40" value="#{interfaceBean.currPhrTransc}" title="Transcription"
+                                         label="Transcription"> </p:inputText>
+
+                            <p:outputLabel value="Label"/>
+                            <p:inputText size="40" value="#{interfaceBean.currPhrLabel}" title="Label"
+                                         label="Label"> </p:inputText>
+                        </h:panelGrid>
+                        <p:commandButton type="submit" value="Submit" actionListener="#{messagesView.info}">
+                        </p:commandButton>
+                        <p:messages id="messages" showDetail="true" autoUpdate="true" closable="true"/>
+                    </h:form>
+                </p:dialog>
+
+                <p:dialog id="deleteDialog" widgetVar="deleteDialog" hideEffect="highlight" modal="true"
+                          resizable="false" header="Delete the current phrase">
+                    <p:commandButton type="submit" value="Yes" action="#{interfaceBean.deletePhrase()}"
+                                     oncomplete="PF('deleteDialog').hide();">
+
+                    </p:commandButton>
+                    <p:commandButton type="button" value="No" onclick="PF('deleteDialog').hide();">
+
+                    </p:commandButton>
+
+                </p:dialog>
             </h:panelGroup>
-        </h:form>
+
+        </div>
     </div>
-    <div style="width: 28%; display:inline-table; vertical-align: top; horiz-align: center">
-        <table >
-            <thead>
-            <tr>
-                <th scope="col">Properties within current session</th>
-                <th scope="col">Value</th>
-            </tr>
-            </thead>
-            <tbody>
+
+
+    <div style="height: 80%">
+        <div style="display:inline-block; width: 71%">
+            <h:form>
+                <h:panelGroup id="myblock" layout="block" escape="false" style="height:70%; width:100%">
+                    <h:outputText id="list" escape="false" style="font-size: 130%"
+                                  value="#{interfaceBean.trainingLog}"> </h:outputText>
+                </h:panelGroup>
+            </h:form>
+        </div>
+        <div style="width: 28%; display:inline-table; vertical-align: top; horiz-align: center">
+            <table>
+                <thead>
+                <tr>
+                    <th scope="col">Properties within current session</th>
+                    <th scope="col">Value</th>
+                </tr>
+                </thead>
+                <tbody>
                 <tr>
                     <td>Number of answers</td>
                     <td>#{interfaceBean.answersForSessionNumber}</td>
@@ -211,62 +215,63 @@
                     <td>#{interfaceBean.averageAnswersPerDayNumber}</td>
                 </tr>
 
-            </tbody>
+                </tbody>
 
 
-            <!--                    Properties of current phrase                         -->
+                <!--                    Properties of current phrase                         -->
 
 
-            <thead>
-            <tr>
-                <th scope="col">Properties of current phrase</th>
-                <th scope="col">Value</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td>Chance of occurrence (points)</td>
-                <td>#{interfaceBean.currPhrProb}</td>
-            </tr>
-            <tr>
-                <td>Chance of occurrence (percents)</td>
-                <td>#{interfaceBean.currPhrPercentOfAppearance}</td>
-            </tr>
-            <tr>
-                <td>Id of current phrase</td>
-                <td>#{interfaceBean.id}</td>
-            </tr>
-            <tr>
-                <td>Rate of current phrase</td>
-                <td>#{interfaceBean.currentPhraseRate}</td>
-            </tr>
+                <thead>
+                <tr>
+                    <th scope="col">Properties of current phrase</th>
+                    <th scope="col">Value</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>Chance of occurrence (points)</td>
+                    <td>#{interfaceBean.currPhrProb}</td>
+                </tr>
+                <tr>
+                    <td>Chance of occurrence (percents)</td>
+                    <td>#{interfaceBean.currPhrPercentOfAppearance}</td>
+                </tr>
+                <tr>
+                    <td>Id of current phrase</td>
+                    <td>#{interfaceBean.id}</td>
+                </tr>
+                <tr>
+                    <td>Rate of current phrase</td>
+                    <td>#{interfaceBean.currentPhraseRate}</td>
+                </tr>
 
-            <tr>
-                <td>Last access date</td>
-                <td>#{interfaceBean.currPhrAbsLastAccsDate}<br/>~#{interfaceBean.currPhrRelLastAccsDate}</td>
-            </tr>
-            <tr>
-                <td>Create date</td>
-                <td>#{interfaceBean.currPhrAbsCreateDate}<br/>~#{interfaceBean.currPhrRelCreateDate}</td>
-            </tr>
-            <tr>
-                <td>Label</td>
-                <td>#{interfaceBean.currPhrLabel}</td>
-            </tr>
-            <tr>
-                <td>Choosed phrase
-                    <h:form>
-                    <h:selectOneMenu id="table" value="#{interfaceBean.choosedLabel}">
-                        <f:ajax event="change" execute="table; #{interfaceBean.setTable()}" render="@all"/>
-                        <f:selectItems value="#{interfaceBean.listOfChooses}" var="group" itemValue="#{group}" itemLabel="#{group}"/>
-                    </h:selectOneMenu>
-                    </h:form>
-                </td>
-                <td>#{interfaceBean.resultChoosedLabel}</td>
-            </tr>
-            </tbody>
-        </table>
+                <tr>
+                    <td>Last access date</td>
+                    <td>#{interfaceBean.currPhrAbsLastAccsDate}<br/>~#{interfaceBean.currPhrRelLastAccsDate}</td>
+                </tr>
+                <tr>
+                    <td>Create date</td>
+                    <td>#{interfaceBean.currPhrAbsCreateDate}<br/>~#{interfaceBean.currPhrRelCreateDate}</td>
+                </tr>
+                <tr>
+                    <td>Label</td>
+                    <td>#{interfaceBean.currPhrLabel}</td>
+                </tr>
+                <tr>
+                    <td>Choosed phrase
+                        <h:form>
+                            <h:selectOneMenu id="table" value="#{interfaceBean.choosedLabel}">
+                                <f:ajax event="change" execute="table; #{interfaceBean.setTable()}" render="@all"/>
+                                <f:selectItems value="#{interfaceBean.listOfChooses}" var="group" itemValue="#{group}"
+                                               itemLabel="#{group}"/>
+                            </h:selectOneMenu>
+                        </h:form>
+                    </td>
+                    <td>#{interfaceBean.resultChoosedLabel}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 </h:body>
 </html>

@@ -1,5 +1,5 @@
 import logic.Answer;
-import logic.Phrase;
+import datamodel.Phrase;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.*;

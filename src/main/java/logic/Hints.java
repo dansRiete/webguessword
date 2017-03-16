@@ -2,17 +2,16 @@ package logic;
 
 /**
  * Created by Aleks on 27.02.2016.
- * Класс UtilClasses.Hints содержит методы для превращения фраз в подсказки использующиеся в процессе учебного процесса
+ * Contains methods for converting phrases into clues used in the learning process
  */
 public class Hints {
     /**
-     * Получает фразу на английском в качестве параметра. Если в фразе встречается слеш (например: car\my auto) возвращает
-     * подсказку типа ***\** ****, если фраза не содержит слеш("/") возвращает ""
-     * @param engWord фразa на английском
-     * @return Если в фразе встречается слеш (например: car\my auto) возвращает
-     * подсказку типа ***\** ****, если фраза не содержит слеш("/") возвращает ""
+     * Gets the phrase in English as a parameter. If a slash occurs in the phrase (for example: car \ my auto) returns
+     * a hint *** \ ** ****, if the phrase does not contain a slash ("/") returns ""
+     * @param engWord foreign phrase
+     * @return a hint *** \ ** ****, if the phrase does not contain a slash ("/") returns ""
      */
-    public String getLongHint(String engWord){
+    public String longHint(String engWord){
         if(engWord.contains("/")||engWord.contains("\\")||engWord.contains(" ")||engWord.contains("-")||
                 engWord.contains("`")||engWord.contains("'")||engWord.contains(",")){
             char[] hintAr = engWord.toCharArray();
@@ -55,7 +54,7 @@ public class Hints {
         return "";
     }
 
-    public String getShortHint(String word){
+    public String shortHint(String word){
 
         int numberOfVariants = 1;   // There is at least one
         int serialNumberOfHint = 0;

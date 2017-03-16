@@ -1,7 +1,9 @@
 package beans;
 
-import Exceptions.DataBaseConnectionException;
-import logic.*;
+import Exceptions.NoAliveDatabasesException;
+import datamodel.User;
+import logic.DAO;
+
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
@@ -10,17 +12,16 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.StringJoiner;
 
 @ManagedBean(name="login")
 @SessionScoped
 public class LoginBean implements Serializable {
+
     private String user;
     private String password;
-    User currentUser;
+    private User currentUser;
     private DAO dao;
-    Connection mainDbConn;
-
+    private Connection mainDbConn;
     private ArrayList<User> usersList = new ArrayList<>();
     public static String activeRemoteHost;
     public static String activeUser;
@@ -70,7 +71,7 @@ public class LoginBean implements Serializable {
                 } catch (SQLException e2) {
                     e2.printStackTrace();
                     System.out.println("EXCEPTION: in connectToDatabase() from LoginBean");
-                    throw new DataBaseConnectionException();
+                    throw new NoAliveDatabasesException();
                 }
             }
         } finally {
@@ -88,7 +89,7 @@ public class LoginBean implements Serializable {
         connectToDatabase();
         ResultSet rs = null;
 
-        //>>Создаём список юзеров ArrayList<User> usersList
+        //>>Create list of users
         try {
             Statement st = mainDbConn.createStatement();
             rs = st.executeQuery("SELECT * FROM users");
@@ -107,7 +108,7 @@ public class LoginBean implements Serializable {
         System.out.println("CALL: checkUserAndPassword() from LoginBean");
         boolean userExist = false;
 
-        //Проверяем или введенный пользователь присутствует в базе данных
+        //Check if there is such user
         for(User user : usersList){
             if(this.user.equalsIgnoreCase(user.login)){
                 userExist = true;
@@ -115,8 +116,7 @@ public class LoginBean implements Serializable {
                 break;
             }
         }
-        //Если пользователь существует и пароль совпадает то dispatch("learn.xhtml")
-        //в противном случае sendRedirect("error.xhtml")
+        //If user exists and password is correct then dispatch to "learn.xhtml" otherwise sendRedirect("error.xhtml")
         if ((userExist)&&(password.equals(currentUser.password))) {
             dao = new DAO(this);
             FacesContext context = FacesContext.getCurrentInstance();

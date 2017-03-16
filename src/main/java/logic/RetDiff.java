@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 
 /**
  * Created by Aleks on 21.05.2016.
- * Класс содержит один метод retDiffInTime(long l) который возвращает относительную разницу даты
+ * Is used for returning the string representation of the time difference (seconds, minutes, hours ... years)
  */
 
 public class RetDiff {
@@ -14,26 +14,30 @@ public class RetDiff {
     private static final long oneMonth = oneMinute * 43830;
     private static final long oneYear = oneMonth * 12;
 
-    public String retDiffInTime(long diff) {
+    /**
+     * @param msTimeDifference Time difference in milliseconds
+     * @return Returns the string representation of the time difference (seconds, minutes, hours ... years)
+     */
+    public String retDiffInTime(long msTimeDifference) {
 
-        if (diff < oneMinute) {
+        if (msTimeDifference < oneMinute) {
             //in seconds
-            return diff / 1000 + (diff / 1000 > 1 ? " seconds ago" : " second ago");
-        } else if (diff < oneHour) {
+            return msTimeDifference / 1000 + (msTimeDifference / 1000 > 1 ? " seconds ago" : " second ago");
+        } else if (msTimeDifference < oneHour) {
             //in minutes
-            return diff / oneMinute + (diff / oneMinute > 1 ? " minutes ago" : " minute ago");
-        } else if (diff < oneDay) {
+            return msTimeDifference / oneMinute + (msTimeDifference / oneMinute > 1 ? " minutes ago" : " minute ago");
+        } else if (msTimeDifference < oneDay) {
             //in hours
-            return diff / oneHour + (diff / oneHour > 1 ? " hours ago" : " hour ago");
-        } else if (diff < oneMonth) {
+            return msTimeDifference / oneHour + (msTimeDifference / oneHour > 1 ? " hours ago" : " hour ago");
+        } else if (msTimeDifference < oneMonth) {
             //in days
-            return diff / oneDay + (diff / oneDay > 1 ? " days ago" : " day ago");
-        } else if (diff < oneYear) {
+            return msTimeDifference / oneDay + (msTimeDifference / oneDay > 1 ? " days ago" : " day ago");
+        } else if (msTimeDifference < oneYear) {
             //in months
-            return diff / oneMonth + (diff / oneMonth > 1 ? " months ago" : " month ago");
+            return msTimeDifference / oneMonth + (msTimeDifference / oneMonth > 1 ? " months ago" : " month ago");
         } else {
             //in years
-            return new BigDecimal((double) diff / (double) oneYear).setScale(1, BigDecimal.ROUND_HALF_UP).toString() + " years ago";
+            return new BigDecimal((double) msTimeDifference / (double) oneYear).setScale(1, BigDecimal.ROUND_HALF_UP).toString() + " years ago";
         }
     }
 

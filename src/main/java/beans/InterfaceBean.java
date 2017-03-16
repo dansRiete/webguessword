@@ -1,5 +1,6 @@
 package beans;
 
+import datamodel.Phrase;
 import logic.*;
 
 import java.io.IOException;
@@ -29,17 +30,8 @@ import javax.servlet.http.HttpSession;
 @SessionScoped
 public class InterfaceBean implements Serializable{
 
-    /*@ManagedProperty(value="#{stat}")
-    private StatBean statBean;
-    public void setStatBean(StatBean statBean) {
-        this.statBean = statBean;
-    }*/
-
     @ManagedProperty(value="#{login}")
     private LoginBean loginBean;
-    public void setLoginBean(LoginBean loginBean) {
-        this.loginBean = loginBean;
-    }
 
     private int answersForSessionNumber;
     private int trainedPhrasesNumber;
@@ -341,11 +333,11 @@ public class InterfaceBean implements Serializable{
             selectedPhrase = newPhrase;
             currentlySelectedPhraseIndex = answeredPhrases.size() - 1;
             selectedPhrase = answeredPhrases.get(currentlySelectedPhraseIndex);
-            question = selectedPhrase.nativeWord + " " + hint.getShortHint(selectedPhrase.foreignWord);
+            question = selectedPhrase.nativeWord + " " + hint.shortHint(selectedPhrase.foreignWord);
         }else {
             currentlySelectedPhraseIndex = answeredPhrases.size() - 1 - --shift;
             selectedPhrase = answeredPhrases.get(currentlySelectedPhraseIndex);
-            question = selectedPhrase.nativeWord + " " + hint.getShortHint(selectedPhrase.foreignWord);
+            question = selectedPhrase.nativeWord + " " + hint.shortHint(selectedPhrase.foreignWord);
         }
         System.out.println(" " + question);
         reloadStatTableData();
@@ -391,6 +383,20 @@ public class InterfaceBean implements Serializable{
 
 
     //>>>>>>>>>>>>    Setters and getters     >>>>>>>>>>>>>
+
+    public DAO getDao() {
+        return dao;
+    }
+    public void setDao(DAO dao) {
+        this.dao = dao;
+    }
+
+    public LoginBean getLoginBean() {
+        return loginBean;
+    }
+    public void setLoginBean(LoginBean loginBean) {
+        this.loginBean = loginBean;
+    }
 
     public String getQuestion() {
         return question;

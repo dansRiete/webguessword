@@ -1,5 +1,7 @@
 package logic;
 
+import datamodel.Phrase;
+
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -8,6 +10,7 @@ import java.util.List;
 /**
  * Created by Aleks on 11.11.2016.
  */
+
 public class Answer {
 
     private boolean answerIsCorrect;

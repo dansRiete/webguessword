@@ -1,10 +1,11 @@
 package beans;
 
+import datamodel.Phrase;
 import logic.DAO;
-import logic.Phrase;
 
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -19,11 +20,8 @@ import java.util.List;
 @RequestScoped
 public class EditBean {
 
-    /*@ManagedProperty(value="#{login}")
+    @ManagedProperty(value="#{login}")
     private LoginBean loginBean;
-    public void setLoginBean(LoginBean loginBean) {
-        this.loginBean = loginBean;
-    }*/
 
     private DAO dao;
     private ArrayList<Phrase> myList;
@@ -33,32 +31,35 @@ public class EditBean {
     private String transcription;
     private String label;
     private BigDecimal probabilityFactor;
+
     public EditBean(){
         init();
     }
+
     @PostConstruct
     private void init(){
         System.out.println("EDITBEAN CALL init()");
-        /*if(loginBean!=null)
-            dao = loginBean.getDao();*/
-        if(dao!=null){
-//            currList = dao.getCurrList();
+        if(loginBean != null)
+            dao = loginBean.getDao();
+        if(dao != null){
             myList = dao.getActivePhrases();
             labelsList = dao.retievePossibleLabels();
         }
     }
 
     public void addAction(){
+
         System.out.println("EDITBEAN CALL START addAction() from editBean mylist.size=" + myList.size());
 
         if( this.foreignWord != null && this.nativeWord != null && !this.foreignWord.equalsIgnoreCase("") && !this.nativeWord.equalsIgnoreCase("")){
-            Timestamp now = new Timestamp(System.currentTimeMillis());
 
+            Timestamp now = new Timestamp(System.currentTimeMillis());
             Phrase phrase = new Phrase(0, this.foreignWord, this.nativeWord, this.transcription, new BigDecimal(30), now, this.label, null, 0, 0, false, 1, dao);
             this.foreignWord = this.nativeWord = this.transcription = this.label = "";
             probabilityFactor = null;
             myList.add(0, phrase);
             dao.insertPhrase(phrase);
+
         }
 
         System.out.println("EDITBEAN CALL END addAction() from editBean mylist.size=" + myList.size());
@@ -81,6 +82,10 @@ public class EditBean {
         else
             return 100;
 
+    }
+
+    public void setLoginBean(LoginBean loginBean) {
+        this.loginBean = loginBean;
     }
 
     public ArrayList<Phrase> getMyList() {

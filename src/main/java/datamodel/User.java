@@ -1,4 +1,4 @@
-package logic;
+package datamodel;
 
 /**
  * Created by Aleks on 20.05.2016.

@@ -3,6 +3,7 @@ package logic;
 import Exceptions.*;
 import Utils.HibernateUtils;
 import beans.*;
+import datamodel.Phrase;
 import org.hibernate.query.Query;
 
 import java.sql.*;

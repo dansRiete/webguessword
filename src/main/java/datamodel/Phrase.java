@@ -1,4 +1,6 @@
-package logic;
+package datamodel;
+
+import logic.DAO;
 
 import javax.persistence.*;
 import java.io.Serializable;

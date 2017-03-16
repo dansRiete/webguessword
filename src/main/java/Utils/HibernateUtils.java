@@ -1,7 +1,7 @@
 package Utils;
 
 import beans.LoginBean;
-import logic.Phrase;
+import datamodel.Phrase;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
@@ -14,9 +14,9 @@ public class HibernateUtils {
 
     private static SessionFactory buildSessionFactory() {
         try {
+
             Configuration configuration = new Configuration().configure();
             configuration.addAnnotatedClass(Phrase.class);
-
             configuration.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
             configuration.setProperty("hibernate.connection.driver_class", "com.mysql.jdbc.Driver");
             configuration.setProperty("hibernate.connection.username", LoginBean.activeUser);
@@ -24,12 +24,12 @@ public class HibernateUtils {
             configuration.setProperty("hibernate.connection.url", LoginBean.activeRemoteHost);
 
             return configuration.buildSessionFactory(
-                    new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build()
-            );
+                    new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build());
+
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException(
-                    "There was an error building the factory");
+                    "There was an error during Hibernate buildSessionFactory()");
         }
     }
 

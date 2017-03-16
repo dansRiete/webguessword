@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:h="http://xmlns.jcp.org/jsf/html"
-      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
-      xmlns:f="http://xmlns.jcp.org/jsf/core">
+      xmlns:h="http://xmlns.jcp.org/jsf/html">
 
 
 <h:head>
@@ -12,8 +10,8 @@
 
 
 <h:body>
-    <h1 style="color:seagreen">Hello, here is my new OpenShift Project.</h1>
-
+    <h1 style="color:seagreen">Hello, here is my web project, which goal is to help in learning foreign words.</h1>
+    <h2 style="color:#7ca5a6">Crucial technologies used: JavaEE, Wildfly server, Servlet API/JSP, JSF web-framework, Hibernate.</h2>
 
     <h:form>
         <h:panelGroup>
@@ -23,9 +21,9 @@
                 <h:outputText value="Password"/>
                 <h:inputSecret value="#{login.password}"/>
             </h:panelGrid>
-            <h:commandButton id="submit" value="submit" action="#{login.checkUserAndPassword()}"/>
-            <h3 style="color: #1c6bbf">Credentials for guests. Login: guest - Password: guest</h3>
-
+            <h:commandButton id="submit" value="Sign In" action="#{login.checkUserAndPassword()}"/>
+            <h3 style="color: #1c6bbf">Credentials for guests. Login: guest - Password: guest <br/>
+                If you want to Sign Up, feel comfortable to ask me on aleks.ce267@gmail.com. Registration page curently is in progress.</h3>
         </h:panelGroup>
     </h:form>
 
