@@ -6,7 +6,6 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.sql.Timestamp;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
@@ -16,15 +15,15 @@ import java.util.HashSet;
  */
 
 @Entity
-@Table(name = "aleks")
+@Table(name = "words")
 public class Phrase implements Serializable{
+
+    @Transient
+    private static final double RIGHT_ANSWER_MULTIPLIER = 1.2;
 
     @javax.persistence.Id
     @GeneratedValue(strategy=GenerationType.AUTO)
     public int id;
-
-    @Transient
-    private static final double RIGHT_ANSWER_MULTIPLIER = 1.2;
 
     @Column(name = "for_word")
     public String foreignWord;
@@ -38,14 +37,8 @@ public class Phrase implements Serializable{
     @Column(name = "prob_factor")
     public BigDecimal probabilityFactor;
 
-    @Transient
-    public BigDecimal previousProbabilityFactor;
-
     @Column
     public String label;
-
-    @Transient
-    public ZonedDateTime phraseAppearingTime = ZonedDateTime.now(ZoneId.of("Europe/Helsinki"));
 
     @Column(name = "create_date")
     public ZonedDateTime collectionAddingDateTime;
@@ -55,6 +48,15 @@ public class Phrase implements Serializable{
 
     @Column
     public boolean exactMatch;
+
+    @Column(name = "rate")
+    public double multiplier;
+
+    @Transient
+    public BigDecimal previousProbabilityFactor;
+
+    @Transient
+    public ZonedDateTime phraseAppearingTime = ZonedDateTime.now(ZoneId.of("Europe/Helsinki"));
 
     @Transient
     public boolean hasBeenAnsweredCorrectly;
@@ -67,9 +69,6 @@ public class Phrase implements Serializable{
 
     @Transient
     public double indexEnd;
-
-    @Column(name = "rate")
-    public double multiplier;
 
     @Transient
     public double previousMultiplier;
@@ -86,7 +85,9 @@ public class Phrase implements Serializable{
     public Phrase() {
     }
 
-    public Phrase(int id, String foreignWord, String nativeWord, String transcription, BigDecimal probabilityFactor, ZonedDateTime collectionAddingDateTime, String label, ZonedDateTime lastAccessDateTime, double indexStart, double indexEnd, boolean exactMatch, double multiplier, DAO dao){
+    public Phrase(int id, String foreignWord, String nativeWord, String transcription, BigDecimal probabilityFactor,
+                  ZonedDateTime collectionAddingDateTime, String label, ZonedDateTime lastAccessDateTime,
+                  double indexStart, double indexEnd, boolean exactMatch, double multiplier, DAO dao){
         this.id = id;
         this.foreignWord = foreignWord;
         this.nativeWord = nativeWord;
@@ -122,12 +123,12 @@ public class Phrase implements Serializable{
         this.dao = givenPhrase.dao;
     }
 
-    //This construcor is used for tests only
+    /*//This construcor is used for tests only
     public Phrase(String foreignWord, String nativeWord){
         this.id = 0;
         this.foreignWord = foreignWord;
         this.nativeWord = nativeWord;
-    }
+    }*/
 
 
 
@@ -220,7 +221,6 @@ public class Phrase implements Serializable{
     public boolean isThisPhraseInList(HashSet<String> phrasesList){
 
         if(phrasesList != null){
-
             if(phrasesList.isEmpty()) {
                 return true;
             }
@@ -230,8 +230,7 @@ public class Phrase implements Serializable{
                 }
             }
             return false;
-
-        } else {
+        }else{
             return true;
         }
     }
@@ -280,7 +279,12 @@ public class Phrase implements Serializable{
                 '}';
     }
 
-//Setters and getters
+    @Override
+    public int hashCode() {
+        return foreignWord.hashCode() * (nativeWord.hashCode() + 21);
+    }
+
+    //Setters and getters
 
     public int getId() {
         return id;

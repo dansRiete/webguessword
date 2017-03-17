@@ -6,11 +6,9 @@ import logic.DAO;
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.RequestScoped;
 import javax.faces.bean.SessionScoped;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -48,6 +46,7 @@ public class EditBean implements Serializable{
         if(dao != null){
             myList = dao.getActivePhrases();
             labelsList = dao.retievePossibleLabels();
+            labelsList.add("All");
         }
     }
 
@@ -81,10 +80,11 @@ public class EditBean implements Serializable{
 
     public int rowNumbers(){
 
-        if(myList.size()/100>10)
-            return myList.size()/10+5;
-        else
+        if(myList.size() / 100 > 10){
+            return myList.size() / 10 + 5;
+        }else{
             return 100;
+        }
 
     }
 

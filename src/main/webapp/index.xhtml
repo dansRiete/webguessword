@@ -10,8 +10,8 @@
 
 
 <h:body>
-    <h1 style="color:seagreen">Hello, here is my web project, which goal is to help in learning foreign words.</h1>
-    <h2 style="color:#7ca5a6">Technologies used: JavaEE, JavaScript, WildFly10 application server, Servlet API/JSP, JSF/PrimeFaces web-framework, Hibernate.</h2>
+    <h1 style="color:seagreen">Hello, here is my web project, which goal is to help in learning foreign words and phrases.</h1>
+    <h2 style="color:#7ca5a6">Technologies used: JavaEE, JavaScript(some insertions), WildFly10 application server, Servlet API/JSP, JSF/PrimeFaces web-framework, Hibernate.</h2>
 
     <h:form>
         <h:panelGroup>
@@ -21,7 +21,7 @@
                 <h:outputText value="Password"/>
                 <h:inputSecret value="#{login.password}"/>
             </h:panelGrid>
-            <h:commandButton id="submit" value="Sign In" action="#{login.checkUserAndPassword()}"/>
+            <h:commandButton id="submit" value="Sign In" action="#{login.checkAndRedirectUser()}"/>
             <h3 style="color: #1c6bbf">Credentials for guests. Login: guest - Password: guest <br/>
                 If you want to Sign Up, feel comfortable to ask me on aleks.ce267@gmail.com. Registration page curently is in progress.</h3>
         </h:panelGroup>

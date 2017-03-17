@@ -185,7 +185,7 @@ public class InterfaceBean implements Serializable{
         answersForSessionNumber = numOfPhrForSession - numOfNonAnswForSession;
         //Generates a string with the percentage of correct answers to the total number of answers
         rightAnswersPercentage = ((new BigDecimal(numOfRightAnswForSession)).divide(new BigDecimal(answersForSessionNumber ==0?1: answersForSessionNumber),2, RoundingMode.HALF_UP).multiply(new BigDecimal(100))).setScale(0, RoundingMode.HALF_UP)+"%";
-        trainedPhrasesNumber = (int) dao.learnedWords;
+        trainedPhrasesNumber = (int) dao.learntWords;
         nonLearnedWordsNumber = (int) dao.nonLearnedWords;
         totalPhrasesNumber = trainedPhrasesNumber + nonLearnedWordsNumber;
 

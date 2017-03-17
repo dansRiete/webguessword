@@ -1,4 +1,4 @@
-package utils;
+package Utils;
 
 import beans.LoginBean;
 import datamodel.Phrase;
@@ -6,34 +6,40 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 
+import javax.el.ELContext;
+import javax.faces.context.FacesContext;
+
 /**
  * Created by Aleks on 08.02.2017.
  */
 public class HibernateUtils {
-    private static final SessionFactory sessionFactory = buildSessionFactory();
 
-    private static SessionFactory buildSessionFactory() {
-        try {
+    public SessionFactory buildSessionFactory() {
+        ELContext elContext = FacesContext.getCurrentInstance().getELContext();
+        LoginBean loginBean = (LoginBean) elContext.getELResolver().getValue(elContext, null, "login");
+        SessionFactory sessionFactory = null;
 
-            Configuration configuration = new Configuration().configure();
-            configuration.addAnnotatedClass(Phrase.class);
-            configuration.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
-            configuration.setProperty("hibernate.connection.driver_class", "com.mysql.jdbc.Driver");
-            configuration.setProperty("hibernate.connection.username", LoginBean.activeUser);
-            configuration.setProperty("hibernate.connection.password", LoginBean.activePassword);
-            configuration.setProperty("hibernate.connection.url", LoginBean.activeRemoteHost);
+        if (loginBean != null) {
+            try {
 
-            return configuration.buildSessionFactory(
-                    new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build());
+                Configuration configuration = new Configuration().configure();
+                configuration.addAnnotatedClass(Phrase.class);
+                configuration.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
+                configuration.setProperty("hibernate.connection.driver_class", "com.mysql.jdbc.Driver");
+                configuration.setProperty("hibernate.connection.username", loginBean.activeUser);
+                configuration.setProperty("hibernate.connection.password", loginBean.activePassword);
+                configuration.setProperty("hibernate.connection.url", loginBean.activeRemoteHost);
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException(
-                    "There was an error during Hibernate buildSessionFactory()");
+                sessionFactory = configuration.buildSessionFactory(
+                        new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build());
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new RuntimeException(
+                        "There was an error during Hibernate buildSessionFactory()");
+            }
         }
-    }
 
-    public static SessionFactory getSessionFactory() {
         return sessionFactory;
     }
 }

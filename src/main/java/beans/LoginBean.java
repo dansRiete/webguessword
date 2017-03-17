@@ -1,7 +1,7 @@
 package beans;
 
-import exceptions.NoAliveDatabasesException;
 import datamodel.User;
+import exceptions.NoAliveDatabasesException;
 import logic.DAO;
 
 import javax.faces.bean.ManagedBean;
@@ -23,70 +23,16 @@ public class LoginBean implements Serializable {
     private DAO dao;
     private Connection mainDbConn;
     private ArrayList<User> usersList = new ArrayList<>();
-    public static String activeRemoteHost;
-    public static String activeUser;
-    public static String activePassword;
-    private String remoteHost = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
-    private String localHost3306 = "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
-    private String localHost3307 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
-    public final static boolean USE_LOCAL_DB = true;
-
-    private void connectToDatabase() {
-
-        System.out.println("CALL: connectToDatabase() from LoginBean");
-        String dbConnected = "EXCEPTION: in connectToDatabase() from LoginBean";
-        if(USE_LOCAL_DB){
-            activeRemoteHost = localHost3306;
-            activeUser = "root";
-            activePassword = "root";
-            try {
-                mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            dbConnected = "Local DB connected without port forwarding";
-            System.out.println(dbConnected);
-            return;
-        }
-        try {
-            activeRemoteHost = remoteHost;
-            activeUser = "adminLtuHq9R";
-            activePassword = "d-AUIKakd1Br";
-            mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
-            dbConnected = "- Remote DB was connected";
-        } catch (SQLException e) {
-            try {
-                activeRemoteHost = localHost3306;
-                activeUser = "adminLtuHq9R";
-                activePassword = "d-AUIKakd1Br";
-                mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
-                dbConnected = "- Local DB 3306 was connected";
-            } catch (SQLException e1) {
-                try {
-                    activeRemoteHost = localHost3307;
-                    activeUser = "adminLtuHq9R";
-                    activePassword = "d-AUIKakd1Br";
-                    mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
-                    dbConnected = "- Local DB 3307 was connected";
-                } catch (SQLException e2) {
-                    e2.printStackTrace();
-                    System.out.println("EXCEPTION: in connectToDatabase() from LoginBean");
-                    throw new NoAliveDatabasesException();
-                }
-            }
-        } finally {
-            System.out.println(dbConnected);
-        }
-    }
-
-
-
-    public Connection getConnection(){
-        return mainDbConn;
-    }
+    public String activeRemoteHost;
+    public String activeUser;
+    public String activePassword;
+    private final static String ORIGINAL_REMOTE_HOST = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
+    private final static String FORWARDED_REMOTE_HOST_PORT3306 = "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
+    private final static String FORWARDED_REMOTE_HOST_PORT3307 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
+    public final static boolean USE_LOCAL_DB = false;
 
     public LoginBean(){
-        connectToDatabase();
+        determineAndConnectToDB();
         ResultSet rs = null;
 
         //>>Create list of users
@@ -104,8 +50,56 @@ public class LoginBean implements Serializable {
         //<<
     }
 
-    public void checkUserAndPassword(){
-        System.out.println("CALL: checkUserAndPassword() from LoginBean");
+    private void determineAndConnectToDB() {
+
+        System.out.println("CALL: determineAndConnectToDB() from LoginBean");
+        String dbConnected = "EXCEPTION: in determineAndConnectToDB() from LoginBean";
+        if(USE_LOCAL_DB){
+            activeRemoteHost = FORWARDED_REMOTE_HOST_PORT3306;
+            activeUser = "root";
+            activePassword = "root";
+            try {
+                mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            dbConnected = "Local virtual DB connected";
+            System.out.println(dbConnected);
+            return;
+        }
+        try {
+            activeRemoteHost = ORIGINAL_REMOTE_HOST;
+            activeUser = "adminLtuHq9R";
+            activePassword = "d-AUIKakd1Br";
+            mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
+            dbConnected = "Remote DB was connected";
+        } catch (SQLException e) {
+            try {
+                activeRemoteHost = FORWARDED_REMOTE_HOST_PORT3306;
+                activeUser = "adminLtuHq9R";
+                activePassword = "d-AUIKakd1Br";
+                mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
+                dbConnected = "Remote DB was connected through the local port 3306 forwarding";
+            } catch (SQLException e1) {
+                try {
+                    activeRemoteHost = FORWARDED_REMOTE_HOST_PORT3307;
+                    activeUser = "adminLtuHq9R";
+                    activePassword = "d-AUIKakd1Br";
+                    mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
+                    dbConnected = "Remote DB was connected through the local port 3307 forwarding";
+                } catch (SQLException e2) {
+                    e2.printStackTrace();
+                    System.out.println();
+                    throw new NoAliveDatabasesException();
+                }
+            }
+        } finally {
+            System.out.println(dbConnected);
+        }
+    }
+
+    public void checkAndRedirectUser(){
+        System.out.println("CALL: checkAndRedirectUser() from LoginBean");
         boolean userExist = false;
 
         //Check if there is such user
@@ -124,7 +118,7 @@ public class LoginBean implements Serializable {
             try {
                 response.sendRedirect("learn.xhtml");
             } catch (IOException e) {
-                System.out.println("EXCEPTION#2: in checkUserAndPassword() from LoginBean");
+                System.out.println("EXCEPTION#2: in checkAndRedirectUser() from LoginBean");
                 e.printStackTrace();
             }
         } else {
@@ -133,11 +127,15 @@ public class LoginBean implements Serializable {
             try {
                 response.sendRedirect("error.xhtml");
             } catch (IOException e) {
-                System.out.println("EXCEPTION#2: in checkUserAndPassword() from LoginBean");
+                System.out.println("EXCEPTION#2: in checkAndRedirectUser() from LoginBean");
                 e.printStackTrace();
             }
         }
 
+    }
+
+    public Connection getConnection(){
+        return mainDbConn;
     }
 
     public DAO getDao(){
