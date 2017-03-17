@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -45,6 +46,16 @@ public class EditBean implements Serializable{
             dao = loginBean.getDao();
         if(dao != null){
             myList = dao.getActivePhrases();
+            Collections.sort(myList, ((o1, o2) -> {
+                if(o1.collectionAddingDateTime.isAfter(o2.collectionAddingDateTime)){
+                    return -1;
+                }else if(o2.collectionAddingDateTime.isAfter(o1.collectionAddingDateTime)){
+                    return 1;
+                }else {
+                    return 0;
+                }
+            }));
+            myList.forEach((phrase -> System.out.println(phrase.id + " " + phrase.foreignWord + '\n')));
             labelsList = dao.retievePossibleLabels();
             labelsList.add("All");
         }
@@ -57,7 +68,8 @@ public class EditBean implements Serializable{
         if( this.foreignWord != null && this.nativeWord != null && !this.foreignWord.equalsIgnoreCase("") && !this.nativeWord.equalsIgnoreCase("")){
 
             ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC"));
-            Phrase phrase = new Phrase(0, this.foreignWord, this.nativeWord, this.transcription, new BigDecimal(30), ZonedDateTime.now(ZoneId.of("UTC")), this.label, null, 0, 0, false, 1, dao);
+            Phrase phrase = new Phrase(0, this.foreignWord, this.nativeWord, this.transcription, new BigDecimal(30),
+                    ZonedDateTime.now(ZoneId.of("UTC")), this.label, null, 0, 0, false, 1, dao);
             this.foreignWord = this.nativeWord = this.transcription = this.label = "";
             probabilityFactor = null;
             myList.add(0, phrase);
@@ -80,11 +92,12 @@ public class EditBean implements Serializable{
 
     public int rowNumbers(){
 
-        if(myList.size() / 100 > 10){
+        /*if(myList.size() / 100 > 10){
             return myList.size() / 10 + 5;
         }else{
             return 100;
-        }
+        }*/
+        return 50;
 
     }
 

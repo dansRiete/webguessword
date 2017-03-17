@@ -61,7 +61,7 @@ public class InterfaceBean implements Serializable{
     private String currPhrRelLastAccsDate;
     private String currPhrRelCreateDate;
     private int currPhrId;
-    private double currentPhraseRate;
+    private String currentPhraseRate;
     //<<
 
     private RetDiff retDiff = new RetDiff();
@@ -140,10 +140,12 @@ public class InterfaceBean implements Serializable{
 
         //After the answerField creates String like this - "40.2 ➩ 37.3"
         if(!selectedPhrase.hasBeenAnswered){
-            currPhrProb = selectedPhrase.probabilityFactor.setScale(1, RoundingMode.HALF_UP).toString();
+            BigDecimal previous = selectedPhrase.probabilityFactor.setScale(1, RoundingMode.HALF_UP);
+            currPhrProb = previous.toString();
         }else{
-            currPhrProb = selectedPhrase.previousProbabilityFactor.setScale(1, RoundingMode.HALF_UP) + "➩"
-                    + selectedPhrase.probabilityFactor.setScale(1, RoundingMode.HALF_UP);
+            BigDecimal previous = selectedPhrase.previousProbabilityFactor.setScale(1, RoundingMode.HALF_UP);
+            BigDecimal present = selectedPhrase.probabilityFactor.setScale(1, RoundingMode.HALF_UP);
+            currPhrProb = previous + "➩" + present + "(" + present.subtract(previous) + ")";
         }
 
         //After the answerField creates String like this - "0.06116% ➩ 0.07294%"
@@ -173,7 +175,11 @@ public class InterfaceBean implements Serializable{
         int numOfRightAnswForSession = 0;
         int numOfPhrForSession = answeredPhrases.size();
         currPhrId = selectedPhrase.id;
-        currentPhraseRate = selectedPhrase.multiplier;
+         if(!selectedPhrase.hasBeenAnswered){
+            currentPhraseRate = new BigDecimal(selectedPhrase.multiplier).setScale(2, BigDecimal.ROUND_HALF_UP).toString();
+         }else {
+             currentPhraseRate = (new BigDecimal(selectedPhrase.previousMultiplier).setScale(2, BigDecimal.ROUND_HALF_UP) + " ➩ " + new BigDecimal(selectedPhrase.multiplier).setScale(2, BigDecimal.ROUND_HALF_UP));
+         }
 
         for(Phrase phrs : answeredPhrases){
             if(!phrs.hasBeenAnswered)
@@ -239,7 +245,7 @@ public class InterfaceBean implements Serializable{
         currPhrNatWord = selectedPhrase.nativeWord;
         currPhrTransc = selectedPhrase.transcription;
         currPhrLabel = selectedPhrase.label;
-        currentPhraseRate = selectedPhrase.multiplier;
+//        currentPhraseRate = selectedPhrase.multiplier;
         if (selectedPhrase.isModified){
             selectedPhrase.updatePhraseInDb();
         }
@@ -580,10 +586,10 @@ public class InterfaceBean implements Serializable{
         this.trainingCompletionPercent = trainingCompletionPercent;
     }
 
-    public double getCurrentPhraseRate() {
+    public String getCurrentPhraseRate() {
         return currentPhraseRate;
     }
-    public void setCurrentPhraseRate(double currentPhraseRate) {
+    public void setCurrentPhraseRate(String currentPhraseRate) {
         this.currentPhraseRate = currentPhraseRate;
     }
 }

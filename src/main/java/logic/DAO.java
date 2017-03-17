@@ -294,7 +294,7 @@ public class DAO {
     public void insertPhrase(Phrase phrase) {
         System.out.println("CALL: insertPhrase(Phrase phrase) from DAO");
         String insertSql = "INSERT INTO " + "words" + " (for_word, nat_word, transcr, prob_factor, create_date," +
-                " label, last_accs_date, exactmatch, rate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                " label, last_accs_date, exactmatch, rate, user) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement ps = mainDbConn.prepareStatement(insertSql)) {
             ps.setString(1, phrase.foreignWord);
@@ -306,6 +306,7 @@ public class DAO {
             ps.setTimestamp(7, toTimestamp(phrase.lastAccessDateTime));
             ps.setBoolean(8, phrase.exactMatch);
             ps.setDouble(9, phrase.multiplier);
+            ps.setString(10, loginBean.getUser());
             ps.execute();
         } catch (SQLException e) {
             System.out.println("EXCEPTION inside: in insertPhrase(Phrase phrase) from DAO");
