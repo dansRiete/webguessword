@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -45,6 +46,16 @@ public class EditBean implements Serializable{
             dao = loginBean.getDao();
         if(dao != null){
             myList = dao.getActivePhrases();
+            Collections.sort(myList, ((o1, o2) -> {
+                if(o1.collectionAddingDateTime.isAfter(o2.collectionAddingDateTime)){
+                    return -1;
+                }else if(o2.collectionAddingDateTime.isAfter(o1.collectionAddingDateTime)){
+                    return 1;
+                }else {
+                    return 0;
+                }
+            }));
+            myList.forEach((phrase -> System.out.println(phrase.id + " " + phrase.foreignWord + '\n')));
             labelsList = dao.retievePossibleLabels();
             labelsList.add("All");
         }
