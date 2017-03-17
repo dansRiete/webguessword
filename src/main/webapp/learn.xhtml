@@ -117,7 +117,6 @@
 
                 <h:form style="display: inline-block">
                     <h:commandButton id="exit" type="submit" value="Exit" action="#{interfaceBean.exitCurrentSession()}">
-                        <f:actionListener binding="logout?faces-redirect=true"/>
                     </h:commandButton>
                 </h:form>
 
@@ -262,7 +261,7 @@
                         <h:form>
                             <h:selectOneMenu id="table" value="#{interfaceBean.choosedLabel}">
                                 <f:ajax event="change" execute="table; #{interfaceBean.setTable()}" render="@all"/>
-                                <f:selectItems value="#{interfaceBean.listOfChooses}" var="group" itemValue="#{group}"
+                                <f:selectItems value="#{interfaceBean.availableLabels}" var="group" itemValue="#{group}"
                                                itemLabel="#{group}"/>
                             </h:selectOneMenu>
                         </h:form>

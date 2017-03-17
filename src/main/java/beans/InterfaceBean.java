@@ -70,12 +70,13 @@ public class InterfaceBean implements Serializable{
     private final static String RIGHT_MESSAGE = " <strong><font color=\"green\">right</font>/<font color=\"#BBBBB9\">wrong</font></strong>";
     private final static String NON_ANSWERED_MESSAGE = " <strong><font color=\"#BBBBB9\">right</font>/<font color=\"#BBBBB9\">wrong</font></strong>";
     private ArrayList<Phrase> answeredPhrases = new ArrayList<>();
-    private ArrayList<String> listOfChooses;
+    private ArrayList<Phrase> todayAnsweredPhrases = new ArrayList<>();
+    private ArrayList<String> availableLabels;
     private String choosedLabel;
     private String resultChoosedLabel;
     private String previousResultChoosedLabel = "";
     private HashSet<String> choosedLabelsForLearningWords = new HashSet<>();
-    private int shift = 0;
+//    private int shift = 0;
     private int currentlySelectedPhraseIndex;
     private Hints hint = new Hints();
 
@@ -91,8 +92,10 @@ public class InterfaceBean implements Serializable{
         if(loginBean != null)
             dao = loginBean.getDao();
         if(dao != null){
-            listOfChooses = dao.possibleLabels;
-            answeredPhrases = dao.getTodaysPhrasesCollection();
+            availableLabels = dao.availableLabels;
+            todayAnsweredPhrases = dao.retrieveTodayAnsweredPhrases();
+            answeredPhrases.addAll(todayAnsweredPhrases);
+            currentlySelectedPhraseIndex = answeredPhrases.size() - 1;
             nextQuestion();
         }
     }
@@ -149,7 +152,7 @@ public class InterfaceBean implements Serializable{
             currPhrAbsLastAccsDate = LocalDateTime.ofInstant(selectedPhrase.lastAccessDateTime.toInstant(),
                     ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
 
-            currPhrRelLastAccsDate = retDiff.retDiffInTime(System.currentTimeMillis() - selectedPhrase.lastAccessDateTime.getTime());
+            currPhrRelLastAccsDate = retDiff.retDiffInTime(System.currentTimeMillis() - selectedPhrase.lastAccessDateTime.toEpochSecond());
         }
 
         if(selectedPhrase.collectionAddingDateTime != null){
@@ -157,7 +160,7 @@ public class InterfaceBean implements Serializable{
             currPhrAbsCreateDate = LocalDateTime.ofInstant(selectedPhrase.collectionAddingDateTime.toInstant(),
                     ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
 
-            currPhrRelCreateDate = retDiff.retDiffInTime(System.currentTimeMillis() - selectedPhrase.collectionAddingDateTime.getTime());
+            currPhrRelCreateDate = retDiff.retDiffInTime(System.currentTimeMillis() - selectedPhrase.collectionAddingDateTime.toEpochSecond());
         }
 
         currPhrLabel = selectedPhrase.label;
@@ -245,7 +248,8 @@ public class InterfaceBean implements Serializable{
         System.out.println("CALL: rightAnswer() from InterfaceBean");
 
         try {
-            currentlySelectedPhraseIndex = answeredPhrases.size() - 1 - shift;
+            currentlySelectedPhraseIndex = currentlySelectedPhraseIndex != answeredPhrases.size() - 1 ?
+                    currentlySelectedPhraseIndex : (currentlySelectedPhraseIndex = answeredPhrases.size() - 1);
             selectedPhrase = answeredPhrases.get(currentlySelectedPhraseIndex);
             selectedPhrase.rightAnswer();
             nextQuestion();
@@ -261,7 +265,8 @@ public class InterfaceBean implements Serializable{
         System.out.println("CALL: wrongAnswer() from InterfaceBean");
 
         try{
-            currentlySelectedPhraseIndex = answeredPhrases.size() - 1 - shift;
+            currentlySelectedPhraseIndex = currentlySelectedPhraseIndex != answeredPhrases.size() - 1 ?
+                    currentlySelectedPhraseIndex : (currentlySelectedPhraseIndex = answeredPhrases.size() - 1);
             selectedPhrase = answeredPhrases.get(currentlySelectedPhraseIndex);
             selectedPhrase.wrongAnswer();
             nextQuestion();
@@ -327,7 +332,7 @@ public class InterfaceBean implements Serializable{
 
     public void nextQuestion(){
         System.out.print("\nCALL: nextQuestion() from InterfaceBean");
-        if(shift == 0) {
+        if(currentlySelectedPhraseIndex == answeredPhrases.size() - 1) {
             Phrase newPhrase = new Phrase(dao.obtainRandomPhrase());
             answeredPhrases.add(newPhrase);
             selectedPhrase = newPhrase;
@@ -335,7 +340,7 @@ public class InterfaceBean implements Serializable{
             selectedPhrase = answeredPhrases.get(currentlySelectedPhraseIndex);
             question = selectedPhrase.nativeWord + " " + hint.shortHint(selectedPhrase.foreignWord);
         }else {
-            currentlySelectedPhraseIndex = answeredPhrases.size() - 1 - --shift;
+            currentlySelectedPhraseIndex++;
             selectedPhrase = answeredPhrases.get(currentlySelectedPhraseIndex);
             question = selectedPhrase.nativeWord + " " + hint.shortHint(selectedPhrase.foreignWord);
         }
@@ -347,10 +352,10 @@ public class InterfaceBean implements Serializable{
 
     public void previousQuestion() {
         System.out.println("CALL: previousQuestion() from InterfaceBean");
-        if (shift < (answeredPhrases.size() - 1)) {
+        /*if (shift < (answeredPhrases.size() - 1 + todayAnsweredPhrases.size())) {
             shift++;
-        }
-        currentlySelectedPhraseIndex = answeredPhrases.size() - 1 - shift;
+        }*/
+        currentlySelectedPhraseIndex--;
         if (currentlySelectedPhraseIndex < 0) {
             currentlySelectedPhraseIndex = 0;
         }
@@ -475,11 +480,11 @@ public class InterfaceBean implements Serializable{
         this.choosedLabel = choosedLabel;
     }
 
-    public ArrayList<String> getListOfChooses() {
-        return listOfChooses;
+    public ArrayList<String> getAvailableLabels() {
+        return availableLabels;
     }
-    public void setListOfChooses(ArrayList<String> listOfChooses) {
-        this.listOfChooses = listOfChooses;
+    public void setAvailableLabels(ArrayList<String> availableLabels) {
+        this.availableLabels = availableLabels;
     }
 
     public String getResultChoosedLabel() {

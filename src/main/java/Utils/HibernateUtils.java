@@ -1,4 +1,4 @@
-package Utils;
+package utils;
 
 import beans.LoginBean;
 import datamodel.Phrase;

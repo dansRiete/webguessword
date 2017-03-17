@@ -7,8 +7,12 @@ import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
+import javax.faces.bean.SessionScoped;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,8 +21,8 @@ import java.util.List;
  */
 
 @ManagedBean
-@RequestScoped
-public class EditBean {
+@SessionScoped
+public class EditBean implements Serializable{
 
     @ManagedProperty(value="#{login}")
     private LoginBean loginBean;
@@ -53,8 +57,8 @@ public class EditBean {
 
         if( this.foreignWord != null && this.nativeWord != null && !this.foreignWord.equalsIgnoreCase("") && !this.nativeWord.equalsIgnoreCase("")){
 
-            Timestamp now = new Timestamp(System.currentTimeMillis());
-            Phrase phrase = new Phrase(0, this.foreignWord, this.nativeWord, this.transcription, new BigDecimal(30), now, this.label, null, 0, 0, false, 1, dao);
+            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC"));
+            Phrase phrase = new Phrase(0, this.foreignWord, this.nativeWord, this.transcription, new BigDecimal(30), ZonedDateTime.now(ZoneId.of("UTC")), this.label, null, 0, 0, false, 1, dao);
             this.foreignWord = this.nativeWord = this.transcription = this.label = "";
             probabilityFactor = null;
             myList.add(0, phrase);

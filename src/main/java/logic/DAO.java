@@ -1,7 +1,7 @@
 package logic;
 
-import Exceptions.*;
-import Utils.HibernateUtils;
+import exceptions.*;
+import utils.HibernateUtils;
 import beans.*;
 import datamodel.Phrase;
 import org.hibernate.query.Query;
@@ -21,7 +21,7 @@ public class DAO {
     public static final double CHANCE_OF_APPEARING_LEARNT_WORDS = 1d / 15d;
 
     public HashSet<String> chosedLabels;
-    public ArrayList<String> possibleLabels = new ArrayList<>();
+    public ArrayList<String> availableLabels = new ArrayList<>();
     public double learnedWords;
     public double nonLearnedWords;
     public double totalActiveWordsAmount;
@@ -104,7 +104,7 @@ public class DAO {
         }
     }
 
-    public ArrayList<Phrase> getTodaysPhrasesCollection(){
+    public ArrayList<Phrase> retrieveTodayAnsweredPhrases(){
         ArrayList<Phrase> list = new ArrayList<>();
 
         try (Statement statement = mainDbConn.createStatement();
@@ -141,8 +141,8 @@ public class DAO {
     public List<String> retievePossibleLabels() {
         //Возвращает список возможных меток для фраз + "All"
         System.out.println("CALL: retievePossibleLabels() from DAO");
-        possibleLabels.clear();
-        possibleLabels.add("All");
+        availableLabels.clear();
+        availableLabels.add("All");
         String temp;
 
         try (Statement st = mainDbConn.createStatement();
@@ -150,7 +150,7 @@ public class DAO {
 
             while (rs.next()) {
                 temp = rs.getString("LABEL");
-                possibleLabels.add(temp == null ? "null" : temp);
+                availableLabels.add(temp == null ? "null" : temp);
             }
 
         } catch (SQLException e) {
@@ -159,7 +159,7 @@ public class DAO {
             throw new RuntimeException();
         }
 
-        return possibleLabels;
+        return availableLabels;
 
     }
 
@@ -288,20 +288,28 @@ public class DAO {
         return createdPhrase;
     }
 
+    public static Timestamp toTimestamp(ZonedDateTime dateTime) {
+        if(dateTime == null){
+            return null;
+        }
+        return new Timestamp(dateTime.toInstant().getEpochSecond() * 1000L);
+    }
+
     public void insertPhrase(Phrase phrase) {
         System.out.println("CALL: insertPhrase(Phrase phrase) from DAO");
         String insertSql = "INSERT INTO " + loginBean.getUser() + " (for_word, nat_word, transcr, prob_factor, create_date," +
-                " label, last_accs_date, exactmatch) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                " label, last_accs_date, exactmatch, rate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement ps = mainDbConn.prepareStatement(insertSql)) {
             ps.setString(1, phrase.foreignWord);
             ps.setString(2, phrase.nativeWord);
             ps.setString(3, phrase.transcription);
             ps.setDouble(4, phrase.probabilityFactor.doubleValue());
-            ps.setTimestamp(5, phrase.collectionAddingDateTime);
+            ps.setTimestamp(5, toTimestamp(phrase.collectionAddingDateTime));
             ps.setString(6, phrase.label);
-            ps.setTimestamp(7, phrase.lastAccessDateTime);
+            ps.setTimestamp(7, toTimestamp(phrase.lastAccessDateTime));
             ps.setBoolean(8, phrase.exactMatch);
+            ps.setDouble(9, phrase.multiplier);
             ps.execute();
         } catch (SQLException e) {
             System.out.println("EXCEPTION inside: in insertPhrase(Phrase phrase) from DAO");
@@ -407,7 +415,7 @@ public class DAO {
 
     public ArrayList<Phrase> getActivePhrases() {
 
-        return activePhrases;
+        return new ArrayList<>(activePhrases);
 
     }
 

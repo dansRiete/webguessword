@@ -48,10 +48,10 @@ public class Phrase implements Serializable{
     public ZonedDateTime phraseAppearingTime = ZonedDateTime.now(ZoneId.of("Europe/Helsinki"));
 
     @Column(name = "create_date")
-    public Timestamp collectionAddingDateTime;
+    public ZonedDateTime collectionAddingDateTime;
 
     @Column(name = "last_accs_date")
-    public Timestamp lastAccessDateTime;
+    public ZonedDateTime lastAccessDateTime;
 
     @Column
     public boolean exactMatch;
@@ -75,7 +75,6 @@ public class Phrase implements Serializable{
     public double previousMultiplier;
 
     @Transient
-
     public DAO dao;
 
     @Transient
@@ -87,7 +86,7 @@ public class Phrase implements Serializable{
     public Phrase() {
     }
 
-    public Phrase(int id, String foreignWord, String nativeWord, String transcription, BigDecimal probabilityFactor, Timestamp collectionAddingDateTime, String label, Timestamp lastAccessDateTime, double indexStart, double indexEnd, boolean exactMatch, double multiplier, DAO dao){
+    public Phrase(int id, String foreignWord, String nativeWord, String transcription, BigDecimal probabilityFactor, ZonedDateTime collectionAddingDateTime, String label, ZonedDateTime lastAccessDateTime, double indexStart, double indexEnd, boolean exactMatch, double multiplier, DAO dao){
         this.id = id;
         this.foreignWord = foreignWord;
         this.nativeWord = nativeWord;
@@ -328,13 +327,13 @@ public class Phrase implements Serializable{
         this.label = label;
         updatePhraseInDb();
     }
-    public Timestamp getCollectionAddingDateTime() {
+    public ZonedDateTime getCollectionAddingDateTime() {
         return collectionAddingDateTime;
     }
-    public Timestamp getLastAccessDateTime() {
+    public ZonedDateTime getLastAccessDateTime() {
         return lastAccessDateTime;
     }
-    public void setLastAccessDateTime(Timestamp lastAccessDateTime) {
+    public void setLastAccessDateTime(ZonedDateTime lastAccessDateTime) {
         this.lastAccessDateTime = lastAccessDateTime;
     }
     public void setTimeOfReturningFromList(long time){
