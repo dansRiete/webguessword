@@ -1,8 +1,18 @@
 package beans;
 
 import datamodel.Phrase;
-import logic.*;
+import logic.Answer;
+import logic.DAO;
+import logic.Hints;
+import logic.RetDiff;
 
+import javax.annotation.PostConstruct;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
+import javax.faces.bean.SessionScoped;
+import javax.faces.context.FacesContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -14,13 +24,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Locale;
-import javax.annotation.PostConstruct;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.SessionScoped;
-import javax.faces.context.FacesContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 
 /**
  * Created by Aleks on 23.04.2016.
@@ -33,6 +36,7 @@ public class InterfaceBean implements Serializable{
     @ManagedProperty(value="#{login}")
     private LoginBean loginBean;
 
+    //>>Current session data
     private int answersForSessionNumber;
     private int trainedPhrasesNumber;
     private int nonLearnedWordsNumber;
@@ -76,7 +80,6 @@ public class InterfaceBean implements Serializable{
     private String resultChoosedLabel;
     private String previousResultChoosedLabel = "";
     private HashSet<String> choosedLabelsForLearningWords = new HashSet<>();
-//    private int shift = 0;
     private int currentlySelectedPhraseIndex;
     private Hints hint = new Hints();
 
@@ -180,7 +183,7 @@ public class InterfaceBean implements Serializable{
         }
 
         answersForSessionNumber = numOfPhrForSession - numOfNonAnswForSession;
-        //Формирует строку с процентным соотношением правильных ответов к общему кол-ву ответов
+        //Generates a string with the percentage of correct answers to the total number of answers
         rightAnswersPercentage = ((new BigDecimal(numOfRightAnswForSession)).divide(new BigDecimal(answersForSessionNumber ==0?1: answersForSessionNumber),2, RoundingMode.HALF_UP).multiply(new BigDecimal(100))).setScale(0, RoundingMode.HALF_UP)+"%";
         trainedPhrasesNumber = (int) dao.learnedWords;
         nonLearnedWordsNumber = (int) dao.nonLearnedWords;
@@ -245,65 +248,50 @@ public class InterfaceBean implements Serializable{
 
 
     public void rightAnswer(){
-        System.out.println("CALL: rightAnswer() from InterfaceBean");
 
-        try {
-            currentlySelectedPhraseIndex = currentlySelectedPhraseIndex != answeredPhrases.size() - 1 ?
-                    currentlySelectedPhraseIndex : (currentlySelectedPhraseIndex = answeredPhrases.size() - 1);
-            selectedPhrase = answeredPhrases.get(currentlySelectedPhraseIndex);
-            selectedPhrase.rightAnswer();
-            nextQuestion();
-            reloadStatTableData();
-            reloadTrainingLog();
-        }catch (NullPointerException e){
-            System.out.println("EXCEPTION: in rightAnswer() from InterfaceBean");
-            e.printStackTrace();
-        }
+        System.out.println("CALL: rightAnswer() from InterfaceBean");
+        selectedPhrase = answeredPhrases.get(currentlySelectedPhraseIndex);
+        selectedPhrase.rightAnswer();
+        nextQuestion();
+        reloadStatTableData();
+        reloadTrainingLog();
+
     }
 
     public void wrongAnswer(){
-        System.out.println("CALL: wrongAnswer() from InterfaceBean");
 
-        try{
-            currentlySelectedPhraseIndex = currentlySelectedPhraseIndex != answeredPhrases.size() - 1 ?
-                    currentlySelectedPhraseIndex : (currentlySelectedPhraseIndex = answeredPhrases.size() - 1);
-            selectedPhrase = answeredPhrases.get(currentlySelectedPhraseIndex);
-            selectedPhrase.wrongAnswer();
-            nextQuestion();
-            reloadStatTableData();
-            reloadTrainingLog();
-        }catch (NullPointerException e){
-            System.out.println("EXCEPTION: in wrongAnswer() from InterfaceBean");
-            e.printStackTrace();
-        }
+        System.out.println("CALL: wrongAnswer() from InterfaceBean");
+        selectedPhrase = answeredPhrases.get(currentlySelectedPhraseIndex);
+        selectedPhrase.wrongAnswer();
+        nextQuestion();
+        reloadStatTableData();
+        reloadTrainingLog();
     }
 
     public void previousRight(){
-        System.out.println("CALL: previousRight() from InterfaceBean");
 
-        try{
+        System.out.println("CALL: previousRight() from InterfaceBean");
+        // previousRight() method is not alowed in the middle of the phrases list and at first question per session
+        if(currentlySelectedPhraseIndex == answeredPhrases.size() - 1 && answeredPhrases.size() - todayAnsweredPhrases.size() > 1){
             answeredPhrases.get(currentlySelectedPhraseIndex -1).rightAnswer();
             reloadStatTableData();
             reloadTrainingLog();
-        }catch (NullPointerException e){
-            System.out.println("EXCEPTION: in previousRight() from InterfaceBean");
-            e.printStackTrace();
         }
     }
 
     public void previousWrong(){
+
         System.out.println("CALL: previousWrong() from InterfaceBean");
-        try{
-            answeredPhrases.get(currentlySelectedPhraseIndex -1).wrongAnswer();
+        // previousWrong() method is not alowed in the middle of the phrases list and at first question per session
+        if(currentlySelectedPhraseIndex == answeredPhrases.size() - 1 && answeredPhrases.size() - todayAnsweredPhrases.size() > 1) {
+            answeredPhrases.get(currentlySelectedPhraseIndex - 1).wrongAnswer();
             reloadStatTableData();
             reloadTrainingLog();
-        }catch (NullPointerException e){
-            System.out.println("EXCEPTION: in previousWrong() from InterfaceBean");
-            e.printStackTrace();
         }
     }
 
     public void checkTheAnswer(){
+
         System.out.println("CALL: checkTheAnswer() from InterfaceBean");
 
         if(answerField == null) {
@@ -312,7 +300,7 @@ public class InterfaceBean implements Serializable{
 
         if (answerField.equals("+")){
             rightAnswer();
-        }else if (answerField.equals("-") || answerField.equals("")){
+        }else if (answerField.equals("-")){
             wrongAnswer();
         }else if (answerField.equals("++")){
             previousRight();
@@ -352,17 +340,14 @@ public class InterfaceBean implements Serializable{
 
     public void previousQuestion() {
         System.out.println("CALL: previousQuestion() from InterfaceBean");
-        /*if (shift < (answeredPhrases.size() - 1 + todayAnsweredPhrases.size())) {
-            shift++;
-        }*/
-        currentlySelectedPhraseIndex--;
-        if (currentlySelectedPhraseIndex < 0) {
-            currentlySelectedPhraseIndex = 0;
+
+        //Prevents selecting today answered phrases and negative index
+        if(currentlySelectedPhraseIndex > todayAnsweredPhrases.size()){
+            selectedPhrase = answeredPhrases.get(--currentlySelectedPhraseIndex);
+            question = selectedPhrase.nativeWord;
+            reloadStatTableData();
+            reloadTrainingLog();
         }
-        selectedPhrase = answeredPhrases.get(currentlySelectedPhraseIndex);
-        question = selectedPhrase.nativeWord;
-        reloadStatTableData();
-        reloadTrainingLog();
     }
 
     public void deletePhrase(){
