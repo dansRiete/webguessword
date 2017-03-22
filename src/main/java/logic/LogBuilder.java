@@ -7,15 +7,15 @@ import java.util.List;
  * Created by Aleks on 12.02.2017.
  */
 public class LogBuilder {
-    private List<Answer> previousAnswers;
-    private List<Answer> currentAnswers = new ArrayList<>();
+    private List<Question> previousQuestions;
+    private List<Question> currentQuestions = new ArrayList<>();
 
-    public LogBuilder(List<Answer> previousAnswers){
-        this.previousAnswers = previousAnswers == null ? new ArrayList<Answer>() : previousAnswers;
+    public LogBuilder(List<Question> previousQuestions){
+        this.previousQuestions = previousQuestions == null ? new ArrayList<Question>() : previousQuestions;
     }
 
-    public void appendAnswer(Answer appendedAnswer){
-        currentAnswers.add(appendedAnswer);
+    public void appendAnswer(Question appendedQuestion){
+        currentQuestions.add(appendedQuestion);
         reloadLog();
     }
 

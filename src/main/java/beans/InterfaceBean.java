@@ -1,7 +1,7 @@
 package beans;
 
 import datamodel.Phrase;
-import logic.Answer;
+import logic.Question;
 import logic.DAO;
 import logic.Hints;
 import logic.RetDiff;
@@ -315,8 +315,8 @@ public class InterfaceBean implements Serializable{
         }else if (answerField.equals("*")){
             nextQuestion();
         }else {
-            Answer givenAnswer = Answer.compose(selectedPhrase, answerField);
-            if(givenAnswer.isCorrect()){
+            Question givenQuestion = Question.compose(selectedPhrase, answerField);
+            if(givenQuestion.isCorrect()){
                 rightAnswer();
             } else {
                 wrongAnswer();

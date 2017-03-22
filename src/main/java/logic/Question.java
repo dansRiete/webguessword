@@ -11,26 +11,27 @@ import java.util.List;
  * Created by Aleks on 11.11.2016.
  */
 
-public class Answer {
+public class Question {
 
+    private long id;
     private boolean answerIsCorrect;
     private final ZonedDateTime answersDate = ZonedDateTime.now(ZoneId.of("UTC"));
     private final String givenAnswerLiteral;
     private final Phrase answeredPhrase;
 
-    private Answer(Phrase answeredPhrase, String givenAnswerLiteral) {
+    private Question(Phrase answeredPhrase, String givenAnswerLiteral) {
         this.answeredPhrase = answeredPhrase;
         this.givenAnswerLiteral = givenAnswerLiteral;
 
     }
 
-    public static Answer compose(Phrase answeredPhrase, String givenAnswerLiteral){
+    public static Question compose(Phrase answeredPhrase, String givenAnswerLiteral){
         if(answeredPhrase == null|| givenAnswerLiteral == null){
             throw new IllegalArgumentException("Phrases foreign and native literals can not be null");
         }
-        Answer composedAnswer = new Answer(answeredPhrase, givenAnswerLiteral);
-        composedAnswer.checkTheAnswer();
-        return composedAnswer;
+        Question composedQuestion = new Question(answeredPhrase, givenAnswerLiteral);
+        composedQuestion.checkTheAnswer();
+        return composedQuestion;
     }
 
     public boolean isCorrect(){
