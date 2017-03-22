@@ -30,7 +30,7 @@
         <p:dataTable value="#{editBean.myList}" var="v" styleClass="order-table" headerClass="order-table-header"
                      rowClasses="order-table-odd-row,order-table-even-row" paginator="true"
                      rows="#{editBean.rowNumbers()}" editable="true"
-                     editMode="cell" id="table" resizableColumns="true" widgetVar="table" style="font-size: 75%">
+                     editMode="cell" id="table" resizableColumns="true" lazy="true" widgetVar="table" style="font-size: 75%">
 
             <p:column width="25" headerText="ID" filterBy="#{v.id}" sortBy="#{v.id}" filterMatchMode="contains">
                 <f:facet name="filter">

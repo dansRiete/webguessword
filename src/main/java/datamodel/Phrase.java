@@ -19,7 +19,7 @@ import java.util.HashSet;
 public class Phrase implements Serializable{
 
     @Transient
-    private static final double RIGHT_ANSWER_MULTIPLIER = 1.2;
+    private static final double RIGHT_ANSWER_MULTIPLIER = 1.44;
 
     @javax.persistence.Id
     @GeneratedValue(strategy=GenerationType.AUTO)
@@ -194,9 +194,9 @@ public class Phrase implements Serializable{
             hasBeenAnswered = true;
             hasBeenAnsweredCorrectly = false;
 
+            System.out.println(probabilityFactor.setScale(1, BigDecimal.ROUND_HALF_UP) + " += " + 6 + " * " + multiplier + " * " + "Math.sqrt(" + dao.activePhrasesNumber() + "/" + dao.totalWordsNumber() + ")");
+            probabilityFactor = probabilityFactor.add(new BigDecimal(6 * multiplier * Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber())));
             multiplier = 1;
-            System.out.println(probabilityFactor.setScale(1, BigDecimal.ROUND_HALF_UP) + "+=" + 6 + "*" + "Math.sqrt(" + dao.activePhrasesNumber() + "/" + dao.totalWordsNumber() + ")");
-            probabilityFactor = probabilityFactor.add(new BigDecimal(6 * Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber())));
             dao.setStatistics(this);
             dao.updateProb(this);
 
@@ -205,12 +205,12 @@ public class Phrase implements Serializable{
             hasBeenAnsweredCorrectly = false;
 
             if(!wasTrainedBeforeAnswer()) {
+                System.out.println(previousProbabilityFactor.setScale(1, BigDecimal.ROUND_HALF_UP) + " += " + 6 + " * " + previousMultiplier + " * " + "Math.sqrt(" + dao.activePhrasesNumber() + "/" + dao.totalWordsNumber() + ")");
+                probabilityFactor = previousProbabilityFactor.add(new BigDecimal(6 * previousMultiplier * Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber())));
                 multiplier = 1;
-                System.out.println(previousProbabilityFactor.setScale(1, BigDecimal.ROUND_HALF_UP) + "+=" + 6 + "*" + "Math.sqrt(" + dao.activePhrasesNumber() + "/" + dao.totalWordsNumber() + ")");
-                probabilityFactor = previousProbabilityFactor.add(new BigDecimal(6 * Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber())));
             }else{
-                System.out.println(previousProbabilityFactor.setScale(1, BigDecimal.ROUND_HALF_UP) + "+=" + 6 + "*" + "Math.sqrt(" + dao.activePhrasesNumber() + "/" + dao.totalWordsNumber() + ")*" + multiplier);
-                probabilityFactor = previousProbabilityFactor.add(new BigDecimal(6 * Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber()) * multiplier));
+                System.out.println(previousProbabilityFactor.setScale(1, BigDecimal.ROUND_HALF_UP) + " += " + 6 + " * " + previousMultiplier + " * " + "Math.sqrt(" + dao.activePhrasesNumber() + "/" + dao.totalWordsNumber() + ")*" + previousMultiplier);
+                probabilityFactor = previousProbabilityFactor.add(new BigDecimal(6 * previousMultiplier * Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber()) * previousMultiplier));
                 multiplier = 1;
             }
             dao.updateStatistics(this);

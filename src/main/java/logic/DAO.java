@@ -3,7 +3,7 @@ package logic;
 import Utils.HibernateUtils;
 import beans.LoginBean;
 import datamodel.Phrase;
-import exceptions.PhraseNotFoundException;
+import Exceptions.PhraseNotFoundException;
 import org.hibernate.query.Query;
 
 import java.sql.*;
@@ -221,47 +221,47 @@ public class DAO {
         rangeOfNonlearnt = learntWords > 0 ? 1 - CHANCE_OF_APPEARING_LEARNT_WORDS : 1;
         scaleOfOneProb = rangeOfNonlearnt / nonLearnedWordsProbSumm;
 
-        for (Phrase phrase : activePhrases) { //Sets indices for nonlearnt words
+        for (Phrase currentPhrase : activePhrases) { //Sets indices for nonlearnt words
             long indexStart;
             long indexEnd;
             double prob;
-            prob = phrase.probabilityFactor.doubleValue();
+            prob = currentPhrase.probabilityFactor.doubleValue();
 
             //If nonLearnedWords == 0 then all words have been learnt, setting equal for all indices
             if (nonLearnedWords == 0) {
 
                 indexStart = Math.round(temp * RANGE);
-                phrase.indexStart = indexStart;
+                currentPhrase.indexStart = indexStart;
                 temp += CHANCE_OF_APPEARING_LEARNT_WORDS / learntWords;
                 indexEnd = Math.round((temp * RANGE) - 1);
-                phrase.indexEnd = indexEnd;
+                currentPhrase.indexEnd = indexEnd;
 
             } else { //Otherwise, set indices by algorithm
 
                 if (prob > 3) {
 
                     indexStart = Math.round(temp * RANGE);
-                    phrase.indexStart = indexStart;
+                    currentPhrase.indexStart = indexStart;
                     temp += scaleOfOneProb * prob;
                     indexEnd = Math.round((temp * RANGE) - 1);
-                    phrase.indexEnd = indexEnd;
+                    currentPhrase.indexEnd = indexEnd;
 
                 } else {
 
                     indexStart = Math.round(temp * RANGE);
-                    phrase.indexStart = indexStart;
+                    currentPhrase.indexStart = indexStart;
                     temp += indexOfLearnt;
                     indexEnd = Math.round((temp * RANGE) - 1);
-                    phrase.indexEnd = indexEnd;
+                    currentPhrase.indexEnd = indexEnd;
 
                 }
             }
 
             countOfModIndices++;
             if(countOfModIndices== activePhrases.size()){
-                maxPossibleAppearingIndex = (int) phrase.indexEnd;
+                maxPossibleAppearingIndex = (int) currentPhrase.indexEnd;
             }
-            if (phrase.id == id) {
+            if (currentPhrase.id == id) {
                 indexes[0] = indexStart;
                 indexes[1] = indexEnd;
             }
@@ -271,7 +271,7 @@ public class DAO {
         return indexes;
     }
 
-    public Phrase obtainRandomPhrase() {
+    public Phrase retrieveRandomPhrase() {
 
         Phrase createdPhrase;
 
@@ -294,7 +294,7 @@ public class DAO {
     public void insertPhrase(Phrase phrase) {
         System.out.println("CALL: insertPhrase(Phrase phrase) from DAO");
         String insertSql = "INSERT INTO " + "words" + " (for_word, nat_word, transcr, prob_factor, create_date," +
-                " label, last_accs_date, exactmatch, rate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                " label, last_accs_date, exactmatch, rate, user) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement ps = mainDbConn.prepareStatement(insertSql)) {
             ps.setString(1, phrase.foreignWord);
@@ -306,6 +306,7 @@ public class DAO {
             ps.setTimestamp(7, toTimestamp(phrase.lastAccessDateTime));
             ps.setBoolean(8, phrase.exactMatch);
             ps.setDouble(9, phrase.multiplier);
+            ps.setString(10, loginBean.getUser());
             ps.execute();
         } catch (SQLException e) {
             System.out.println("EXCEPTION inside: in insertPhrase(Phrase phrase) from DAO");

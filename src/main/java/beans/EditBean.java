@@ -68,7 +68,8 @@ public class EditBean implements Serializable{
         if( this.foreignWord != null && this.nativeWord != null && !this.foreignWord.equalsIgnoreCase("") && !this.nativeWord.equalsIgnoreCase("")){
 
             ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC"));
-            Phrase phrase = new Phrase(0, this.foreignWord, this.nativeWord, this.transcription, new BigDecimal(30), ZonedDateTime.now(ZoneId.of("UTC")), this.label, null, 0, 0, false, 1, dao);
+            Phrase phrase = new Phrase(0, this.foreignWord, this.nativeWord, this.transcription, new BigDecimal(30),
+                    ZonedDateTime.now(ZoneId.of("UTC")), this.label, null, 0, 0, false, 1, dao);
             this.foreignWord = this.nativeWord = this.transcription = this.label = "";
             probabilityFactor = null;
             myList.add(0, phrase);
@@ -91,11 +92,12 @@ public class EditBean implements Serializable{
 
     public int rowNumbers(){
 
-        if(myList.size() / 100 > 10){
+        /*if(myList.size() / 100 > 10){
             return myList.size() / 10 + 5;
         }else{
             return 100;
-        }
+        }*/
+        return 50;
 
     }
 
