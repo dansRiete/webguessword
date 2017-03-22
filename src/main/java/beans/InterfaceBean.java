@@ -312,6 +312,8 @@ public class InterfaceBean implements Serializable{
             previousRight();
         }else if (answerField.equals("--")){
             previousWrong();
+        }else if (answerField.equals("*")){
+            nextQuestion();
         }else {
             Answer givenAnswer = Answer.compose(selectedPhrase, answerField);
             if(givenAnswer.isCorrect()){

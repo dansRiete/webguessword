@@ -194,8 +194,8 @@ public class Phrase implements Serializable{
             hasBeenAnswered = true;
             hasBeenAnsweredCorrectly = false;
 
-            System.out.println(probabilityFactor.setScale(1, BigDecimal.ROUND_HALF_UP) + " += " + 3 + " * " + multiplier + " * " + "Math.sqrt(" + dao.activePhrasesNumber() + "/" + dao.totalWordsNumber() + ")");
-            probabilityFactor = probabilityFactor.add(new BigDecimal(3 * multiplier * Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber())));
+            System.out.println(probabilityFactor.setScale(1, BigDecimal.ROUND_HALF_UP) + " += " + 6 + " * " + multiplier + " * " + "Math.sqrt(" + dao.activePhrasesNumber() + "/" + dao.totalWordsNumber() + ")");
+            probabilityFactor = probabilityFactor.add(new BigDecimal(6 * multiplier * Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber())));
             multiplier = 1;
             dao.setStatistics(this);
             dao.updateProb(this);
@@ -205,12 +205,12 @@ public class Phrase implements Serializable{
             hasBeenAnsweredCorrectly = false;
 
             if(!wasTrainedBeforeAnswer()) {
-                System.out.println(previousProbabilityFactor.setScale(1, BigDecimal.ROUND_HALF_UP) + " += " + 3 + " * " + previousMultiplier + " * " + "Math.sqrt(" + dao.activePhrasesNumber() + "/" + dao.totalWordsNumber() + ")");
-                probabilityFactor = previousProbabilityFactor.add(new BigDecimal(3 * previousMultiplier * Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber())));
+                System.out.println(previousProbabilityFactor.setScale(1, BigDecimal.ROUND_HALF_UP) + " += " + 6 + " * " + previousMultiplier + " * " + "Math.sqrt(" + dao.activePhrasesNumber() + "/" + dao.totalWordsNumber() + ")");
+                probabilityFactor = previousProbabilityFactor.add(new BigDecimal(6 * previousMultiplier * Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber())));
                 multiplier = 1;
             }else{
-                System.out.println(previousProbabilityFactor.setScale(1, BigDecimal.ROUND_HALF_UP) + " += " + 3 + " * " + previousMultiplier + " * " + "Math.sqrt(" + dao.activePhrasesNumber() + "/" + dao.totalWordsNumber() + ")*" + previousMultiplier);
-                probabilityFactor = previousProbabilityFactor.add(new BigDecimal(3 * previousMultiplier * Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber()) * previousMultiplier));
+                System.out.println(previousProbabilityFactor.setScale(1, BigDecimal.ROUND_HALF_UP) + " += " + 6 + " * " + previousMultiplier + " * " + "Math.sqrt(" + dao.activePhrasesNumber() + "/" + dao.totalWordsNumber() + ")*" + previousMultiplier);
+                probabilityFactor = previousProbabilityFactor.add(new BigDecimal(6 * previousMultiplier * Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber()) * previousMultiplier));
                 multiplier = 1;
             }
             dao.updateStatistics(this);

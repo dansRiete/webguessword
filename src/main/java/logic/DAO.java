@@ -3,7 +3,7 @@ package logic;
 import Utils.HibernateUtils;
 import beans.LoginBean;
 import datamodel.Phrase;
-import exceptions.PhraseNotFoundException;
+import Exceptions.PhraseNotFoundException;
 import org.hibernate.query.Query;
 
 import java.sql.*;
