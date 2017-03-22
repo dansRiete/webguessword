@@ -221,47 +221,47 @@ public class DAO {
         rangeOfNonlearnt = learntWords > 0 ? 1 - CHANCE_OF_APPEARING_LEARNT_WORDS : 1;
         scaleOfOneProb = rangeOfNonlearnt / nonLearnedWordsProbSumm;
 
-        for (Phrase phrase : activePhrases) { //Sets indices for nonlearnt words
+        for (Phrase currentPhrase : activePhrases) { //Sets indices for nonlearnt words
             long indexStart;
             long indexEnd;
             double prob;
-            prob = phrase.probabilityFactor.doubleValue();
+            prob = currentPhrase.probabilityFactor.doubleValue();
 
             //If nonLearnedWords == 0 then all words have been learnt, setting equal for all indices
             if (nonLearnedWords == 0) {
 
                 indexStart = Math.round(temp * RANGE);
-                phrase.indexStart = indexStart;
+                currentPhrase.indexStart = indexStart;
                 temp += CHANCE_OF_APPEARING_LEARNT_WORDS / learntWords;
                 indexEnd = Math.round((temp * RANGE) - 1);
-                phrase.indexEnd = indexEnd;
+                currentPhrase.indexEnd = indexEnd;
 
             } else { //Otherwise, set indices by algorithm
 
                 if (prob > 3) {
 
                     indexStart = Math.round(temp * RANGE);
-                    phrase.indexStart = indexStart;
+                    currentPhrase.indexStart = indexStart;
                     temp += scaleOfOneProb * prob;
                     indexEnd = Math.round((temp * RANGE) - 1);
-                    phrase.indexEnd = indexEnd;
+                    currentPhrase.indexEnd = indexEnd;
 
                 } else {
 
                     indexStart = Math.round(temp * RANGE);
-                    phrase.indexStart = indexStart;
+                    currentPhrase.indexStart = indexStart;
                     temp += indexOfLearnt;
                     indexEnd = Math.round((temp * RANGE) - 1);
-                    phrase.indexEnd = indexEnd;
+                    currentPhrase.indexEnd = indexEnd;
 
                 }
             }
 
             countOfModIndices++;
             if(countOfModIndices== activePhrases.size()){
-                maxPossibleAppearingIndex = (int) phrase.indexEnd;
+                maxPossibleAppearingIndex = (int) currentPhrase.indexEnd;
             }
-            if (phrase.id == id) {
+            if (currentPhrase.id == id) {
                 indexes[0] = indexStart;
                 indexes[1] = indexEnd;
             }
@@ -271,7 +271,7 @@ public class DAO {
         return indexes;
     }
 
-    public Phrase obtainRandomPhrase() {
+    public Phrase retrieveRandomPhrase() {
 
         Phrase createdPhrase;
 

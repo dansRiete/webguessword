@@ -45,7 +45,7 @@
                 <h:inputText size="50" id="answerField" value="#{interfaceBean.answerField}" lang="en"
                              autocomplete="off"> </h:inputText>
                 <h:commandButton style="margin-left: 3px" type="submit" id="answerAction" value="Answer"
-                                 action="#{interfaceBean.checkTheAnswer()}">
+                                 action="#{interfaceBean.answerTheQuestion()}">
                     <f:ajax execute="answerField" render="@all"> </f:ajax>
                 </h:commandButton>
 
@@ -260,7 +260,7 @@
                     <td>Choosed phrase
                         <h:form>
                             <h:selectOneMenu id="table" value="#{interfaceBean.choosedLabel}">
-                                <f:ajax event="change" execute="table; #{interfaceBean.setTable()}" render="@all"/>
+                                <f:ajax event="change" execute="table; #{interfaceBean.chosenLabels()}" render="@all"/>
                                 <f:selectItems value="#{interfaceBean.availableLabels}" var="group" itemValue="#{group}"
                                                itemLabel="#{group}"/>
                             </h:selectOneMenu>
