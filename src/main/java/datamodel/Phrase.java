@@ -35,7 +35,7 @@ public class Phrase implements Serializable{
     public String transcription;
 
     @Column(name = "prob_factor")
-    public BigDecimal probabilityFactor;
+    public double probabilityFactor;
 
     @Column
     public String label;
@@ -53,7 +53,7 @@ public class Phrase implements Serializable{
     public double multiplier;
 
     @Transient
-    public BigDecimal previousProbabilityFactor;
+    public double previousProbabilityFactor;
 
     @Transient
     public ZonedDateTime phraseAppearingTime = ZonedDateTime.now(ZoneId.of("Europe/Helsinki"));
@@ -85,15 +85,15 @@ public class Phrase implements Serializable{
     public Phrase() {
     }
 
-    public Phrase(int id, String foreignWord, String nativeWord, String transcription, BigDecimal probabilityFactor,
+    public Phrase(int id, String foreignWord, String nativeWord, String transcription, double probabilityFactor,
                   ZonedDateTime collectionAddingDateTime, String label, ZonedDateTime lastAccessDateTime,
                   double indexStart, double indexEnd, boolean exactMatch, double multiplier, DAO dao){
         this.id = id;
         this.foreignWord = foreignWord;
         this.nativeWord = nativeWord;
         this.transcription = transcription == null ? "" : transcription;
-        this.probabilityFactor = probabilityFactor.setScale(1, RoundingMode.HALF_UP);
-        this.previousProbabilityFactor = probabilityFactor.setScale(1, RoundingMode.HALF_UP);
+        this.probabilityFactor = probabilityFactor;
+        this.previousProbabilityFactor = probabilityFactor;
         this.collectionAddingDateTime = collectionAddingDateTime;
         this.label = (label == null ? "" : label);
         this.lastAccessDateTime = lastAccessDateTime;
@@ -143,8 +143,8 @@ public class Phrase implements Serializable{
             if(!isTrained()){
 
                 double activeWordsAmountRatio = Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber());
-                BigDecimal subtrahendForProb = new BigDecimal(3 * activeWordsAmountRatio * multiplier);
-                probabilityFactor = probabilityFactor.subtract(subtrahendForProb);
+                double subtrahendForProb = 3 * activeWordsAmountRatio * multiplier;
+                probabilityFactor = probabilityFactor -= subtrahendForProb;
 
                 if(activeWordsAmountRatio > 0.6) {
                     if (multiplier <= 1) {
@@ -166,8 +166,8 @@ public class Phrase implements Serializable{
 //                probabilityFactor = previousProbabilityFactor;
                 double rateDepandableOnNumberOfWords = Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber());
                 multiplier = previousMultiplier;
-                BigDecimal probFactorSubtrahend = new BigDecimal(3 * rateDepandableOnNumberOfWords * multiplier);
-                probabilityFactor = previousProbabilityFactor.subtract(probFactorSubtrahend);
+                double probFactorSubtrahend = 3 * rateDepandableOnNumberOfWords * multiplier;
+                probabilityFactor = previousProbabilityFactor -= probFactorSubtrahend;
 
                 if(rateDepandableOnNumberOfWords > 0.6) {
                     if (multiplier <= 1) {
@@ -194,8 +194,8 @@ public class Phrase implements Serializable{
             hasBeenAnswered = true;
             hasBeenAnsweredCorrectly = false;
 
-            System.out.println(probabilityFactor.setScale(1, BigDecimal.ROUND_HALF_UP) + " += " + 6 + " * " + multiplier + " * " + "Math.sqrt(" + dao.activePhrasesNumber() + "/" + dao.totalWordsNumber() + ")");
-            probabilityFactor = probabilityFactor.add(new BigDecimal(6 * multiplier * Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber())));
+            System.out.println(new BigDecimal(probabilityFactor).setScale(1, BigDecimal.ROUND_HALF_UP) + " += " + 6 + " * " + multiplier + " * " + "Math.sqrt(" + dao.activePhrasesNumber() + "/" + dao.totalWordsNumber() + ")");
+            probabilityFactor  += (6 * multiplier * Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber()));
             multiplier = 1;
             dao.setStatistics(this);
             dao.updateProb(this);
@@ -205,12 +205,12 @@ public class Phrase implements Serializable{
             hasBeenAnsweredCorrectly = false;
 
             if(!wasTrainedBeforeAnswer()) {
-                System.out.println(previousProbabilityFactor.setScale(1, BigDecimal.ROUND_HALF_UP) + " += " + 6 + " * " + previousMultiplier + " * " + "Math.sqrt(" + dao.activePhrasesNumber() + "/" + dao.totalWordsNumber() + ")");
-                probabilityFactor = previousProbabilityFactor.add(new BigDecimal(6 * previousMultiplier * Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber())));
+                System.out.println(new BigDecimal(previousProbabilityFactor).setScale(1, BigDecimal.ROUND_HALF_UP) + " += " + 6 + " * " + previousMultiplier + " * " + "Math.sqrt(" + dao.activePhrasesNumber() + "/" + dao.totalWordsNumber() + ")");
+                probabilityFactor += (6 * previousMultiplier * Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber()));
                 multiplier = 1;
             }else{
-                System.out.println(previousProbabilityFactor.setScale(1, BigDecimal.ROUND_HALF_UP) + " += " + 6 + " * " + previousMultiplier + " * " + "Math.sqrt(" + dao.activePhrasesNumber() + "/" + dao.totalWordsNumber() + ")*" + previousMultiplier);
-                probabilityFactor = previousProbabilityFactor.add(new BigDecimal(6 * previousMultiplier * Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber()) * previousMultiplier));
+                System.out.println(new BigDecimal(previousProbabilityFactor).setScale(1, BigDecimal.ROUND_HALF_UP) + " += " + 6 + " * " + previousMultiplier + " * " + "Math.sqrt(" + dao.activePhrasesNumber() + "/" + dao.totalWordsNumber() + ")*" + previousMultiplier);
+                probabilityFactor += (6 * previousMultiplier * Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber()) * previousMultiplier);
                 multiplier = 1;
             }
             dao.updateStatistics(this);
@@ -259,15 +259,11 @@ public class Phrase implements Serializable{
     }
 
     public boolean isTrained(){
-        return probabilityFactor.doubleValue() <= 3;
+        return probabilityFactor <= 3;
     }
 
     public boolean wasTrainedBeforeAnswer(){
-        if(previousProbabilityFactor == null){
-            return false;
-        }else {
-            return previousProbabilityFactor.doubleValue() <= 3;
-        }
+        return previousProbabilityFactor <= 3;
     }
 
     @Override
@@ -315,11 +311,10 @@ public class Phrase implements Serializable{
         this.transcription = transcription;
         updatePhraseInDb();
     }
-    public BigDecimal getProbabilityFactor() {
+    public double getProbabilityFactor() {
         return probabilityFactor;
     }
-    public void setProbabilityFactor(BigDecimal probabilityFactor) {
-        System.out.println("CALL setProbabilityFactor("+ probabilityFactor +") from Phrase");
+    public void setProbabilityFactor(double probabilityFactor) {
         this.probabilityFactor = probabilityFactor;
         updatePhraseInDb();
     }

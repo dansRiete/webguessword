@@ -68,7 +68,7 @@ public class EditBean implements Serializable{
         if( this.foreignWord != null && this.nativeWord != null && !this.foreignWord.equalsIgnoreCase("") && !this.nativeWord.equalsIgnoreCase("")){
 
             ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC"));
-            Phrase phrase = new Phrase(0, this.foreignWord, this.nativeWord, this.transcription, new BigDecimal(30),
+            Phrase phrase = new Phrase(0, this.foreignWord, this.nativeWord, this.transcription, 30,
                     ZonedDateTime.now(ZoneId.of("UTC")), this.label, null, 0, 0, false, 1, dao);
             this.foreignWord = this.nativeWord = this.transcription = this.label = "";
             probabilityFactor = null;

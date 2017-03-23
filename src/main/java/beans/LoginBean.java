@@ -1,7 +1,7 @@
 package beans;
 
 import datamodel.User;
-import exceptions.NoAliveDatabasesException;
+import Exceptions.NoAliveDatabasesException;
 import logic.DAO;
 
 import javax.faces.bean.ManagedBean;
