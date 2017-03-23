@@ -3,7 +3,6 @@ package logic;
 import Utils.HibernateUtils;
 import beans.LoginBean;
 import datamodel.Phrase;
-import Exceptions.PhraseNotFoundException;
 import org.hibernate.query.Query;
 
 import java.sql.*;
@@ -46,7 +45,6 @@ public class DAO {
 
         this.loginBean = loginBean;
         mainDbConn = loginBean.getConnection();
-        checkDbForExistingAllTables();
         reloadPhrasesCollection();
         retievePossibleLabels();
         initThisDayStatistics();
@@ -116,7 +114,7 @@ public class DAO {
 
             while (rs.next()){
                 Phrase currentPhrase = null;
-                try {
+
                     currentPhrase = getPhraseById(rs.getInt("id"));
                     currentPhrase.hasBeenAnswered = true;
                     if(rs.getString("event").equalsIgnoreCase("r_answ")) {
@@ -127,9 +125,7 @@ public class DAO {
                     currentPhrase.phraseAppearingTime = rs.getTimestamp("date").toLocalDateTime().atZone(ZoneId.of("Europe/Helsinki"));
                     list.add(currentPhrase);
 
-                } catch (PhraseNotFoundException e) {
-                    e.printStackTrace();
-                }
+
             }
 
         } catch (SQLException e) {
@@ -207,11 +203,11 @@ public class DAO {
 
         for (Phrase phr : activePhrases) {
             phr.indexStart = phr.indexEnd = 0;
-            if (phr.probabilityFactor.doubleValue() > 3) {
+            if (phr.probabilityFactor > 3) {
                 nonLearnedWords++;
-                nonLearnedWordsProbSumm += phr.probabilityFactor.doubleValue();
+                nonLearnedWordsProbSumm += phr.probabilityFactor;
             }else {
-                learnedWordsProbSumm += phr.probabilityFactor.doubleValue();
+                learnedWordsProbSumm += phr.probabilityFactor;
             }
         }
 
@@ -225,7 +221,7 @@ public class DAO {
             long indexStart;
             long indexEnd;
             double prob;
-            prob = currentPhrase.probabilityFactor.doubleValue();
+            prob = currentPhrase.probabilityFactor;
 
             //If nonLearnedWords == 0 then all words have been learnt, setting equal for all indices
             if (nonLearnedWords == 0) {
@@ -273,15 +269,15 @@ public class DAO {
 
     public Phrase retrieveRandomPhrase() {
 
-        Phrase createdPhrase;
+        Phrase retrievedPhrase;
 
         do {
-            createdPhrase = getPhraseByIndex(random.nextInt(maxPossibleAppearingIndex));
-        } while (doesStackContainPhrase(createdPhrase));
+            retrievedPhrase = getPhraseByIndex(random.nextInt(maxPossibleAppearingIndex));
+        } while (stackContainsPhrase(retrievedPhrase));
 
-        pushToLastSevenPhrasesStack(createdPhrase);
-        createdPhrase.resetPreviousValues();
-        return createdPhrase;
+        pushToLastSevenPhrasesStack(retrievedPhrase);
+        retrievedPhrase.resetPreviousValues();
+        return retrievedPhrase;
     }
 
     public static Timestamp toTimestamp(ZonedDateTime dateTime) {
@@ -300,7 +296,7 @@ public class DAO {
             ps.setString(1, phrase.foreignWord);
             ps.setString(2, phrase.nativeWord);
             ps.setString(3, phrase.transcription);
-            ps.setDouble(4, phrase.probabilityFactor.doubleValue());
+            ps.setDouble(4, phrase.probabilityFactor);
             ps.setTimestamp(5, toTimestamp(phrase.collectionAddingDateTime));
             ps.setString(6, phrase.label);
             ps.setTimestamp(7, toTimestamp(phrase.lastAccessDateTime));
@@ -339,12 +335,7 @@ public class DAO {
                 "exactmatch=?, label=?, prob_factor=?, rate=?  WHERE id =" + givenPhrase.id;
         Phrase phraseInTheCollection = null;
 
-        try {
-            phraseInTheCollection = getPhraseById(givenPhrase.id);
-        } catch (PhraseNotFoundException e) {
-            e.printStackTrace();
-            throw new RuntimeException();
-        }
+        phraseInTheCollection = getPhraseById(givenPhrase.id);
 
         phraseInTheCollection.foreignWord = givenPhrase.foreignWord;
         phraseInTheCollection.nativeWord = givenPhrase.nativeWord;
@@ -372,7 +363,7 @@ public class DAO {
 
             mainDbPrepStat.setString(4, dateTime);
             mainDbPrepStat.setBoolean(5, givenPhrase.exactMatch);
-            mainDbPrepStat.setDouble(7, givenPhrase.probabilityFactor.doubleValue());
+            mainDbPrepStat.setDouble(7, givenPhrase.probabilityFactor);
             mainDbPrepStat.setDouble(8, givenPhrase.multiplier);
             mainDbPrepStat.execute();
         } catch (SQLException e) {
@@ -389,13 +380,8 @@ public class DAO {
         System.out.println("CALL: updateProb(Phrase phrase) with id=" + phrase.id + " from DAO");
         String dateTime = ZonedDateTime.now(ZoneId.of(TIMEZONE)).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
 
-        try {
-            getPhraseById(phrase.id).probabilityFactor = phrase.probabilityFactor;
-            getPhraseById(phrase.id).multiplier = phrase.multiplier;
-        } catch (PhraseNotFoundException e) {
-            e.printStackTrace();
-            throw new RuntimeException();
-        }
+        getPhraseById(phrase.id).probabilityFactor = phrase.probabilityFactor;
+        getPhraseById(phrase.id).multiplier = phrase.multiplier;
 
         try (Statement st = mainDbConn.createStatement()) {
             st.execute("UPDATE " + "words" + " SET prob_factor=" + phrase.probabilityFactor + ", last_accs_date='" + dateTime + "', rate=" + phrase.multiplier +
@@ -480,35 +466,7 @@ public class DAO {
         }
     }
 
-    private void checkDbForExistingAllTables() {
-
-        /*boolean mainDbExists = false;
-        boolean statDbExists = false;
-        try (ResultSet rs_tables = mainDbConn.createStatement().executeQuery
-                ("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA='guessword'")) {
-            while (rs_tables.next()) {
-                //Check for exisiting the Main DB
-                if (rs_tables.getString("TABLE_NAME").equals(loginBean.getUser()))
-                    mainDbExists = true;
-                //Check for exisiting the Stat DB
-                if (rs_tables.getString("TABLE_NAME").equals(loginBean.getUser() + "_stat"))
-                    statDbExists = true;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("EXCEPTION: SQLException in checkDbForExistingAllTables() from DAO");
-        }
-
-        if (!mainDbExists) {
-            createMainDb();
-        }
-
-        if (!statDbExists) {
-            createStatisticsDb();
-        }*/
-    }
-
-    private Phrase getPhraseById(int id) throws PhraseNotFoundException{
+    private Phrase getPhraseById(int id){
         //Возвращает фразу из коллекции по данному id
 
         for (Phrase phrase : allPhrases) {
@@ -516,7 +474,7 @@ public class DAO {
                 return phrase;
         }
 
-        throw new PhraseNotFoundException();
+        throw new RuntimeException("PhraseNotFoundException");
     }
 
     private Phrase getPhraseByIndex(long index) {
@@ -553,12 +511,12 @@ public class DAO {
 
         checkLastSevenPhraseSatck();
 
-        if (!doesStackContainPhrase(addedPhrase) && lastSevenPhrasesStack != null) {
+        if (!stackContainsPhrase(addedPhrase) && lastSevenPhrasesStack != null) {
             lastSevenPhrasesStack[getCurrentLssPosition()] = addedPhrase;
         }
     }
 
-    private boolean doesStackContainPhrase(Phrase givenPhrase){
+    private boolean stackContainsPhrase(Phrase givenPhrase){
         if(givenPhrase == null){
             throw new IllegalArgumentException("Given phrase was null");
         }

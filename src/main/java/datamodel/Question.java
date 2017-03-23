@@ -1,6 +1,4 @@
-package logic;
-
-import datamodel.Phrase;
+package datamodel;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -18,6 +16,8 @@ public class Question {
     private final ZonedDateTime answersDate = ZonedDateTime.now(ZoneId.of("UTC"));
     private final String givenAnswerLiteral;
     private final Phrase answeredPhrase;
+    private String askedLiteral;
+    private String answeredLiteral;
 
     private Question(Phrase answeredPhrase, String givenAnswerLiteral) {
         this.answeredPhrase = answeredPhrase;
@@ -26,7 +26,7 @@ public class Question {
     }
 
     public static Question compose(Phrase answeredPhrase, String givenAnswerLiteral){
-        if(answeredPhrase == null|| givenAnswerLiteral == null){
+        if(answeredPhrase == null || givenAnswerLiteral == null){
             throw new IllegalArgumentException("Phrases foreign and native literals can not be null");
         }
         Question composedQuestion = new Question(answeredPhrase, givenAnswerLiteral);

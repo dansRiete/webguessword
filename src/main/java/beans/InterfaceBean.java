@@ -1,12 +1,13 @@
 package beans;
 
 import datamodel.Phrase;
-import logic.Question;
+import datamodel.Question;
 import logic.DAO;
 import logic.Hints;
 import logic.RetDiff;
 
 import javax.annotation.PostConstruct;
+import javax.el.ELContext;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
@@ -92,8 +93,13 @@ public class InterfaceBean implements Serializable{
     @PostConstruct
     private void init(){
         System.out.println("CALL: init() from InterfaceBean");
-        if(loginBean != null)
+        ELContext elContext = FacesContext.getCurrentInstance().getELContext();
+        loginBean = (LoginBean) elContext.getELResolver().getValue(elContext, null, "login");
+        if(loginBean != null){
             dao = loginBean.getDao();
+        }else {
+            throw new RuntimeException("loginBean in InterfaceBean was null");
+        }
         if(dao != null){
             availableLabels = dao.availableLabels;
             todayAnsweredPhrases = dao.retrieveTodayAnsweredPhrases();
@@ -105,7 +111,7 @@ public class InterfaceBean implements Serializable{
         }
     }
 
-    public void setChosenLabels() {
+    public void chosenLabels() {
         System.out.println("CALL: setChosenLabels() from InterfaceBean");
 
         if (choosedLabel != null && !choosedLabel.equalsIgnoreCase("")){
@@ -142,11 +148,11 @@ public class InterfaceBean implements Serializable{
 
         //After the answerField creates String like this - "40.2 ➩ 37.3"
         if(!selectedPhrase.hasBeenAnswered){
-            BigDecimal previous = selectedPhrase.probabilityFactor.setScale(1, RoundingMode.HALF_UP);
+            BigDecimal previous = new BigDecimal(selectedPhrase.probabilityFactor).setScale(1, RoundingMode.HALF_UP);
             currPhrProb = previous.toString();
         }else{
-            BigDecimal previous = selectedPhrase.previousProbabilityFactor.setScale(1, RoundingMode.HALF_UP);
-            BigDecimal present = selectedPhrase.probabilityFactor.setScale(1, RoundingMode.HALF_UP);
+            BigDecimal previous = new BigDecimal(selectedPhrase.previousProbabilityFactor).setScale(1, RoundingMode.HALF_UP);
+            BigDecimal present = new BigDecimal(selectedPhrase.probabilityFactor).setScale(1, RoundingMode.HALF_UP);
             currPhrProb = previous + "➩" + present + "(" + present.subtract(previous) + ")";
         }
 

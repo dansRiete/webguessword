@@ -1,4 +1,4 @@
-import logic.Question;
+import datamodel.Question;
 import datamodel.Phrase;
 import org.junit.Test;
 
