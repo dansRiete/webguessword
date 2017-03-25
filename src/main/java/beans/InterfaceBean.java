@@ -41,14 +41,13 @@ public class InterfaceBean implements Serializable{
     private int answersForSessionNumber;
     private int trainedPhrasesNumber;
     private int nonLearnedWordsNumber;
-    private int averageAnswersPerDayNumber;
+    private int averageAnswersPerDayQuantity;
     private String trainingCompletionPercent;
     private int totalPhrasesNumber;
     private int trainedPhrasesPerSessionNumber;
     private String rightAnswersPercentage;
     private BigDecimal currentPhraseLastAccessDate;
     //<<
-
 
     //>>Current phrase data
     private String currPhrNatWord;
@@ -78,9 +77,9 @@ public class InterfaceBean implements Serializable{
     private ArrayList<Phrase> todayAnsweredPhrases = new ArrayList<>();
     private ArrayList<String> availableLabels;
     private String choosedLabel;
-    private String resultChoosedLabel;
+    private String resultChosenLabel;
     private String previousResultChoosedLabel = "";
-    private HashSet<String> choosedLabelsForLearningWords = new HashSet<>();
+    private HashSet<String> chosenLabelsForLearningWords = new HashSet<>();
     private int currentlySelectedPhraseIndex;
     private Hints hint = new Hints();
 
@@ -101,7 +100,7 @@ public class InterfaceBean implements Serializable{
             throw new RuntimeException("loginBean in InterfaceBean was null");
         }
         if(dao != null){
-            availableLabels = dao.availableLabels;
+            availableLabels = dao.getAllAvailableLabels();
             todayAnsweredPhrases = dao.retrieveTodayAnsweredPhrases();
             answeredPhrasesLog.addAll(todayAnsweredPhrases);
             currentlySelectedPhraseIndex = answeredPhrasesLog.size() - 1;
@@ -116,27 +115,27 @@ public class InterfaceBean implements Serializable{
 
         if (choosedLabel != null && !choosedLabel.equalsIgnoreCase("")){
             if(choosedLabel.equalsIgnoreCase("all")){
-                choosedLabelsForLearningWords.clear();
+                chosenLabelsForLearningWords.clear();
             }else{
-                choosedLabelsForLearningWords.add(choosedLabel);
+                chosenLabelsForLearningWords.add(choosedLabel);
             }
         }
-        resultChoosedLabel = "";
+        resultChosenLabel = "";
 
         boolean firstLoop = true;
-        for(String currentLabel : choosedLabelsForLearningWords){   //Makes a "WHERE LABEL IN" clause
+        for(String currentLabel : chosenLabelsForLearningWords){   //Makes a "WHERE LABEL IN" clause
             if(firstLoop){
-                resultChoosedLabel += "'" + currentLabel + "'";
+                resultChosenLabel += "'" + currentLabel + "'";
                 firstLoop = false;
             }else {
-                resultChoosedLabel += ",'" + currentLabel + "'";
+                resultChosenLabel += ",'" + currentLabel + "'";
             }
         }
 
-        if(!resultChoosedLabel.equals(previousResultChoosedLabel)){ //If clause was changed
-            dao.chosedLabels = choosedLabelsForLearningWords;
+        if(!resultChosenLabel.equals(previousResultChoosedLabel)){ //If clause was changed
+            dao.setActiveLabels(chosenLabelsForLearningWords);
             dao.reloadPhrasesCollection();
-            previousResultChoosedLabel = resultChoosedLabel;
+            previousResultChoosedLabel = resultChosenLabel;
             reloadStatisticsTable();
         }
     }
@@ -199,14 +198,14 @@ public class InterfaceBean implements Serializable{
         answersForSessionNumber = numOfPhrForSession - numOfNonAnswForSession;
         //Generates a string with the percentage of correct answers to the total number of answers
         rightAnswersPercentage = ((new BigDecimal(numOfRightAnswForSession)).divide(new BigDecimal(answersForSessionNumber ==0?1: answersForSessionNumber),2, RoundingMode.HALF_UP).multiply(new BigDecimal(100))).setScale(0, RoundingMode.HALF_UP)+"%";
-        trainedPhrasesNumber = (int) dao.learntWords;
-        nonLearnedWordsNumber = (int) dao.nonLearnedWords;
+        trainedPhrasesNumber = dao.getLearntWordsAmount();
+        nonLearnedWordsNumber = dao.getNonLearntWordsAmount();
         totalPhrasesNumber = trainedPhrasesNumber + nonLearnedWordsNumber;
 
          try{
-             averageAnswersPerDayNumber = (int) ( (float) (dao.answUntil6amAmount + answersForSessionNumber) / (float) (dao.totalHoursUntil6am + ZonedDateTime.now(ZoneId.of("Europe/Kiev")).getHour() - 6) * 24);
+             averageAnswersPerDayQuantity = (int) ((float) (dao.getTotalTrainingAnswers() + answersForSessionNumber) / (float) (dao.getTotalTrainingHoursSpent() + ZonedDateTime.now(ZoneId.of("Europe/Kiev")).getHour() - 6) * 24);
          }catch (ArithmeticException e){
-             averageAnswersPerDayNumber = 0;
+             averageAnswersPerDayQuantity = 0;
          }
         //<<
 
@@ -253,9 +252,8 @@ public class InterfaceBean implements Serializable{
         currPhrNatWord = selectedPhrase.nativeWord;
         currPhrTransc = selectedPhrase.transcription;
         currPhrLabel = selectedPhrase.label;
-//        currentPhraseRate = selectedPhrase.multiplier;
         if (selectedPhrase.isModified){
-            selectedPhrase.updatePhraseInDb();
+            selectedPhrase.update();
         }
 
     }
@@ -333,19 +331,18 @@ public class InterfaceBean implements Serializable{
 
 
     public void nextQuestion(){
-        System.out.print("\nCALL: nextQuestion() from InterfaceBean");
+        System.out.println();
+        System.out.println("CALL: nextQuestion() from InterfaceBean");
         if(currentlySelectedPhraseIndex == answeredPhrasesLog.size() - 1) {
             selectedPhrase = new Phrase(dao.retrieveRandomPhrase());
             answeredPhrasesLog.add(selectedPhrase);
             currentlySelectedPhraseIndex = answeredPhrasesLog.size() - 1;
-//            selectedPhrase = answeredPhrasesLog.get(currentlySelectedPhraseIndex);
             question = selectedPhrase.nativeWord + " " + hint.shortHint(selectedPhrase.foreignWord);
         }else {
             currentlySelectedPhraseIndex++;
             selectedPhrase = answeredPhrasesLog.get(currentlySelectedPhraseIndex);
             question = selectedPhrase.nativeWord + " " + hint.shortHint(selectedPhrase.foreignWord);
         }
-        System.out.println(" " + question);
         reloadStatisticsTable();
         reloadTrainingLog();
     }
@@ -363,8 +360,8 @@ public class InterfaceBean implements Serializable{
     }
 
     public void deletePhrase(){
-        System.out.println("CALL: deleteThisPhrase() from InterfaceBean");
-        selectedPhrase.deleteThisPhrase();
+        System.out.println("CALL: delete() from InterfaceBean");
+        selectedPhrase.delete();
     }
 
     public void exitCurrentSession(){
@@ -482,11 +479,11 @@ public class InterfaceBean implements Serializable{
         this.availableLabels = availableLabels;
     }
 
-    public String getResultChoosedLabel() {
-        return resultChoosedLabel;
+    public String getResultChosenLabel() {
+        return resultChosenLabel;
     }
-    public void setResultChoosedLabel(String resultChoosedLabel) {
-        this.resultChoosedLabel = resultChoosedLabel;
+    public void setResultChosenLabel(String resultChosenLabel) {
+        this.resultChosenLabel = resultChosenLabel;
     }
 
     public String getCurrPhrNatWord() {
@@ -576,11 +573,11 @@ public class InterfaceBean implements Serializable{
         this.currPhrRelCreateDate = currPhrRelCreateDate;
     }
 
-    public int getAverageAnswersPerDayNumber() {
-        return averageAnswersPerDayNumber;
+    public int getAverageAnswersPerDayQuantity() {
+        return averageAnswersPerDayQuantity;
     }
-    public void setAverageAnswersPerDayNumber(int averageAnswersPerDayNumber) {
-        this.averageAnswersPerDayNumber = averageAnswersPerDayNumber;
+    public void setAverageAnswersPerDayQuantity(int averageAnswersPerDayQuantity) {
+        this.averageAnswersPerDayQuantity = averageAnswersPerDayQuantity;
     }
 
     public String getTrainingCompletionPercent() {

@@ -211,7 +211,7 @@
                 </tr>
                 <tr>
                     <td>Average answers per day</td>
-                    <td>#{interfaceBean.averageAnswersPerDayNumber}</td>
+                    <td>#{interfaceBean.averageAnswersPerDayQuantity}</td>
                 </tr>
 
                 </tbody>
@@ -257,7 +257,7 @@
                     <td>#{interfaceBean.currPhrLabel}</td>
                 </tr>
                 <tr>
-                    <td>Choosed phrase
+                    <td>Choosen labels
                         <h:form>
                             <h:selectOneMenu id="table" value="#{interfaceBean.choosedLabel}">
                                 <f:ajax event="change" execute="table; #{interfaceBean.chosenLabels()}" render="@all"/>
@@ -266,7 +266,7 @@
                             </h:selectOneMenu>
                         </h:form>
                     </td>
-                    <td>#{interfaceBean.resultChoosedLabel}</td>
+                    <td>#{interfaceBean.resultChosenLabel}</td>
                 </tr>
                 </tbody>
             </table>

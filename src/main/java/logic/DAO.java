@@ -17,29 +17,28 @@ import java.util.Random;
 /**
  * Created by Aleks on 11.05.2016.
  */
-@SuppressWarnings("SqlResolve")
+//@SuppressWarnings("SqlResolve")
 public class DAO {
 
-    private final static String TIMEZONE = "Europe/Kiev";
-    public static final double CHANCE_OF_APPEARING_LEARNT_WORDS = 1d / 15d;
-
-    public HashSet<String> chosedLabels;
-    public ArrayList<String> availableLabels = new ArrayList<>();
-    public double learntWords;
-    public double nonLearnedWords;
-    public double totalActiveWordsAmount;
-    public int nonLearnedWordsProbSumm;
-    public int learnedWordsProbSumm;
-    private int maxPossibleAppearingIndex;
-    private Random random = new Random();
-    private Phrase[] lastSevenPhrasesStack;
-    private int lastSevenStackCurrentPosition;
-    public Connection mainDbConn;
-    private LoginBean loginBean;
+    private static final String TIMEZONE = "Europe/Kiev";
+    private static final double CHANCE_OF_APPEARING_LEARNT_WORDS = 1d / 15d;
+    private HashSet<String> activeLabels;
+    private ArrayList<String> allAvailableLabels = new ArrayList<>();
     private ArrayList<Phrase> activePhrases = new ArrayList<>();
-    private List<Phrase> allPhrases = new ArrayList<>();
-    public int answUntil6amAmount; //Number of replies to 6 am of the current day
-    public int totalHoursUntil6am; // Number of hours spent from the very begining till 6am of the current day
+    private List<Phrase> allAvailablePhrases = new ArrayList<>();
+    private int learntWordsAmount;
+    private int nonLearntWordsAmount;
+    private int totalActiveWordsAmount;
+    private int learntWordsProbSumm; //unused since 25/03/2017
+    private int theGreatestPhrasesIndex;
+    private int totalTrainingAnswers; //Number of replies to 6 am of the current day
+    private int totalTrainingHoursSpent; // Number of hours spent from the very begining till 6am of the current day
+    private int lastSevenStackIndex;
+    private Phrase[] lastSevenPhrasesStack;
+    private Random random = new Random();
+    private Connection mainDbConn;
+    private LoginBean loginBean;
+
 
     public DAO(LoginBean loginBean) {
 
@@ -139,14 +138,14 @@ public class DAO {
     public List<String> retievePossibleLabels() {
         //Returns list of possible labels
         System.out.println("CALL: retievePossibleLabels() from DAO");
-        availableLabels.clear();
+        allAvailableLabels.clear();
         String temp;
 
         try (Statement st = mainDbConn.createStatement();
              ResultSet rs = st.executeQuery("SELECT DISTINCT (LABEL) FROM " + "words" + " ORDER BY LABEL")) {
             while (rs.next()) {
                 temp = rs.getString("LABEL");
-                availableLabels.add(temp == null ? "null" : temp);
+                allAvailableLabels.add(temp == null ? "null" : temp);
             }
 
         } catch (SQLException e) {
@@ -155,12 +154,12 @@ public class DAO {
             throw new RuntimeException();
         }
 
-        return availableLabels;
+        return allAvailableLabels;
 
     }
 
     public int totalWordsNumber(){
-        return allPhrases.size();
+        return allAvailablePhrases.size();
     }
 
     public int activePhrasesNumber(){
@@ -170,101 +169,17 @@ public class DAO {
     public void reloadPhrasesCollection() {
 
         HibernateUtils hibernateUtils = new HibernateUtils();
-
         activePhrases.clear();
-        allPhrases.clear();
-
+        allAvailablePhrases.clear();
         Query<Phrase> allPhrasesQuery = hibernateUtils.buildSessionFactory().openSession().createQuery("from Phrase");
-        allPhrases = allPhrasesQuery.list();
-        for(Phrase currentPhrase : allPhrases){
+        allAvailablePhrases = allPhrasesQuery.list();
+        for(Phrase currentPhrase : allAvailablePhrases){
             currentPhrase.setDao(this);
-            if(currentPhrase.isThisPhraseInList(chosedLabels)){
+            if(currentPhrase.isInList(activeLabels)){
                 activePhrases.add(currentPhrase);
             }
         }
-        reloadIndices(1);
-    }
-
-    private long[] reloadIndices(int id) {
-
-        final long RANGE = 1000000000;
-        long start = System.currentTimeMillis();
-        double temp = 0;
-        double indexOfLearnt;     //Index of appearing learnt words
-        double rangeOfNonlearnt;  //Ranhe indices non learnt words
-        double scaleOfOneProb;
-        int countOfModIndices = 0;
-        long[] indexes = new long[2];
-        totalActiveWordsAmount = activePhrases.size();
-        //Count nonlearnt words, nonLearnedWordsProbSumm and clear indices
-        nonLearnedWords = 0;
-        nonLearnedWordsProbSumm = 0;
-        learnedWordsProbSumm = 0;
-
-        for (Phrase phr : activePhrases) {
-            phr.indexStart = phr.indexEnd = 0;
-            if (phr.probabilityFactor > 3) {
-                nonLearnedWords++;
-                nonLearnedWordsProbSumm += phr.probabilityFactor;
-            }else {
-                learnedWordsProbSumm += phr.probabilityFactor;
-            }
-        }
-
-        //Count learntWords
-        learntWords = totalActiveWordsAmount - nonLearnedWords;
-        indexOfLearnt = CHANCE_OF_APPEARING_LEARNT_WORDS / learntWords;
-        rangeOfNonlearnt = learntWords > 0 ? 1 - CHANCE_OF_APPEARING_LEARNT_WORDS : 1;
-        scaleOfOneProb = rangeOfNonlearnt / nonLearnedWordsProbSumm;
-
-        for (Phrase currentPhrase : activePhrases) { //Sets indices for nonlearnt words
-            long indexStart;
-            long indexEnd;
-            double prob;
-            prob = currentPhrase.probabilityFactor;
-
-            //If nonLearnedWords == 0 then all words have been learnt, setting equal for all indices
-            if (nonLearnedWords == 0) {
-
-                indexStart = Math.round(temp * RANGE);
-                currentPhrase.indexStart = indexStart;
-                temp += CHANCE_OF_APPEARING_LEARNT_WORDS / learntWords;
-                indexEnd = Math.round((temp * RANGE) - 1);
-                currentPhrase.indexEnd = indexEnd;
-
-            } else { //Otherwise, set indices by algorithm
-
-                if (prob > 3) {
-
-                    indexStart = Math.round(temp * RANGE);
-                    currentPhrase.indexStart = indexStart;
-                    temp += scaleOfOneProb * prob;
-                    indexEnd = Math.round((temp * RANGE) - 1);
-                    currentPhrase.indexEnd = indexEnd;
-
-                } else {
-
-                    indexStart = Math.round(temp * RANGE);
-                    currentPhrase.indexStart = indexStart;
-                    temp += indexOfLearnt;
-                    indexEnd = Math.round((temp * RANGE) - 1);
-                    currentPhrase.indexEnd = indexEnd;
-
-                }
-            }
-
-            countOfModIndices++;
-            if(countOfModIndices== activePhrases.size()){
-                maxPossibleAppearingIndex = (int) currentPhrase.indexEnd;
-            }
-            if (currentPhrase.id == id) {
-                indexes[0] = indexStart;
-                indexes[1] = indexEnd;
-            }
-        }
-
-        System.out.println("CALL: reloadIndices() from DAO" + "Indexes changed=" + countOfModIndices + " Time taken " + (System.currentTimeMillis() - start) + "ms");
-        return indexes;
+        reloadIndices();
     }
 
     public Phrase retrieveRandomPhrase() {
@@ -272,10 +187,10 @@ public class DAO {
         Phrase retrievedPhrase;
 
         do {
-            retrievedPhrase = getPhraseByIndex(random.nextInt(maxPossibleAppearingIndex));
-        } while (stackContainsPhrase(retrievedPhrase));
+            retrievedPhrase = getPhraseByIndex(random.nextInt(theGreatestPhrasesIndex));
+        } while (lastPhrasesStackContains(retrievedPhrase));
 
-        pushToLastSevenPhrasesStack(retrievedPhrase);
+        pushToLastPhrasesStack(retrievedPhrase);
         retrievedPhrase.resetPreviousValues();
         return retrievedPhrase;
     }
@@ -290,7 +205,7 @@ public class DAO {
     public void insertPhrase(Phrase phrase) {
         System.out.println("CALL: insertPhrase(Phrase phrase) from DAO");
         String insertSql = "INSERT INTO " + "words" + " (for_word, nat_word, transcr, prob_factor, create_date," +
-                " label, last_accs_date, exactmatch, rate, user) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                " label, last_accs_date, rate, user) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement ps = mainDbConn.prepareStatement(insertSql)) {
             ps.setString(1, phrase.foreignWord);
@@ -300,9 +215,8 @@ public class DAO {
             ps.setTimestamp(5, toTimestamp(phrase.collectionAddingDateTime));
             ps.setString(6, phrase.label);
             ps.setTimestamp(7, toTimestamp(phrase.lastAccessDateTime));
-            ps.setBoolean(8, phrase.exactMatch);
-            ps.setDouble(9, phrase.multiplier);
-            ps.setString(10, loginBean.getUser());
+            ps.setDouble(8, phrase.multiplier);
+            ps.setString(9, loginBean.getUser());
             ps.execute();
         } catch (SQLException e) {
             System.out.println("EXCEPTION inside: in insertPhrase(Phrase phrase) from DAO");
@@ -329,19 +243,17 @@ public class DAO {
     }
 
     public void updatePhrase(Phrase givenPhrase) {
-        System.out.println("CALL: updatePhraseInDb(Phrase givenPhrase) from DAO with id=" + givenPhrase.id);
+        System.out.println("CALL: update(Phrase givenPhrase) from DAO with id=" + givenPhrase.id);
         String dateTime = ZonedDateTime.now(ZoneId.of(TIMEZONE)).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
         String updateSql = "UPDATE " + "words" + " SET for_word=?, nat_word=?, transcr=?, last_accs_date=?, " +
-                "exactmatch=?, label=?, prob_factor=?, rate=?  WHERE id =" + givenPhrase.id;
-        Phrase phraseInTheCollection = null;
+                "label=?, prob_factor=?, rate=?  WHERE id =" + givenPhrase.id;
 
-        phraseInTheCollection = getPhraseById(givenPhrase.id);
+        Phrase phraseInTheCollection = getPhraseById(givenPhrase.id);
 
         phraseInTheCollection.foreignWord = givenPhrase.foreignWord;
         phraseInTheCollection.nativeWord = givenPhrase.nativeWord;
         phraseInTheCollection.transcription = givenPhrase.transcription;
         phraseInTheCollection.lastAccessDateTime = givenPhrase.lastAccessDateTime;
-        phraseInTheCollection.exactMatch = givenPhrase.exactMatch;
         phraseInTheCollection.label = givenPhrase.label;
         phraseInTheCollection.probabilityFactor = givenPhrase.probabilityFactor;
         phraseInTheCollection.multiplier = givenPhrase.multiplier;
@@ -356,15 +268,15 @@ public class DAO {
             else
                 mainDbPrepStat.setString(3, givenPhrase.transcription);
 
-            if (givenPhrase.label == null || givenPhrase.label.equalsIgnoreCase(""))
-                mainDbPrepStat.setString(6, null);
-            else
-                mainDbPrepStat.setString(6, givenPhrase.label);
-
             mainDbPrepStat.setString(4, dateTime);
-            mainDbPrepStat.setBoolean(5, givenPhrase.exactMatch);
-            mainDbPrepStat.setDouble(7, givenPhrase.probabilityFactor);
-            mainDbPrepStat.setDouble(8, givenPhrase.multiplier);
+
+            if (givenPhrase.label == null || givenPhrase.label.equalsIgnoreCase(""))
+                mainDbPrepStat.setString(5, null);
+            else
+                mainDbPrepStat.setString(5, givenPhrase.label);
+
+            mainDbPrepStat.setDouble(6, givenPhrase.probabilityFactor);
+            mainDbPrepStat.setDouble(7, givenPhrase.multiplier);
             mainDbPrepStat.execute();
         } catch (SQLException e) {
             System.out.println("EXCEPTION#2: in updateProb(Phrase givenPhrase) from DAO");
@@ -376,7 +288,7 @@ public class DAO {
 
     }
 
-    public long[] updateProb(Phrase phrase) {
+    public void updateProb(Phrase phrase) {
         System.out.println("CALL: updateProb(Phrase phrase) with id=" + phrase.id + " from DAO");
         String dateTime = ZonedDateTime.now(ZoneId.of(TIMEZONE)).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
 
@@ -391,9 +303,6 @@ public class DAO {
             e.printStackTrace();
             throw new RuntimeException();
         }
-
-
-        return reloadIndices(phrase.id);
     }
 
     public ArrayList<Phrase> getActivePhrases() {
@@ -402,135 +311,180 @@ public class DAO {
 
     }
 
-    private String getSql_CreateMainTable() {
-        return "CREATE TABLE " + "words" + "\n" +
-                "    (id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,\n" +
-                "    for_word VARCHAR(250) NOT NULL,\n" +
-                "    nat_word VARCHAR(250) NOT NULL,\n" +
-                "    transcr VARCHAR(100),\n" +
-                "    prob_factor DOUBLE NOT NULL,\n" +
-                "    label VARCHAR(50),\n" +
-                "    create_date DATETIME,\n" +
-                "    last_accs_date DATETIME,\n" +
-                "    exactmatch BOOLEAN DEFAULT FALSE  NOT NULL,\n" +
-                "    index_start DOUBLE,\n" +
-                "    index_end DOUBLE,\n" +
-                "    rate DOUBLE DEFAULT 1 NOT NULL" +
-                "    user VARCHAR(50) NOT NULL,\n" +
-                ")";
-    }
-
-    private String getSql_CreateStatTable() {
-
-        return "CREATE TABLE " + "words" + "_stat (date DATETIME NOT NULL, ms INT NOT NULL, event VARCHAR(30) NOT NULL," +
-                " id INT NOT NULL, learnt INT)";
-
-    }
-
     private void initThisDayStatistics(){
         try(
                 ResultSet rs1 = mainDbConn.createStatement().executeQuery
-                        ("SELECT COUNT(*) FROM " + "statistics" + " WHERE date < DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)");
-                ResultSet rs2 = mainDbConn.createStatement().executeQuery
-                        ("SELECT TIMESTAMPDIFF(HOUR, (SELECT MIN(date) FROM " + "statistics" + " WHERE date < DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)), " +
-                                "DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR))")
+                        ("SELECT COUNT(*) FROM statistics WHERE date < DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)");
+                ResultSet rs2 = mainDbConn.createStatement().executeQuery(
+                        "SELECT TIMESTAMPDIFF(HOUR, (SELECT MIN(date) FROM statistics WHERE date < DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)), DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR))")
         ){
             rs1.next();
-            answUntil6amAmount = rs1.getInt(1);
+            totalTrainingAnswers = rs1.getInt(1);
             rs2.next();
-            totalHoursUntil6am = rs2.getInt(1);
+            totalTrainingHoursSpent = rs2.getInt(1);
 
         }catch (SQLException e){
             e.printStackTrace();
         }
     }
 
-    private void createMainDb(){
-        try (Statement statement = mainDbConn.createStatement()) {
-            statement.execute(getSql_CreateMainTable());
-            statement.execute("INSERT INTO " + "words" + " (for_word, nat_word, prob_factor) VALUES ('The', " +
-                    "'The collection is empty, push Show All an add phrases', 30)");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("EXCEPTION: SQLException in checkDbForExistingAllTables() from DAO during create main table in main DB");
-        }
-    }
+    private void reloadIndices() {
 
-    private void createStatisticsDb(){
-        try (Statement statement = mainDbConn.createStatement()) {
-            System.out.println("Execute " + getSql_CreateStatTable());
-            statement.execute(getSql_CreateStatTable());
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("EXCEPTION: SQLException in checkDbForExistingAllTables() from DAO during create stat table in main DB");
+        final long RANGE = 1_000_000_000;
+        long start = System.currentTimeMillis();
+        double temp = 0;
+        double indexOfLearnt;     //Index of appearing learnt words
+        double rangeOfNonlearnt;  //Ranhe indices non learnt words
+        double scaleOfOneProb;
+        int countOfModIndices = 0;
+        int nonLearntWordsProbSumm = 0;
+        totalActiveWordsAmount = activePhrases.size();
+        nonLearntWordsAmount = 0;
+        learntWordsProbSumm = 0;
+
+        for (Phrase phr : activePhrases) {
+            phr.indexStart = phr.indexEnd = 0;
+            if (phr.probabilityFactor > 3) {
+                nonLearntWordsAmount++;
+                nonLearntWordsProbSumm += phr.probabilityFactor;
+            }else {
+                learntWordsProbSumm += phr.probabilityFactor;
+            }
         }
+
+        learntWordsAmount = totalActiveWordsAmount - nonLearntWordsAmount;
+        indexOfLearnt = CHANCE_OF_APPEARING_LEARNT_WORDS / learntWordsAmount;
+        rangeOfNonlearnt = learntWordsAmount > 0 ? 1 - CHANCE_OF_APPEARING_LEARNT_WORDS : 1;
+        scaleOfOneProb = rangeOfNonlearnt / nonLearntWordsProbSumm;
+
+
+        for (Phrase currentPhrase : activePhrases) { //Sets indices for nonlearnt words
+            int indexStart;
+            int indexEnd;
+            double prob;
+            prob = currentPhrase.probabilityFactor;
+
+            //If nonLearntWordsAmount == 0 then all words have been learnt, setting equal for all indices
+            if (nonLearntWordsAmount == 0) {
+
+                indexStart = (int) (temp * RANGE);
+                currentPhrase.indexStart = indexStart;
+                temp += CHANCE_OF_APPEARING_LEARNT_WORDS / learntWordsAmount;
+                indexEnd = (int) ((temp * RANGE) - 1);
+                currentPhrase.indexEnd = indexEnd;
+
+            } else { //Otherwise, set indices by algorithm
+
+                if (prob > 3) {
+
+                    indexStart = (int) (temp * RANGE);
+                    currentPhrase.indexStart = indexStart;
+                    temp += scaleOfOneProb * prob;
+                    indexEnd = (int) ((temp * RANGE) - 1);
+                    currentPhrase.indexEnd = indexEnd;
+
+                } else {
+
+                    indexStart = (int) (temp * RANGE);
+                    currentPhrase.indexStart = indexStart;
+                    temp += indexOfLearnt;
+                    indexEnd = (int) ((temp * RANGE) - 1);
+                    currentPhrase.indexEnd = indexEnd;
+                }
+            }
+
+            countOfModIndices++;
+            if(countOfModIndices== activePhrases.size()){
+                theGreatestPhrasesIndex = currentPhrase.indexEnd;
+            }
+        }
+
+        System.out.println("CALL: reloadIndices() from DAO" + "Indexes changed=" + countOfModIndices + " Time taken " + (System.currentTimeMillis() - start) + "ms");
     }
 
     private Phrase getPhraseById(int id){
-        //Возвращает фразу из коллекции по данному id
-
-        for (Phrase phrase : allPhrases) {
+        for (Phrase phrase : allAvailablePhrases) {
             if (phrase.id == id)
                 return phrase;
         }
-
         throw new RuntimeException("PhraseNotFoundException");
     }
 
-    private Phrase getPhraseByIndex(long index) {
-        // @param index индекс, как правило, рандомный по которому искать фразу в коллекции
-        // @return Возвращает фразу из коллекции
-        long startTime = System.nanoTime();
+    private Phrase getPhraseByIndex(int index) {
         for (Phrase phrase : activePhrases) {
             if (index >= phrase.indexStart && index <= phrase.indexEnd) {
-                //Записываем время доступа в объект фразы
-                phrase.setTimeOfReturningFromList(System.nanoTime() - startTime);
                 return phrase;
             }
         }
-        throw new RuntimeException();
+        throw new RuntimeException("There was no phrase by given index " + index);
     }
 
-    private void checkLastSevenPhraseSatck(){
+    /**
+     * Corrects phrases stack size. Phrases stack size can not be
+     * greater than a total active number of phrases curently trained
+     */
+    private void adjustLastPhrasesStackSize(){
         if (lastSevenPhrasesStack == null || lastSevenPhrasesStack.length > totalActiveWordsAmount) {
             if (totalActiveWordsAmount >= 7) {
                 lastSevenPhrasesStack = new Phrase[7];
-                lastSevenStackCurrentPosition = 0;
+                lastSevenStackIndex = 0;
             }else {
                 lastSevenPhrasesStack = new Phrase[0];
             }
         }
     }
 
-    private int getCurrentLssPosition(){
-        int position = lastSevenStackCurrentPosition > lastSevenPhrasesStack.length - 1 ? lastSevenStackCurrentPosition = 0 : lastSevenStackCurrentPosition;
-        return position++;
+    private int lastPhrasesStackPosition(){
+        lastSevenStackIndex = lastSevenStackIndex > lastSevenPhrasesStack.length - 1 ? lastSevenStackIndex = 0 : lastSevenStackIndex;
+        return lastSevenStackIndex++;
     }
 
-    private void pushToLastSevenPhrasesStack(Phrase addedPhrase) {
+    private void pushToLastPhrasesStack(Phrase pushedPhrase) {
 
-        checkLastSevenPhraseSatck();
+        adjustLastPhrasesStackSize();
 
-        if (!stackContainsPhrase(addedPhrase) && lastSevenPhrasesStack != null) {
-            lastSevenPhrasesStack[getCurrentLssPosition()] = addedPhrase;
+        if (!lastPhrasesStackContains(pushedPhrase) && lastSevenPhrasesStack != null) {
+            lastSevenPhrasesStack[lastPhrasesStackPosition()] = pushedPhrase;
         }
     }
 
-    private boolean stackContainsPhrase(Phrase givenPhrase){
-        if(givenPhrase == null){
+    private boolean lastPhrasesStackContains(Phrase checkedPhrase){
+        if(checkedPhrase == null){
             throw new IllegalArgumentException("Given phrase was null");
         }
-        checkLastSevenPhraseSatck();
+        adjustLastPhrasesStackSize();
         for (Phrase currentPhraseFromStack : lastSevenPhrasesStack) {
-            if (currentPhraseFromStack != null && currentPhraseFromStack.id == givenPhrase.id) {
+            if (currentPhraseFromStack != null && currentPhraseFromStack.id == checkedPhrase.id) {
                 return true;
             }
         }
         return false;
     }
 
+    //Setters and Getters
 
+    public void setActiveLabels(HashSet<String> activeLabels) {
+        this.activeLabels = activeLabels;
+    }
 
+    public int getLearntWordsAmount() {
+        return learntWordsAmount;
+    }
 
+    public int getNonLearntWordsAmount() {
+        return nonLearntWordsAmount;
+    }
+
+    public ArrayList<String> getAllAvailableLabels() {
+        return allAvailableLabels;
+    }
+
+    public int getTotalTrainingHoursSpent() {
+        return totalTrainingHoursSpent;
+    }
+
+    public int getTotalTrainingAnswers() {
+        return totalTrainingAnswers;
+    }
 }
 

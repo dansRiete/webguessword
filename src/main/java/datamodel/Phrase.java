@@ -5,7 +5,6 @@ import logic.DAO;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
@@ -46,9 +45,6 @@ public class Phrase implements Serializable{
     @Column(name = "last_accs_date")
     public ZonedDateTime lastAccessDateTime;
 
-    @Column
-    public boolean exactMatch;
-
     @Column(name = "rate")
     public double multiplier;
 
@@ -65,10 +61,10 @@ public class Phrase implements Serializable{
     public boolean hasBeenAnswered;
 
     @Transient
-    public double indexStart;
+    public int indexStart;
 
     @Transient
-    public double indexEnd;
+    public int indexEnd;
 
     @Transient
     public double previousMultiplier;
@@ -86,8 +82,7 @@ public class Phrase implements Serializable{
     }
 
     public Phrase(int id, String foreignWord, String nativeWord, String transcription, double probabilityFactor,
-                  ZonedDateTime collectionAddingDateTime, String label, ZonedDateTime lastAccessDateTime,
-                  double indexStart, double indexEnd, boolean exactMatch, double multiplier, DAO dao){
+                  ZonedDateTime collectionAddingDateTime, String label, ZonedDateTime lastAccessDateTime, double multiplier, DAO dao){
         this.id = id;
         this.foreignWord = foreignWord;
         this.nativeWord = nativeWord;
@@ -97,9 +92,6 @@ public class Phrase implements Serializable{
         this.collectionAddingDateTime = collectionAddingDateTime;
         this.label = (label == null ? "" : label);
         this.lastAccessDateTime = lastAccessDateTime;
-        this.indexStart = indexStart;
-        this.indexEnd = indexEnd;
-        this.exactMatch = exactMatch;
         this.multiplier = multiplier <= 1 ? 1 : multiplier;
         this.previousMultiplier = multiplier <= 1 ? 1 : multiplier;
         this.dao = dao;
@@ -117,21 +109,10 @@ public class Phrase implements Serializable{
         this.lastAccessDateTime = givenPhrase.lastAccessDateTime;
         this.indexStart = givenPhrase.indexStart;
         this.indexEnd = givenPhrase.indexEnd;
-        this.exactMatch = givenPhrase.exactMatch;
         this.multiplier = givenPhrase.multiplier;
         this.previousMultiplier = multiplier <= 1 ? 1 : multiplier;
         this.dao = givenPhrase.dao;
     }
-
-    /*//This construcor is used for tests only
-    public Phrase(String foreignWord, String nativeWord){
-        this.id = 0;
-        this.foreignWord = foreignWord;
-        this.nativeWord = nativeWord;
-    }*/
-
-
-
 
     public void rightAnswer(){
 
@@ -144,7 +125,7 @@ public class Phrase implements Serializable{
 
                 double activeWordsAmountRatio = Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber());
                 double subtrahendForProb = 3 * activeWordsAmountRatio * multiplier;
-                probabilityFactor = probabilityFactor -= subtrahendForProb;
+                probabilityFactor -= subtrahendForProb;
 
                 if(activeWordsAmountRatio > 0.6) {
                     if (multiplier <= 1) {
@@ -163,7 +144,6 @@ public class Phrase implements Serializable{
 
             if(!wasTrainedBeforeAnswer()){
 
-//                probabilityFactor = previousProbabilityFactor;
                 double rateDepandableOnNumberOfWords = Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber());
                 multiplier = previousMultiplier;
                 double probFactorSubtrahend = 3 * rateDepandableOnNumberOfWords * multiplier;
@@ -218,7 +198,7 @@ public class Phrase implements Serializable{
         }
     }
 
-    public boolean isThisPhraseInList(HashSet<String> phrasesList){
+    public boolean isInList(HashSet<String> phrasesList){
 
         if(phrasesList != null){
             if(phrasesList.isEmpty()) {
@@ -248,12 +228,12 @@ public class Phrase implements Serializable{
         }
     }
 
-    public void deleteThisPhrase(){
-        System.out.println("CALL deleteThisPhrase(), requested id=" + id);
+    public void delete(){
+        System.out.println("CALL delete(), requested id=" + id);
         dao.deletePhrase(this);
     }
 
-    public void updatePhraseInDb(){
+    public void update(){
         if(dao != null)
             dao.updatePhrase(this);
     }
@@ -269,15 +249,25 @@ public class Phrase implements Serializable{
     @Override
     public String toString() {
         return "Phrase{" +
-                "id=" + id +
-                ", foreignWord='" + foreignWord + '\'' +
-                ", nativeWord='" + nativeWord + '\'' +
+                "indexStart=" + indexStart +
+                ", indexEnd=" + indexEnd +
                 '}';
     }
 
     @Override
     public int hashCode() {
         return foreignWord.hashCode() * (nativeWord.hashCode() + 21);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Phrase phrase = (Phrase) o;
+
+        return id == phrase.id;
+
     }
 
     //Setters and getters
@@ -291,7 +281,7 @@ public class Phrase implements Serializable{
     public Phrase setForeignWord(String foreignWord) {
         System.out.println("CALL setForeignWord("+ foreignWord +") from Phrase");
         this.foreignWord = foreignWord;
-        updatePhraseInDb();
+        update();
         return this;
     }
     public String getNativeWord() {
@@ -300,7 +290,7 @@ public class Phrase implements Serializable{
     public Phrase setNativeWord(String nativeWord) {
         System.out.println("CALL setNativeWord("+ nativeWord +") from Phrase");
         this.nativeWord = nativeWord;
-        updatePhraseInDb();
+        update();
         return this;
     }
     public String getTranscription() {
@@ -309,14 +299,14 @@ public class Phrase implements Serializable{
     public void setTranscription(String transcription) {
         System.out.println("CALL setTranscription("+ transcription +") from Phrase");
         this.transcription = transcription;
-        updatePhraseInDb();
+        update();
     }
     public double getProbabilityFactor() {
         return probabilityFactor;
     }
     public void setProbabilityFactor(double probabilityFactor) {
         this.probabilityFactor = probabilityFactor;
-        updatePhraseInDb();
+        update();
     }
     public String getLabel() {
         return label;
@@ -324,7 +314,7 @@ public class Phrase implements Serializable{
     public void setLabel(String label) {
         System.out.println("CALL setLabel("+label+") from Phrase");
         this.label = label;
-        updatePhraseInDb();
+        update();
     }
     public ZonedDateTime getCollectionAddingDateTime() {
         return collectionAddingDateTime;
@@ -339,15 +329,15 @@ public class Phrase implements Serializable{
         timeOfReturningFromList = Double.toString((double) time / 1000000d);
     }
     public int getIndexStart() {
-        return (int) indexStart;
+        return indexStart;
     }
-    public void setIndexStart(long indexStart) {
+    public void setIndexStart(int indexStart) {
         this.indexStart = indexStart;
     }
     public int getIndexEnd() {
-        return (int) indexEnd;
+        return indexEnd;
     }
-    public void setIndexEnd(long indexEnd) {
+    public void setIndexEnd(int indexEnd) {
         this.indexEnd = indexEnd;
     }
     public DAO getDao() {

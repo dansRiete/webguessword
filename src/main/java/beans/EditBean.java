@@ -46,16 +46,19 @@ public class EditBean implements Serializable{
             dao = loginBean.getDao();
         if(dao != null){
             myList = dao.getActivePhrases();
-            Collections.sort(myList, ((o1, o2) -> {
-                if(o1.collectionAddingDateTime.isAfter(o2.collectionAddingDateTime)){
+            Collections.sort(myList, ((phrase1, phrase2) -> {
+                if(phrase1.collectionAddingDateTime.isAfter(phrase2.collectionAddingDateTime)){
                     return -1;
-                }else if(o2.collectionAddingDateTime.isAfter(o1.collectionAddingDateTime)){
+                }else if(phrase2.collectionAddingDateTime.isAfter(phrase1.collectionAddingDateTime)){
                     return 1;
                 }else {
-                    return 0;
+                    if(phrase1.getId() > phrase2.getId()){
+                        return -1;
+                    }else {
+                        return 1;
+                    }
                 }
             }));
-            myList.forEach((phrase -> System.out.println(phrase.id + " " + phrase.foreignWord + '\n')));
             labelsList = dao.retievePossibleLabels();
             labelsList.add("All");
         }
@@ -69,7 +72,7 @@ public class EditBean implements Serializable{
 
             ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC"));
             Phrase phrase = new Phrase(0, this.foreignWord, this.nativeWord, this.transcription, 30,
-                    ZonedDateTime.now(ZoneId.of("UTC")), this.label, null, 0, 0, false, 1, dao);
+                    ZonedDateTime.now(ZoneId.of("UTC")), this.label, null, 1, dao);
             this.foreignWord = this.nativeWord = this.transcription = this.label = "";
             probabilityFactor = null;
             myList.add(0, phrase);

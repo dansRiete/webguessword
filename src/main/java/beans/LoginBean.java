@@ -1,7 +1,6 @@
 package beans;
 
 import datamodel.User;
-import Exceptions.NoAliveDatabasesException;
 import logic.DAO;
 
 import javax.faces.bean.ManagedBean;
@@ -53,7 +52,7 @@ public class LoginBean implements Serializable {
     private void determineAndConnectToDB() {
 
         System.out.println("CALL: determineAndConnectToDB() from LoginBean");
-        String dbConnected = "EXCEPTION: in determineAndConnectToDB() from LoginBean";
+        String conectedDatabaseMessage = null;
         if(USE_LOCAL_DB){
             activeRemoteHost = FORWARDED_REMOTE_HOST_PORT3306;
             activeUser = "root";
@@ -63,8 +62,8 @@ public class LoginBean implements Serializable {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-            dbConnected = "Local virtual DB connected";
-            System.out.println(dbConnected);
+            conectedDatabaseMessage = "Local virtual DB connected";
+            System.out.println(conectedDatabaseMessage);
             return;
         }
         try {
@@ -72,35 +71,39 @@ public class LoginBean implements Serializable {
             activeUser = "adminLtuHq9R";
             activePassword = "d-AUIKakd1Br";
             mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
-            dbConnected = "Remote DB was connected";
+            conectedDatabaseMessage = "Remote DB was connected";
         } catch (SQLException e) {
             try {
                 activeRemoteHost = FORWARDED_REMOTE_HOST_PORT3306;
                 activeUser = "adminLtuHq9R";
                 activePassword = "d-AUIKakd1Br";
                 mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
-                dbConnected = "Remote DB was connected through the local port 3306 forwarding";
+                conectedDatabaseMessage = "Remote DB was connected through the local port 3306 forwarding";
             } catch (SQLException e1) {
                 try {
                     activeRemoteHost = FORWARDED_REMOTE_HOST_PORT3307;
                     activeUser = "adminLtuHq9R";
                     activePassword = "d-AUIKakd1Br";
                     mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
-                    dbConnected = "Remote DB was connected through the local port 3307 forwarding";
+                    conectedDatabaseMessage = "Remote DB was connected through the local port 3307 forwarding";
                 } catch (SQLException e2) {
                     e2.printStackTrace();
                     System.out.println();
-                    throw new NoAliveDatabasesException();
+                    throw new RuntimeException("NoAliveDatabasesException");
                 }
             }
         } finally {
-            System.out.println(dbConnected);
+            if(conectedDatabaseMessage != null){
+                System.out.println(conectedDatabaseMessage);
+            }
         }
     }
 
-    public void checkAndRedirectUser(){
-        System.out.println("CALL: checkAndRedirectUser() from LoginBean");
+    public void checkCredentialsAndRedirectUser(){
+        System.out.println("CALL: checkCredentialsAndRedirectUser() from LoginBean");
         boolean userExist = false;
+        FacesContext context = FacesContext.getCurrentInstance();
+        HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getResponse();
 
         //Check if there is such user
         for(User user : usersList){
@@ -110,28 +113,18 @@ public class LoginBean implements Serializable {
                 break;
             }
         }
-        //If user exists and password is correct then dispatch to "learn.xhtml" otherwise sendRedirect("error.xhtml")
-        if ((userExist)&&(password.equals(currentUser.password))) {
-            dao = new DAO(this);
-            FacesContext context = FacesContext.getCurrentInstance();
-            HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getResponse();
-            try {
-                response.sendRedirect("learn.xhtml");
-            } catch (IOException e) {
-                System.out.println("EXCEPTION#2: in checkAndRedirectUser() from LoginBean");
-                e.printStackTrace();
-            }
-        } else {
-            FacesContext context = FacesContext.getCurrentInstance();
-            HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getResponse();
-            try {
-                response.sendRedirect("error.xhtml");
-            } catch (IOException e) {
-                System.out.println("EXCEPTION#2: in checkAndRedirectUser() from LoginBean");
-                e.printStackTrace();
-            }
-        }
 
+        //If user exists and password is correct then dispatch to "learn.xhtml" otherwise sendRedirect("error.xhtml")
+        try{
+            if (userExist && password.equals(currentUser.password)) {
+                dao = new DAO(this);
+                response.sendRedirect("learn.xhtml");
+            } else {
+                response.sendRedirect("error.xhtml");
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }
     }
 
     public Connection getConnection(){
