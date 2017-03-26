@@ -40,7 +40,7 @@ public class InterfaceBean implements Serializable{
     //>>Current session data
     private int answersForSessionNumber;
     private int trainedPhrasesNumber;
-    private int nonLearnedWordsNumber;
+    private int nonTrainedWordsNumber;
     private int averageAnswersPerDayQuantity;
     private String trainingCompletionPercent;
     private int totalPhrasesNumber;
@@ -60,7 +60,7 @@ public class InterfaceBean implements Serializable{
     private String currPhrAbsCreateDate;
     private String currPhrRelLastAccsDate;
     private String currPhrRelCreateDate;
-    private int currPhrId;
+    private long currPhrId;
     private String currentPhraseRate;
     //<<
 
@@ -140,8 +140,6 @@ public class InterfaceBean implements Serializable{
         }
     }
 
-
-
      private void reloadStatisticsTable(){
         System.out.println("CALL: reloadStatisticsTable() from InterfaceBean");
 
@@ -199,8 +197,8 @@ public class InterfaceBean implements Serializable{
         //Generates a string with the percentage of correct answers to the total number of answers
         rightAnswersPercentage = ((new BigDecimal(numOfRightAnswForSession)).divide(new BigDecimal(answersForSessionNumber ==0?1: answersForSessionNumber),2, RoundingMode.HALF_UP).multiply(new BigDecimal(100))).setScale(0, RoundingMode.HALF_UP)+"%";
         trainedPhrasesNumber = dao.getLearntWordsAmount();
-        nonLearnedWordsNumber = dao.getNonLearntWordsAmount();
-        totalPhrasesNumber = trainedPhrasesNumber + nonLearnedWordsNumber;
+        nonTrainedWordsNumber = dao.getNonLearntWordsAmount();
+        totalPhrasesNumber = trainedPhrasesNumber + nonTrainedWordsNumber;
 
          try{
              averageAnswersPerDayQuantity = (int) ((float) (dao.getTotalTrainingAnswers() + answersForSessionNumber) / (float) (dao.getTotalTrainingHoursSpent() + ZonedDateTime.now(ZoneId.of("Europe/Kiev")).getHour() - 6) * 24);
@@ -524,10 +522,10 @@ public class InterfaceBean implements Serializable{
         selectedPhrase.isModified = true;
     }
 
-    public int getId() {
+    public long getId() {
         return currPhrId;
     }
-    public void setId(int id) {
+    public void setId(long id) {
         this.currPhrId = id;
     }
 
@@ -538,11 +536,11 @@ public class InterfaceBean implements Serializable{
         this.trainedPhrasesNumber = trainedPhrasesNumber;
     }
 
-    public int getNonLearnedWordsNumber() {
-        return nonLearnedWordsNumber;
+    public int getNonTrainedWordsNumber() {
+        return nonTrainedWordsNumber;
     }
-    public void setNonLearnedWordsNumber(int nonLearnedWordsNumber) {
-        this.nonLearnedWordsNumber = nonLearnedWordsNumber;
+    public void setNonTrainedWordsNumber(int nonTrainedWordsNumber) {
+        this.nonTrainedWordsNumber = nonTrainedWordsNumber;
     }
 
     public int getTotalPhrasesNumber() {

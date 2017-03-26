@@ -3,8 +3,12 @@ package logic;
 import Utils.HibernateUtils;
 import beans.LoginBean;
 import datamodel.Phrase;
+import org.hibernate.Session;
 import org.hibernate.query.Query;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import java.sql.*;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -168,10 +172,17 @@ public class DAO {
 
     public void reloadPhrasesCollection() {
 
-        HibernateUtils hibernateUtils = new HibernateUtils();
         activePhrases.clear();
         allAvailablePhrases.clear();
-        Query<Phrase> allPhrasesQuery = hibernateUtils.buildSessionFactory().openSession().createQuery("from Phrase");
+
+        HibernateUtils hibernateUtils = new HibernateUtils();
+        Session session = hibernateUtils.buildSessionFactory().openSession();
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<Phrase> criteriaQuery = builder.createQuery(Phrase.class);
+        Root<Phrase> phraseRoot = criteriaQuery.from(Phrase.class);
+        criteriaQuery.select(phraseRoot);
+        criteriaQuery.where(builder.equal(phraseRoot.get("user"), loginBean.activeUser));
+        Query<Phrase> allPhrasesQuery = session.createQuery(criteriaQuery);
         allAvailablePhrases = allPhrasesQuery.list();
         for(Phrase currentPhrase : allAvailablePhrases){
             currentPhrase.setDao(this);
@@ -402,7 +413,7 @@ public class DAO {
         System.out.println("CALL: reloadIndices() from DAO" + "Indexes changed=" + countOfModIndices + " Time taken " + (System.currentTimeMillis() - start) + "ms");
     }
 
-    private Phrase getPhraseById(int id){
+    private Phrase getPhraseById(long id){
         for (Phrase phrase : allAvailablePhrases) {
             if (phrase.id == id)
                 return phrase;

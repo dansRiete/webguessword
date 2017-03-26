@@ -22,7 +22,7 @@ public class Phrase implements Serializable{
 
     @javax.persistence.Id
     @GeneratedValue(strategy=GenerationType.AUTO)
-    public int id;
+    public long id;
 
     @Column(name = "for_word")
     public String foreignWord;
@@ -47,6 +47,9 @@ public class Phrase implements Serializable{
 
     @Column(name = "rate")
     public double multiplier;
+
+    @Column(name = "user")
+    public String user;
 
     @Transient
     public double previousProbabilityFactor;
@@ -272,7 +275,7 @@ public class Phrase implements Serializable{
 
     //Setters and getters
 
-    public int getId() {
+    public long getId() {
         return id;
     }
     public String getForeignWord(){
