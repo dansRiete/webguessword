@@ -82,12 +82,12 @@
 
                 <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevWrong"
                                  value="Prev.Wrong"
-                                 action="#{interfaceBean.previousWrong()}">
+                                 action="#{interfaceBean.previousQuestionWrong()}">
                     <f:ajax render="@all"> </f:ajax>
                 </h:commandButton>
                 <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevRight"
                                  value="Prev.Right"
-                                 action="#{interfaceBean.previousRight()}">
+                                 action="#{interfaceBean.previousQuestionRight()}">
                     <f:ajax render="@all"> </f:ajax>
                 </h:commandButton>
 
@@ -116,7 +116,7 @@
 
 
                 <h:form style="display: inline-block">
-                    <h:commandButton id="exit" type="submit" value="Exit" action="#{interfaceBean.exitCurrentSession()}">
+                    <h:commandButton id="exit" type="submit" value="Exit" action="#{interfaceBean.exitSession()}">
                     </h:commandButton>
                 </h:form>
 
@@ -125,19 +125,19 @@
                     <h:form id="red">
                         <h:panelGrid columns="2" layout="grid">
                             <p:outputLabel value="Native word"/>
-                            <p:inputText size="40" value="#{interfaceBean.currPhrNatWord}" title="Native word"
+                            <p:inputText size="40" value="#{interfaceBean.selectedQuestion.nativeWord}" title="Native word"
                                          label="Native word"> </p:inputText>
 
                             <p:outputLabel value="Foreign word"/>
-                            <p:inputText size="40" value="#{interfaceBean.currPhrForWord}" title="Foreign word"
+                            <p:inputText size="40" value="#{interfaceBean.selectedQuestion.foreignWord}" title="Foreign word"
                                          label="Foreign word"> </p:inputText>
 
                             <p:outputLabel value="Transcription"/>
-                            <p:inputText size="40" value="#{interfaceBean.currPhrTransc}" title="Transcription"
+                            <p:inputText size="40" value="#{interfaceBean.selectedQuestion.transcription}" title="Transcription"
                                          label="Transcription"> </p:inputText>
 
                             <p:outputLabel value="Label"/>
-                            <p:inputText size="40" value="#{interfaceBean.currPhrLabel}" title="Label"
+                            <p:inputText size="40" value="#{interfaceBean.selectedQuestion.label}" title="Label"
                                          label="Label"> </p:inputText>
                         </h:panelGrid>
                         <p:commandButton type="submit" value="Submit" actionListener="#{messagesView.info}">
@@ -199,7 +199,7 @@
                 </tr>
                 <tr>
                     <td>Number of unlearned phrases</td>
-                    <td>#{interfaceBean.nonTrainedWordsNumber}</td>
+                    <td>#{interfaceBean.nonTrainedPhrasesNumber}</td>
                 </tr>
                 <tr>
                     <td>Total number of phrases</td>
@@ -211,7 +211,7 @@
                 </tr>
                 <tr>
                     <td>Average answers per day</td>
-                    <td>#{interfaceBean.averageAnswersPerDayQuantity}</td>
+                    <td>#{interfaceBean.averageAnswersPerDay}</td>
                 </tr>
 
                 </tbody>
@@ -229,7 +229,7 @@
                 <tbody>
                 <tr>
                     <td>Chance of occurrence (points)</td>
-                    <td>#{interfaceBean.currPhrProb}</td>
+                    <td>#{interfaceBean.currPhrasesProbabilityFactor}</td>
                 </tr>
                 <tr>
                     <td>Chance of occurrence (percents)</td>
@@ -246,7 +246,7 @@
 
                 <tr>
                     <td>Last access date</td>
-                    <td>#{interfaceBean.currPhrAbsLastAccsDate}<br/>~#{interfaceBean.currPhrRelLastAccsDate}</td>
+                    <td>#{interfaceBean.currentPhraseLastAccesssDate}<br/>~#{interfaceBean.currPhrRelLastAccsDate}</td>
                 </tr>
                 <tr>
                     <td>Create date</td>
@@ -254,13 +254,13 @@
                 </tr>
                 <tr>
                     <td>Label</td>
-                    <td>#{interfaceBean.currPhrLabel}</td>
+                    <td>#{interfaceBean.selectedQuestion.label}</td>
                 </tr>
                 <tr>
                     <td>Choosen labels
                         <h:form>
                             <h:selectOneMenu id="table" value="#{interfaceBean.choosedLabel}">
-                                <f:ajax event="change" execute="table; #{interfaceBean.chosenLabels()}" render="@all"/>
+                                <f:ajax event="change" execute="table; #{interfaceBean.reloadLabelsList()}" render="@all"/>
                                 <f:selectItems value="#{interfaceBean.availableLabels}" var="group" itemValue="#{group}"
                                                itemLabel="#{group}"/>
                             </h:selectOneMenu>

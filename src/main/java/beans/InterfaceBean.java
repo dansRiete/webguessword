@@ -5,6 +5,7 @@ import datamodel.Question;
 import logic.DAO;
 import logic.Hints;
 import logic.RetDiff;
+import logic.TrainingLog;
 
 import javax.annotation.PostConstruct;
 import javax.el.ELContext;
@@ -40,8 +41,8 @@ public class InterfaceBean implements Serializable{
     //>>Current session data
     private int answersForSessionNumber;
     private int trainedPhrasesNumber;
-    private int nonTrainedWordsNumber;
-    private int averageAnswersPerDayQuantity;
+    private int nonTrainedPhrasesNumber;
+    private int averageAnswersPerDay;
     private String trainingCompletionPercent;
     private int totalPhrasesNumber;
     private int trainedPhrasesPerSessionNumber;
@@ -50,13 +51,13 @@ public class InterfaceBean implements Serializable{
     //<<
 
     //>>Current phrase data
-    private String currPhrNatWord;
-    private String currPhrForWord;
-    private String currPhrTransc;
-    private String currPhrLabel;
+//    private String currPhrNatWord;
+//    private String currPhrForWord;
+//    private String currPhrTransc;
+//    private String currPhrLabel;
     private String currPhrPercentOfAppearance;
-    private String currPhrProb;
-    private String currPhrAbsLastAccsDate;
+    private String currPhrasesProbabilityFactor;
+    private String currentPhraseLastAccesssDate;
     private String currPhrAbsCreateDate;
     private String currPhrRelLastAccsDate;
     private String currPhrRelCreateDate;
@@ -66,15 +67,20 @@ public class InterfaceBean implements Serializable{
 
     private RetDiff retDiff = new RetDiff();
     private DAO dao;
-    private Phrase selectedPhrase;
+
+    public Question getSelectedQuestion() {
+        return selectedQuestion;
+    }
+
+    public Question selectedQuestion;
     private String question ="";
     private String answerField = "";
-    private StringBuilder trainingLog = new StringBuilder("");
+    private TrainingLog trainingLog = new TrainingLog();
     private final static String WRONG_MESSAGE = " <strong><font color=\"#BBBBB9\">right</font>/<font color=\"#ff0000\">wrong</font></strong>";
     private final static String RIGHT_MESSAGE = " <strong><font color=\"green\">right</font>/<font color=\"#BBBBB9\">wrong</font></strong>";
     private final static String NON_ANSWERED_MESSAGE = " <strong><font color=\"#BBBBB9\">right</font>/<font color=\"#BBBBB9\">wrong</font></strong>";
-    private ArrayList<Phrase> answeredPhrasesLog = new ArrayList<>();
-    private ArrayList<Phrase> todayAnsweredPhrases = new ArrayList<>();
+//    private ArrayList<Phrase> askedPhrasesLog = new ArrayList<>();
+//    private ArrayList<Phrase> todayAskedPhrases = new ArrayList<>();
     private ArrayList<String> availableLabels;
     private String choosedLabel;
     private String resultChosenLabel;
@@ -101,16 +107,16 @@ public class InterfaceBean implements Serializable{
         }
         if(dao != null){
             availableLabels = dao.getAllAvailableLabels();
-            todayAnsweredPhrases = dao.retrieveTodayAnsweredPhrases();
-            answeredPhrasesLog.addAll(todayAnsweredPhrases);
-            currentlySelectedPhraseIndex = answeredPhrasesLog.size() - 1;
+            todayAskedPhrases = dao.retrieveTodayAnsweredPhrases();
+            askedPhrasesLog.addAll(todayAskedPhrases);
+            currentlySelectedPhraseIndex = askedPhrasesLog.size() - 1;
             nextQuestion();
         }else {
             throw new RuntimeException("DAO was null");
         }
     }
 
-    public void chosenLabels() {
+    public void reloadLabelsList() {
         System.out.println("CALL: setChosenLabels() from InterfaceBean");
 
         if (choosedLabel != null && !choosedLabel.equalsIgnoreCase("")){
@@ -144,49 +150,48 @@ public class InterfaceBean implements Serializable{
         System.out.println("CALL: reloadStatisticsTable() from InterfaceBean");
 
         //After the answerField creates String like this - "40.2 ➩ 37.3"
-        if(!selectedPhrase.hasBeenAnswered){
-            BigDecimal previous = new BigDecimal(selectedPhrase.probabilityFactor).setScale(1, RoundingMode.HALF_UP);
-            currPhrProb = previous.toString();
+        if(!selectedQuestion.hasBeenAnswered){
+            BigDecimal previous = new BigDecimal(selectedQuestion.probabilityFactor).setScale(1, RoundingMode.HALF_UP);
+            currPhrasesProbabilityFactor = previous.toString();
         }else{
-            BigDecimal previous = new BigDecimal(selectedPhrase.previousProbabilityFactor).setScale(1, RoundingMode.HALF_UP);
-            BigDecimal present = new BigDecimal(selectedPhrase.probabilityFactor).setScale(1, RoundingMode.HALF_UP);
-            currPhrProb = previous + "➩" + present + "(" + present.subtract(previous) + ")";
+            BigDecimal previous = new BigDecimal(selectedQuestion.previousProbabilityFactor).setScale(1, RoundingMode.HALF_UP);
+            BigDecimal present = new BigDecimal(selectedQuestion.probabilityFactor).setScale(1, RoundingMode.HALF_UP);
+            currPhrasesProbabilityFactor = previous + "➩" + present + "(" + present.subtract(previous) + ")";
         }
 
         //After the answerField creates String like this - "0.06116% ➩ 0.07294%"
-         currPhrPercentOfAppearance = /*selectedPhrase.getPercentChanceView();*/ "NOT YET IMPLEMENTED";
+         currPhrPercentOfAppearance = /*selectedQuestion.getPercentChanceView();*/ "NOT YET IMPLEMENTED";
 
 
-        if(selectedPhrase.lastAccessDateTime != null){
+        if(selectedQuestion.lastAccessDateTime != null){
 
-            currPhrAbsLastAccsDate = LocalDateTime.ofInstant(selectedPhrase.lastAccessDateTime.toInstant(),
-                    ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
+            currentPhraseLastAccesssDate = selectedQuestion.lastAccessDateTime.format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
 
-            currPhrRelLastAccsDate = retDiff.retDiffInTime(System.currentTimeMillis() - selectedPhrase.lastAccessDateTime.toEpochSecond());
+            currPhrRelLastAccsDate = retDiff.retDiffInTime(System.currentTimeMillis() - selectedQuestion.lastAccessDateTime.toEpochSecond());
         }
 
-        if(selectedPhrase.collectionAddingDateTime != null){
+        if(selectedQuestion.collectionAddingDateTime != null){
 
-            currPhrAbsCreateDate = LocalDateTime.ofInstant(selectedPhrase.collectionAddingDateTime.toInstant(),
+            currPhrAbsCreateDate = LocalDateTime.ofInstant(selectedQuestion.collectionAddingDateTime.toInstant(),
                     ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
 
-            currPhrRelCreateDate = retDiff.retDiffInTime(System.currentTimeMillis() - selectedPhrase.collectionAddingDateTime.toEpochSecond());
+            currPhrRelCreateDate = retDiff.retDiffInTime(System.currentTimeMillis() - selectedQuestion.collectionAddingDateTime.toEpochSecond());
         }
 
-        currPhrLabel = selectedPhrase.label;
+//        currPhrLabel = selectedQuestion.label;
 
         //>>Calculate session statistics
         int numOfNonAnswForSession = 0;
         int numOfRightAnswForSession = 0;
-        int numOfPhrForSession = answeredPhrasesLog.size();
-        currPhrId = selectedPhrase.id;
-         if(!selectedPhrase.hasBeenAnswered){
-            currentPhraseRate = new BigDecimal(selectedPhrase.multiplier).setScale(2, BigDecimal.ROUND_HALF_UP).toString();
+        int numOfPhrForSession = askedPhrasesLog.size();
+        currPhrId = selectedQuestion.id;
+         if(!selectedQuestion.hasBeenAnswered){
+            currentPhraseRate = new BigDecimal(selectedQuestion.multiplier).setScale(2, BigDecimal.ROUND_HALF_UP).toString();
          }else {
-             currentPhraseRate = (new BigDecimal(selectedPhrase.previousMultiplier).setScale(2, BigDecimal.ROUND_HALF_UP) + " ➩ " + new BigDecimal(selectedPhrase.multiplier).setScale(2, BigDecimal.ROUND_HALF_UP));
+             currentPhraseRate = (new BigDecimal(selectedQuestion.previousMultiplier).setScale(2, BigDecimal.ROUND_HALF_UP) + " ➩ " + new BigDecimal(selectedQuestion.multiplier).setScale(2, BigDecimal.ROUND_HALF_UP));
          }
 
-        for(Phrase phrs : answeredPhrasesLog){
+        for(Phrase phrs : askedPhrasesLog){
             if(!phrs.hasBeenAnswered)
                 numOfNonAnswForSession++;
             else if(phrs.hasBeenAnsweredCorrectly)
@@ -197,13 +202,13 @@ public class InterfaceBean implements Serializable{
         //Generates a string with the percentage of correct answers to the total number of answers
         rightAnswersPercentage = ((new BigDecimal(numOfRightAnswForSession)).divide(new BigDecimal(answersForSessionNumber ==0?1: answersForSessionNumber),2, RoundingMode.HALF_UP).multiply(new BigDecimal(100))).setScale(0, RoundingMode.HALF_UP)+"%";
         trainedPhrasesNumber = dao.getLearntWordsAmount();
-        nonTrainedWordsNumber = dao.getNonLearntWordsAmount();
-        totalPhrasesNumber = trainedPhrasesNumber + nonTrainedWordsNumber;
+        nonTrainedPhrasesNumber = dao.getNonLearntWordsAmount();
+        totalPhrasesNumber = trainedPhrasesNumber + nonTrainedPhrasesNumber;
 
          try{
-             averageAnswersPerDayQuantity = (int) ((float) (dao.getTotalTrainingAnswers() + answersForSessionNumber) / (float) (dao.getTotalTrainingHoursSpent() + ZonedDateTime.now(ZoneId.of("Europe/Kiev")).getHour() - 6) * 24);
+             averageAnswersPerDay = (int) ((float) (dao.getTotalTrainingAnswers() + answersForSessionNumber) / (float) (dao.getTotalTrainingHoursSpent() + ZonedDateTime.now(ZoneId.of("Europe/Kiev")).getHour() - 6) * 24);
          }catch (ArithmeticException e){
-             averageAnswersPerDayQuantity = 0;
+             averageAnswersPerDay = 0;
          }
         //<<
 
@@ -216,8 +221,8 @@ public class InterfaceBean implements Serializable{
         trainingLog = new StringBuilder();
         trainedPhrasesPerSessionNumber = 0;
 
-        for (int i = answeredPhrasesLog.size() - 1; i >= 0; i--) {
-            Phrase currentPhrase = answeredPhrasesLog.get(i);
+        for (int i = askedPhrasesLog.size() - 1; i >= 0; i--) {
+            Phrase currentPhrase = askedPhrasesLog.get(i);
 
             if (currentPhrase.isTrained() && !currentPhrase.wasTrainedBeforeAnswer()) {
                 trainedPhrasesPerSessionNumber++;
@@ -246,12 +251,12 @@ public class InterfaceBean implements Serializable{
             }
         }
 
-        currPhrForWord = selectedPhrase.foreignWord;
-        currPhrNatWord = selectedPhrase.nativeWord;
-        currPhrTransc = selectedPhrase.transcription;
-        currPhrLabel = selectedPhrase.label;
-        if (selectedPhrase.isModified){
-            selectedPhrase.update();
+//        currPhrForWord = selectedQuestion.foreignWord;
+//        currPhrNatWord = selectedQuestion.nativeWord;
+//        currPhrTransc = selectedQuestion.transcription;
+//        currPhrLabel = selectedQuestion.label;
+        if (selectedQuestion.isModified){
+            selectedQuestion.update();
         }
 
     }
@@ -260,8 +265,8 @@ public class InterfaceBean implements Serializable{
     public void rightAnswer(){
 
         System.out.println("CALL: rightAnswer() from InterfaceBean");
-        selectedPhrase = answeredPhrasesLog.get(currentlySelectedPhraseIndex);
-        selectedPhrase.rightAnswer();
+        selectedQuestion = askedPhrasesLog.get(currentlySelectedPhraseIndex);
+        selectedQuestion.rightAnswer();
         nextQuestion();
         reloadStatisticsTable();
         reloadTrainingLog();
@@ -271,30 +276,30 @@ public class InterfaceBean implements Serializable{
     public void wrongAnswer(){
 
         System.out.println("CALL: wrongAnswer() from InterfaceBean");
-        selectedPhrase = answeredPhrasesLog.get(currentlySelectedPhraseIndex);
-        selectedPhrase.wrongAnswer();
+        selectedQuestion = askedPhrasesLog.get(currentlySelectedPhraseIndex);
+        selectedQuestion.wrongAnswer();
         nextQuestion();
         reloadStatisticsTable();
         reloadTrainingLog();
     }
 
-    public void previousRight(){
+    public void previousQuestionRight(){
 
-        System.out.println("CALL: previousRight() from InterfaceBean");
-        // previousRight() method is not alowed in the middle of the phrases list and at first question per session
-        if(currentlySelectedPhraseIndex == answeredPhrasesLog.size() - 1 && answeredPhrasesLog.size() - todayAnsweredPhrases.size() > 1){
-            answeredPhrasesLog.get(currentlySelectedPhraseIndex - 1).rightAnswer();
+        System.out.println("CALL: previousQuestionRight() from InterfaceBean");
+        // previousQuestionRight() method is not alowed in the middle of the phrases list and at first question per session
+        if(currentlySelectedPhraseIndex == askedPhrasesLog.size() - 1 && askedPhrasesLog.size() - todayAskedPhrases.size() > 1){
+            askedPhrasesLog.get(currentlySelectedPhraseIndex - 1).rightAnswer();
             reloadStatisticsTable();
             reloadTrainingLog();
         }
     }
 
-    public void previousWrong(){
+    public void previousQuestionWrong(){
 
-        System.out.println("CALL: previousWrong() from InterfaceBean");
-        // previousWrong() method is not alowed in the middle of the phrases list and at first question per session
-        if(currentlySelectedPhraseIndex == answeredPhrasesLog.size() - 1 && answeredPhrasesLog.size() - todayAnsweredPhrases.size() > 1) {
-            answeredPhrasesLog.get(currentlySelectedPhraseIndex - 1).wrongAnswer();
+        System.out.println("CALL: previousQuestionWrong() from InterfaceBean");
+        // previousQuestionWrong() method is not alowed in the middle of the phrases list and at first question per session
+        if(currentlySelectedPhraseIndex == askedPhrasesLog.size() - 1 && askedPhrasesLog.size() - todayAskedPhrases.size() > 1) {
+            askedPhrasesLog.get(currentlySelectedPhraseIndex - 1).wrongAnswer();
             reloadStatisticsTable();
             reloadTrainingLog();
         }
@@ -311,14 +316,14 @@ public class InterfaceBean implements Serializable{
         }else if (answerField.equals("-")){
             wrongAnswer();
         }else if (answerField.equals("++")){
-            previousRight();
+            previousQuestionRight();
         }else if (answerField.equals("--")){
-            previousWrong();
+            previousQuestionWrong();
         }else if (answerField.equals("*")){
             nextQuestion();
         }else {
-            Question givenQuestion = Question.compose(selectedPhrase, answerField);
-            if(givenQuestion.isCorrect()){
+            Question givenQuestion = Question.compose(selectedQuestion);
+            if(givenQuestion.answerIsCorrect()){
                 rightAnswer();
             } else {
                 wrongAnswer();
@@ -331,15 +336,15 @@ public class InterfaceBean implements Serializable{
     public void nextQuestion(){
         System.out.println();
         System.out.println("CALL: nextQuestion() from InterfaceBean");
-        if(currentlySelectedPhraseIndex == answeredPhrasesLog.size() - 1) {
-            selectedPhrase = new Phrase(dao.retrieveRandomPhrase());
-            answeredPhrasesLog.add(selectedPhrase);
-            currentlySelectedPhraseIndex = answeredPhrasesLog.size() - 1;
-            question = selectedPhrase.nativeWord + " " + hint.shortHint(selectedPhrase.foreignWord);
+        if(currentlySelectedPhraseIndex == askedPhrasesLog.size() - 1) {
+            selectedQuestion = new Phrase(dao.retrieveRandomPhrase());
+            askedPhrasesLog.add(selectedQuestion);
+            currentlySelectedPhraseIndex = askedPhrasesLog.size() - 1;
+            question = selectedQuestion.nativeWord + " " + hint.shortHint(selectedQuestion.foreignWord);
         }else {
             currentlySelectedPhraseIndex++;
-            selectedPhrase = answeredPhrasesLog.get(currentlySelectedPhraseIndex);
-            question = selectedPhrase.nativeWord + " " + hint.shortHint(selectedPhrase.foreignWord);
+            selectedQuestion = askedPhrasesLog.get(currentlySelectedPhraseIndex);
+            question = selectedQuestion.nativeWord + " " + hint.shortHint(selectedQuestion.foreignWord);
         }
         reloadStatisticsTable();
         reloadTrainingLog();
@@ -349,9 +354,9 @@ public class InterfaceBean implements Serializable{
         System.out.println("CALL: previousQuestion() from InterfaceBean");
 
         //Prevents selecting today answered phrases and negative index
-        if(currentlySelectedPhraseIndex > todayAnsweredPhrases.size()){
-            selectedPhrase = answeredPhrasesLog.get(--currentlySelectedPhraseIndex);
-            question = selectedPhrase.nativeWord;
+        if(currentlySelectedPhraseIndex > todayAskedPhrases.size()){
+            selectedQuestion = askedPhrasesLog.get(--currentlySelectedPhraseIndex);
+            question = selectedQuestion.nativeWord;
             reloadStatisticsTable();
             reloadTrainingLog();
         }
@@ -359,11 +364,11 @@ public class InterfaceBean implements Serializable{
 
     public void deletePhrase(){
         System.out.println("CALL: delete() from InterfaceBean");
-        selectedPhrase.delete();
+        selectedQuestion.delete();
     }
 
-    public void exitCurrentSession(){
-        System.out.println("CALL: exitCurrentSession() from InterfaceBean");
+    public void exitSession(){
+        System.out.println("CALL: exitSession() from InterfaceBean");
         FacesContext context = FacesContext.getCurrentInstance();
         HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
         HttpSession session = request.getSession();
@@ -407,10 +412,10 @@ public class InterfaceBean implements Serializable{
         this.answerField = answerField;
     }
 
-    public StringBuilder getTrainingLog() {
+    public TrainingLog getTrainingLog() {
         return trainingLog;
     }
-    public void setTrainingLog(StringBuilder res) {
+    public void setTrainingLog(TrainingLog res) {
         this.trainingLog = res;
     }
 
@@ -435,18 +440,18 @@ public class InterfaceBean implements Serializable{
         this.currPhrPercentOfAppearance = pDpercentOfAppearance;
     }
 
-    public String getCurrPhrProb() {
-        return currPhrProb;
+    public String getCurrPhrasesProbabilityFactor() {
+        return currPhrasesProbabilityFactor;
     }
-    public void setCurrPhrProb(String pDprob) {
-        this.currPhrProb = pDprob;
+    public void setCurrPhrasesProbabilityFactor(String pDprob) {
+        this.currPhrasesProbabilityFactor = pDprob;
     }
 
-    public String getCurrPhrAbsLastAccsDate() {
-        return currPhrAbsLastAccsDate;
+    public String getCurrentPhraseLastAccesssDate() {
+        return currentPhraseLastAccesssDate;
     }
-    public void setCurrPhrAbsLastAccsDate(String pdLastAccs) {
-        this.currPhrAbsLastAccsDate = pdLastAccs;
+    public void setCurrentPhraseLastAccesssDate(String pdLastAccs) {
+        this.currentPhraseLastAccesssDate = pdLastAccs;
     }
 
     /*public BigDecimal getCurrentPhraseLastAccessDate() {
@@ -484,13 +489,13 @@ public class InterfaceBean implements Serializable{
         this.resultChosenLabel = resultChosenLabel;
     }
 
-    public String getCurrPhrNatWord() {
+    /*public String getCurrPhrNatWord() {
         return currPhrNatWord;
     }
     public void setCurrPhrNatWord(String currPhrNatWord) {
         this.currPhrNatWord = currPhrNatWord;
-        selectedPhrase.nativeWord = this.currPhrNatWord;
-        selectedPhrase.isModified = true;
+        selectedQuestion.nativeWord = this.currPhrNatWord;
+        selectedQuestion.isModified = true;
     }
 
     public String getCurrPhrForWord() {
@@ -499,8 +504,8 @@ public class InterfaceBean implements Serializable{
     public void setCurrPhrForWord(String currPhrForWord) {
 
         this.currPhrForWord = currPhrForWord;
-        selectedPhrase.foreignWord = this.currPhrForWord;
-        selectedPhrase.isModified = true;
+        selectedQuestion.foreignWord = this.currPhrForWord;
+        selectedQuestion.isModified = true;
         System.out.println("--- inside setCurrPhrForWord(String currPhrForWord) currPhrForWord is " + this.currPhrForWord);
     }
 
@@ -509,8 +514,8 @@ public class InterfaceBean implements Serializable{
     }
     public void setCurrPhrTransc(String currPhrTransc) {
         this.currPhrTransc = currPhrTransc;
-        selectedPhrase.transcription = this.currPhrTransc;
-        selectedPhrase.isModified = true;
+        selectedQuestion.transcription = this.currPhrTransc;
+        selectedQuestion.isModified = true;
     }
 
     public String getCurrPhrLabel() {
@@ -518,9 +523,9 @@ public class InterfaceBean implements Serializable{
     }
     public void setCurrPhrLabel(String currPhrLabel) {
         this.currPhrLabel = currPhrLabel;
-        selectedPhrase.label = this.currPhrLabel;
-        selectedPhrase.isModified = true;
-    }
+        selectedQuestion.label = this.currPhrLabel;
+        selectedQuestion.isModified = true;
+    }*/
 
     public long getId() {
         return currPhrId;
@@ -536,11 +541,11 @@ public class InterfaceBean implements Serializable{
         this.trainedPhrasesNumber = trainedPhrasesNumber;
     }
 
-    public int getNonTrainedWordsNumber() {
-        return nonTrainedWordsNumber;
+    public int getNonTrainedPhrasesNumber() {
+        return nonTrainedPhrasesNumber;
     }
-    public void setNonTrainedWordsNumber(int nonTrainedWordsNumber) {
-        this.nonTrainedWordsNumber = nonTrainedWordsNumber;
+    public void setNonTrainedPhrasesNumber(int nonTrainedPhrasesNumber) {
+        this.nonTrainedPhrasesNumber = nonTrainedPhrasesNumber;
     }
 
     public int getTotalPhrasesNumber() {
@@ -571,11 +576,11 @@ public class InterfaceBean implements Serializable{
         this.currPhrRelCreateDate = currPhrRelCreateDate;
     }
 
-    public int getAverageAnswersPerDayQuantity() {
-        return averageAnswersPerDayQuantity;
+    public int getAverageAnswersPerDay() {
+        return averageAnswersPerDay;
     }
-    public void setAverageAnswersPerDayQuantity(int averageAnswersPerDayQuantity) {
-        this.averageAnswersPerDayQuantity = averageAnswersPerDayQuantity;
+    public void setAverageAnswersPerDay(int averageAnswersPerDay) {
+        this.averageAnswersPerDay = averageAnswersPerDay;
     }
 
     public String getTrainingCompletionPercent() {

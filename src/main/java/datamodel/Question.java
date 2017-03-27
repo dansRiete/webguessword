@@ -1,6 +1,5 @@
 package datamodel;
 
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,40 +11,39 @@ import java.util.List;
 public class Question {
 
     private long id;
-    private boolean answerIsCorrect;
-    private final ZonedDateTime answersDate = ZonedDateTime.now(ZoneId.of("UTC"));
-    private final String givenAnswerLiteral;
-    private final Phrase answeredPhrase;
-    private String askedLiteral;
-    private String answeredLiteral;
+    private String answer;
+    private final ZonedDateTime askDate = ZonedDateTime.now();
+    private final Phrase askedPhrase;
+    private boolean answerCorrect;
 
-    private Question(Phrase answeredPhrase, String givenAnswerLiteral) {
-        this.answeredPhrase = answeredPhrase;
-        this.givenAnswerLiteral = givenAnswerLiteral;
-
+    public boolean isSelected() {
+        return selected;
     }
 
-    public static Question compose(Phrase answeredPhrase, String givenAnswerLiteral){
-        if(answeredPhrase == null || givenAnswerLiteral == null){
+    private boolean selected;
+
+    private Question(Phrase askedPhrase) {
+        this.askedPhrase = askedPhrase;
+    }
+
+
+
+    public static Question compose(Phrase askedPhrase){
+        if(askedPhrase == null){
             throw new IllegalArgumentException("Phrases foreign and native literals can not be null");
         }
-        Question composedQuestion = new Question(answeredPhrase, givenAnswerLiteral);
-        composedQuestion.checkTheAnswer();
-        return composedQuestion;
+        return new Question(askedPhrase);
     }
 
-    public boolean isCorrect(){
-        return answerIsCorrect;
-    }
-
-    private void checkTheAnswer(){
-        if(givenAnswerLiteral.equals("") || answeredPhrase.getForeignWord().equals("")){
-            answerIsCorrect = false;
-        }else if(!givenAnswerLiteral.contains("\\") && !givenAnswerLiteral.contains("/")){
-            answerIsCorrect = phrasesEquals(givenAnswerLiteral, answeredPhrase.getForeignWord());
+    public Question answerTheQuestion(String answer){
+        this.answer = answer;
+        if(this.answer.equals("") || askedPhrase.getForeignWord().equals("")){
+            answerCorrect = false;
+        }else if(!this.answer.contains("\\") && !this.answer.contains("/")){
+            answerCorrect = phrasesEquals(this.answer, askedPhrase.getForeignWord());
         }else {
-            String [] givenLiteralPhrases = givenAnswerLiteral.split("[/\\\\]");
-            String [] referenceLiteralPhrases = answeredPhrase.getForeignWord().split("[/\\\\]");
+            String [] givenLiteralPhrases = this.answer.split("[/\\\\]");
+            String [] referenceLiteralPhrases = askedPhrase.getForeignWord().split("[/\\\\]");
             int matchesAmount = 0;
             for (String referenceLiteralPhrase : referenceLiteralPhrases) {
                 for (String givenLiteralPhrase : givenLiteralPhrases) {
@@ -54,8 +52,21 @@ public class Question {
                     }
                 }
             }
-            answerIsCorrect = matchesAmount == referenceLiteralPhrases.length;
+            answerCorrect = matchesAmount == referenceLiteralPhrases.length;
         }
+        return this;
+    }
+
+    public Question rightAnswer(){
+        this.answer = askedPhrase.getForeignWord();
+        this.answerCorrect = true;
+        return this;
+    }
+
+    public Question wrongAnswer(){
+        this.answer = "Had not been given";
+        this.answerCorrect = false;
+        return this;
     }
 
     private boolean phrasesEquals(String givenPhrase, String referencePhrase){
@@ -108,11 +119,27 @@ public class Question {
         return false;
     }
 
-    public boolean isAnswerIsCorrect() {
-        return answerIsCorrect;
+    public long getId() {
+        return id;
     }
 
-    public void setAnswerIsCorrect(boolean answerIsCorrect) {
-        this.answerIsCorrect = answerIsCorrect;
+    public String getAnswer() {
+        return answer;
+    }
+
+    public ZonedDateTime getAskDate() {
+        return askDate;
+    }
+
+    public Phrase getAskedPhrase() {
+        return askedPhrase;
+    }
+
+    public boolean answerIsCorrect() {
+        return answered() && answerCorrect;
+    }
+
+    public boolean answered(){
+        return answer != null;
     }
 }
