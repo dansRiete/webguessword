@@ -51,6 +51,9 @@ public class Phrase implements Serializable{
     @Column(name = "user")
     public String user;
 
+    @Column(name = "is_deleted")
+    public boolean isDeleted;
+
     @Transient
     public double previousProbabilityFactor;
 

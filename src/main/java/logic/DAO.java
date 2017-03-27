@@ -107,7 +107,7 @@ public class DAO {
         }
     }
 
-    public ArrayList<Phrase> retrieveTodayAnsweredPhrases(){
+    public ArrayList<Phrase> retrieveTodayQuestions(){
         ArrayList<Phrase> list = new ArrayList<>();
 
         try (Statement statement = mainDbConn.createStatement();
@@ -181,9 +181,12 @@ public class DAO {
         CriteriaQuery<Phrase> criteriaQuery = builder.createQuery(Phrase.class);
         Root<Phrase> phraseRoot = criteriaQuery.from(Phrase.class);
         criteriaQuery.select(phraseRoot);
-        criteriaQuery.where(builder.equal(phraseRoot.get("user"), loginBean.activeUser));
+        System.out.println("user=" + loginBean.getUser());
+        criteriaQuery.where(builder.equal(phraseRoot.get("user"), loginBean.getUser()), builder.equal(phraseRoot.get("isDeleted"), false));
+//        criteriaQuery.where(builder.equal(phraseRoot.get("isDeleted"), false));
         Query<Phrase> allPhrasesQuery = session.createQuery(criteriaQuery);
         allAvailablePhrases = allPhrasesQuery.list();
+        System.out.println("LIST SIZE:" + allAvailablePhrases.size());
         for(Phrase currentPhrase : allAvailablePhrases){
             currentPhrase.setDao(this);
             if(currentPhrase.isInList(activeLabels)){
@@ -341,6 +344,10 @@ public class DAO {
 
     private void reloadIndices() {
 
+        if(activePhrases.isEmpty()){
+            throw new RuntimeException("Active Phrases list was empty. Reload indices impossible");
+        }
+
         final long RANGE = 1_000_000_000;
         long start = System.currentTimeMillis();
         double temp = 0;
@@ -454,7 +461,7 @@ public class DAO {
 
         adjustLastPhrasesStackSize();
 
-        if (!lastPhrasesStackContains(pushedPhrase) && lastSevenPhrasesStack != null) {
+        if (!lastPhrasesStackContains(pushedPhrase) && lastSevenPhrasesStack != null && lastSevenPhrasesStack.length != 0) {
             lastSevenPhrasesStack[lastPhrasesStackPosition()] = pushedPhrase;
         }
     }

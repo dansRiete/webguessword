@@ -14,7 +14,7 @@ public class MessagesView {
         FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Info", "Changes have been sent."));
     }
 
-    public void warn() {
+    /*public void warn() {
         FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN, "Warning!", "Watch out for PrimeFaces."));
     }
 
@@ -24,5 +24,5 @@ public class MessagesView {
 
     public void fatal() {
         FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_FATAL, "Fatal!", "System Error"));
-    }
+    }*/
 }
