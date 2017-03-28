@@ -1,7 +1,13 @@
 package beans;
 
+import dao.UserDao;
+import datamodel.Phrase;
+import datamodel.Question;
 import datamodel.User;
-import logic.DAO;
+import logic.DatabaseHelper;
+import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.Configuration;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
@@ -9,8 +15,11 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Serializable;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 
 @ManagedBean(name="login")
 @SessionScoped
@@ -19,23 +28,30 @@ public class LoginBean implements Serializable {
     private String user;
     private String password;
     private User currentUser;
-    private DAO dao;
+    private DatabaseHelper databaseHelper;
     private Connection mainDbConn;
-    private ArrayList<User> usersList = new ArrayList<>();
+    private List<User> usersList = new ArrayList<>();
     public String activeRemoteHost;
     public String activeUser;
     public String activePassword;
     private final static String ORIGINAL_REMOTE_HOST = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     private final static String FORWARDED_REMOTE_HOST_PORT3306 = "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     private final static String FORWARDED_REMOTE_HOST_PORT3307 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
-    public final static boolean USE_LOCAL_DB = false;
+    public final static boolean USE_LOCAL_DB = true;
+
+
+    private SessionFactory sessionFactory;
 
     public LoginBean(){
-        determineAndConnectToDB();
-        ResultSet rs = null;
+        determineAliveDbAndConnectTo();
+        buildSessionFactory();
+        UserDao userDao = new UserDao(sessionFactory);
+        userDao.openCurrentSession();
+        usersList = userDao.findAll();
+        userDao.closeCurrentSession();
 
         //>>Create list of users
-        try {
+        /*try {
             Statement st = mainDbConn.createStatement();
             rs = st.executeQuery("SELECT * FROM users");
             while (rs.next()){
@@ -45,13 +61,13 @@ public class LoginBean implements Serializable {
         } catch (SQLException e) {
             System.out.println("EXCEPTION: in LoginBean constructor");
             e.printStackTrace();
-        }
+        }*/
         //<<
     }
 
-    private void determineAndConnectToDB() {
+    private void determineAliveDbAndConnectTo() {
 
-        System.out.println("CALL: determineAndConnectToDB() from LoginBean");
+        System.out.println("CALL: determineAliveDbAndConnectTo() from LoginBean");
         String conectedDatabaseMessage = null;
         if(USE_LOCAL_DB){
             activeRemoteHost = FORWARDED_REMOTE_HOST_PORT3306;
@@ -117,7 +133,7 @@ public class LoginBean implements Serializable {
         //If user exists and password is correct then dispatch to "learn.xhtml" otherwise sendRedirect("error.xhtml")
         try{
             if (userExist && password.equals(currentUser.password)) {
-                dao = new DAO(this);
+                databaseHelper = new DatabaseHelper(this, sessionFactory);
                 response.sendRedirect("learn.xhtml");
             } else {
                 response.sendRedirect("error.xhtml");
@@ -127,12 +143,41 @@ public class LoginBean implements Serializable {
         }
     }
 
+    public SessionFactory buildSessionFactory(){
+        /*try {*/
+
+            Configuration configuration = new Configuration().configure();
+            configuration.addAnnotatedClass(Phrase.class);
+            configuration.addAnnotatedClass(datamodel.User.class);
+            configuration.addAnnotatedClass(Question.class);
+            configuration.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
+            configuration.setProperty("hibernate.connection.driver_class", "com.mysql.jdbc.Driver");
+            System.out.println(this.activeUser + " - " + this.activePassword + " - " + this.activeRemoteHost);
+            configuration.setProperty("hibernate.connection.username", this.activeUser);
+            configuration.setProperty("hibernate.connection.password", this.activePassword);
+            configuration.setProperty("hibernate.connection.url", this.activeRemoteHost);
+
+            sessionFactory = configuration.buildSessionFactory(
+                    new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build());
+
+        /*} catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(
+                    "There was an error during Hibernate buildSessionFactory()");
+        }*/
+        return sessionFactory;
+    }
+
+    public SessionFactory getSessionFactory() {
+        return sessionFactory;
+    }
+
     public Connection getConnection(){
         return mainDbConn;
     }
 
-    public DAO getDao(){
-        return this.dao;
+    public DatabaseHelper getDatabaseHelper(){
+        return this.databaseHelper;
     }
 
     public String getUser() {

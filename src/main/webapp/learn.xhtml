@@ -125,19 +125,19 @@
                     <h:form id="red">
                         <h:panelGrid columns="2" layout="grid">
                             <p:outputLabel value="Native word"/>
-                            <p:inputText size="40" value="#{interfaceBean.selectedQuestion.nativeWord}" title="Native word"
+                            <p:inputText size="40" value="#{interfaceBean.selectedQuestion.askedPhrase.nativeWord}" title="Native word"
                                          label="Native word"> </p:inputText>
 
                             <p:outputLabel value="Foreign word"/>
-                            <p:inputText size="40" value="#{interfaceBean.selectedQuestion.foreignWord}" title="Foreign word"
+                            <p:inputText size="40" value="#{interfaceBean.selectedQuestion.askedPhrase.foreignWord}" title="Foreign word"
                                          label="Foreign word"> </p:inputText>
 
                             <p:outputLabel value="Transcription"/>
-                            <p:inputText size="40" value="#{interfaceBean.selectedQuestion.transcription}" title="Transcription"
+                            <p:inputText size="40" value="#{interfaceBean.selectedQuestion.askedPhrase.transcription}" title="Transcription"
                                          label="Transcription"> </p:inputText>
 
                             <p:outputLabel value="Label"/>
-                            <p:inputText size="40" value="#{interfaceBean.selectedQuestion.label}" title="Label"
+                            <p:inputText size="40" value="#{interfaceBean.selectedQuestion.askedPhrase.label}" title="Label"
                                          label="Label"> </p:inputText>
                         </h:panelGrid>
                         <p:commandButton type="submit" value="Submit" actionListener="#{messagesView.info}">
@@ -229,7 +229,7 @@
                 <tbody>
                 <tr>
                     <td>Chance of occurrence (points)</td>
-                    <td>#{interfaceBean.currPhrasesProbabilityFactor}</td>
+                    <td>#{interfaceBean.selectedQuestion.askedPhrase.probabilityFactor}</td>
                 </tr>
                 <tr>
                     <td>Chance of occurrence (percents)</td>
@@ -237,7 +237,7 @@
                 </tr>
                 <tr>
                     <td>Id of current phrase</td>
-                    <td>#{interfaceBean.id}</td>
+                    <td>#{interfaceBean.selectedQuestion.askedPhrase.id}</td>
                 </tr>
                 <tr>
                     <td>Rate of current phrase</td>
@@ -246,15 +246,15 @@
 
                 <tr>
                     <td>Last access date</td>
-                    <td>#{interfaceBean.currentPhraseLastAccesssDate}<br/>~#{interfaceBean.currPhrRelLastAccsDate}</td>
+                    <td>#{interfaceBean.selectedQuestion.askedPhrase.lastAccessDateTime}<!--<br/>~#{interfaceBean.selectedQuestion.askedPhrase.lastAccessDateTime}--></td>
                 </tr>
                 <tr>
                     <td>Create date</td>
-                    <td>#{interfaceBean.currPhrAbsCreateDate}<br/>~#{interfaceBean.currPhrRelCreateDate}</td>
+                    <td>#{interfaceBean.selectedQuestion.askedPhrase.collectionAddingDateTime}<!--<br/>~#{interfaceBean.selectedQuestion.askedPhrase.collectionAddingDateTime}--></td>
                 </tr>
                 <tr>
                     <td>Label</td>
-                    <td>#{interfaceBean.selectedQuestion.label}</td>
+                    <td>#{interfaceBean.selectedQuestion.askedPhrase.label}</td>
                 </tr>
                 <tr>
                     <td>Choosen labels

@@ -1,5 +1,6 @@
 package datamodel;
 
+import javax.persistence.*;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,21 +9,38 @@ import java.util.List;
  * Created by Aleks on 11.11.2016.
  */
 
+@Entity
+@Table(name = "questions")
 public class Question {
 
+    @javax.persistence.Id
+    @GeneratedValue(strategy= GenerationType.AUTO)
     private long id;
+
+    @Column(name = "answer")
     private String answer;
+
+    @Column(name = "date")
     private final ZonedDateTime askDate = ZonedDateTime.now();
+
+    @Column(name = "phrase_key")
     private final Phrase askedPhrase;
+
+    @Column(name = "answered_correctly")
     private boolean answerCorrect;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     public boolean isSelected() {
         return selected;
     }
 
-    private boolean selected;
+    @Transient
+    public boolean selected;
 
-    private Question(Phrase askedPhrase) {
+    public Question(Phrase askedPhrase) {
         this.askedPhrase = askedPhrase;
     }
 
@@ -33,6 +51,10 @@ public class Question {
             throw new IllegalArgumentException("Phrases foreign and native literals can not be null");
         }
         return new Question(askedPhrase);
+    }
+
+    public void deletePhrase(){
+
     }
 
     public Question answerTheQuestion(String answer){

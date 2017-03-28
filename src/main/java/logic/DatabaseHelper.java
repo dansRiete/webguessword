@@ -1,9 +1,13 @@
 package logic;
 
-import Utils.HibernateUtils;
 import beans.LoginBean;
+import dao.PhraseDao;
+import dao.QuestionDao;
+import dao.UserDao;
 import datamodel.Phrase;
+import datamodel.Question;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
 
 import javax.persistence.criteria.CriteriaBuilder;
@@ -22,7 +26,7 @@ import java.util.Random;
  * Created by Aleks on 11.05.2016.
  */
 //@SuppressWarnings("SqlResolve")
-public class DAO {
+public class DatabaseHelper {
 
     private static final String TIMEZONE = "Europe/Kiev";
     private static final double CHANCE_OF_APPEARING_LEARNT_WORDS = 1d / 15d;
@@ -42,12 +46,19 @@ public class DAO {
     private Random random = new Random();
     private Connection mainDbConn;
     private LoginBean loginBean;
+    private SessionFactory sessionFactory;
+    private QuestionDao questionDao;
+    private UserDao userDao;
+    private PhraseDao phraseDao;
 
 
-    public DAO(LoginBean loginBean) {
-
+    public DatabaseHelper(LoginBean loginBean, SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
         this.loginBean = loginBean;
         mainDbConn = loginBean.getConnection();
+        questionDao = new QuestionDao(sessionFactory);
+        userDao = new UserDao(sessionFactory);
+        phraseDao = new PhraseDao(sessionFactory);
         reloadPhrasesCollection();
         retievePossibleLabels();
         initThisDayStatistics();
@@ -78,7 +89,7 @@ public class DAO {
 
         } catch (SQLException e) {
             e.printStackTrace();
-            System.out.println("EXCEPTION: SQLException in setStatistics() from DAO");
+            System.out.println("EXCEPTION: SQLException in setStatistics() from DatabaseHelper");
         }
     }
 
@@ -103,14 +114,14 @@ public class DAO {
             statement.execute(sql);
         } catch (SQLException e) {
             e.printStackTrace();
-            System.out.println("EXCEPTION: SQLException in updateStatistics from DAO ");
+            System.out.println("EXCEPTION: SQLException in updateStatistics from DatabaseHelper ");
         }
     }
 
-    public ArrayList<Phrase> retrieveTodayAnsweredPhrases(){
-        ArrayList<Phrase> list = new ArrayList<>();
+    public ArrayList<Question> retrieveTodayQuestions(){
+        ArrayList<Question> list = new ArrayList<>();
 
-        try (Statement statement = mainDbConn.createStatement();
+        /*try (Statement statement = mainDbConn.createStatement();
              ResultSet rs = statement.executeQuery
                      ("SELECT * FROM " + "statistics" + " WHERE " +
                              "date > DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR) ORDER BY DATE , ms")) {
@@ -133,15 +144,15 @@ public class DAO {
 
         } catch (SQLException e) {
             e.printStackTrace();
-            System.out.println("EXCEPTION: SQLException in setStatistics() from DAO");
-        }
+            System.out.println("EXCEPTION: SQLException in setStatistics() from DatabaseHelper");
+        }*/
 
         return list;
     }
 
     public List<String> retievePossibleLabels() {
         //Returns list of possible labels
-        System.out.println("CALL: retievePossibleLabels() from DAO");
+        System.out.println("CALL: retievePossibleLabels() from DatabaseHelper");
         allAvailableLabels.clear();
         String temp;
 
@@ -153,7 +164,7 @@ public class DAO {
             }
 
         } catch (SQLException e) {
-            System.out.println("EXCEPTION: in retievePossibleLabels() from DAO");
+            System.out.println("EXCEPTION: in retievePossibleLabels() from DatabaseHelper");
             e.printStackTrace();
             throw new RuntimeException();
         }
@@ -175,20 +186,20 @@ public class DAO {
         activePhrases.clear();
         allAvailablePhrases.clear();
 
-        HibernateUtils hibernateUtils = new HibernateUtils();
-        Session session = hibernateUtils.buildSessionFactory().openSession();
+        Session session = sessionFactory.openSession();
         CriteriaBuilder builder = session.getCriteriaBuilder();
         CriteriaQuery<Phrase> criteriaQuery = builder.createQuery(Phrase.class);
         Root<Phrase> phraseRoot = criteriaQuery.from(Phrase.class);
         criteriaQuery.select(phraseRoot);
         System.out.println("user=" + loginBean.getUser());
-        criteriaQuery.where(builder.equal(phraseRoot.get("user"), loginBean.getUser()), builder.equal(phraseRoot.get("isDeleted"), false));
+        criteriaQuery.where(builder.equal(phraseRoot.get("user"), 1), builder.equal(phraseRoot.get("isDeleted"), false));
 //        criteriaQuery.where(builder.equal(phraseRoot.get("isDeleted"), false));
         Query<Phrase> allPhrasesQuery = session.createQuery(criteriaQuery);
         allAvailablePhrases = allPhrasesQuery.list();
+        session.close();
         System.out.println("LIST SIZE:" + allAvailablePhrases.size());
         for(Phrase currentPhrase : allAvailablePhrases){
-            currentPhrase.setDao(this);
+            currentPhrase.setDatabaseHelper(this);
             if(currentPhrase.isInList(activeLabels)){
                 activePhrases.add(currentPhrase);
             }
@@ -217,7 +228,7 @@ public class DAO {
     }
 
     public void insertPhrase(Phrase phrase) {
-        System.out.println("CALL: insertPhrase(Phrase phrase) from DAO");
+        System.out.println("CALL: insertPhrase(Phrase phrase) from DatabaseHelper");
         String insertSql = "INSERT INTO " + "words" + " (for_word, nat_word, transcr, prob_factor, create_date," +
                 " label, last_accs_date, rate, user) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -233,7 +244,7 @@ public class DAO {
             ps.setString(9, loginBean.getUser());
             ps.execute();
         } catch (SQLException e) {
-            System.out.println("EXCEPTION inside: in insertPhrase(Phrase phrase) from DAO");
+            System.out.println("EXCEPTION inside: in insertPhrase(Phrase phrase) from DatabaseHelper");
             e.printStackTrace();
             throw new RuntimeException();
         }
@@ -243,12 +254,12 @@ public class DAO {
     }
 
     public void deletePhrase(Phrase phr) {
-        System.out.println("CALL: deletePhrase(int id) from DAO");
+        System.out.println("CALL: deletePhrase(int id) from DatabaseHelper");
         String deleteSql = "DELETE FROM " + loginBean.getUser() + " WHERE ID=" + phr.id;
         try (Statement st = mainDbConn.createStatement()) {
             st.execute(deleteSql);
         } catch (SQLException e) {
-            System.out.println("EXCEPTION#2: in deletePhrase(int id) from DAO");
+            System.out.println("EXCEPTION#2: in deletePhrase(int id) from DatabaseHelper");
             e.printStackTrace();
             throw new RuntimeException();
         }
@@ -257,7 +268,7 @@ public class DAO {
     }
 
     public void updatePhrase(Phrase givenPhrase) {
-        System.out.println("CALL: update(Phrase givenPhrase) from DAO with id=" + givenPhrase.id);
+        System.out.println("CALL: update(Phrase givenPhrase) from DatabaseHelper with id=" + givenPhrase.id);
         String dateTime = ZonedDateTime.now(ZoneId.of(TIMEZONE)).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
         String updateSql = "UPDATE " + "words" + " SET for_word=?, nat_word=?, transcr=?, last_accs_date=?, " +
                 "label=?, prob_factor=?, rate=?  WHERE id =" + givenPhrase.id;
@@ -293,7 +304,7 @@ public class DAO {
             mainDbPrepStat.setDouble(7, givenPhrase.multiplier);
             mainDbPrepStat.execute();
         } catch (SQLException e) {
-            System.out.println("EXCEPTION#2: in updateProb(Phrase givenPhrase) from DAO");
+            System.out.println("EXCEPTION#2: in updateProb(Phrase givenPhrase) from DatabaseHelper");
             e.printStackTrace();
             throw new RuntimeException();
         }
@@ -303,7 +314,7 @@ public class DAO {
     }
 
     public void updateProb(Phrase phrase) {
-        System.out.println("CALL: updateProb(Phrase phrase) with id=" + phrase.id + " from DAO");
+        System.out.println("CALL: updateProb(Phrase phrase) with id=" + phrase.id + " from DatabaseHelper");
         String dateTime = ZonedDateTime.now(ZoneId.of(TIMEZONE)).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
 
         getPhraseById(phrase.id).probabilityFactor = phrase.probabilityFactor;
@@ -313,7 +324,7 @@ public class DAO {
             st.execute("UPDATE " + "words" + " SET prob_factor=" + phrase.probabilityFactor + ", last_accs_date='" + dateTime + "', rate=" + phrase.multiplier +
                     " WHERE id=" + phrase.id);
         } catch (SQLException e) {
-            System.out.println("EXCEPTION#2: in updateProb(Phrase phrase) from DAO");
+            System.out.println("EXCEPTION#2: in updateProb(Phrase phrase) from DatabaseHelper");
             e.printStackTrace();
             throw new RuntimeException();
         }
@@ -417,7 +428,7 @@ public class DAO {
             }
         }
 
-        System.out.println("CALL: reloadIndices() from DAO" + "Indexes changed=" + countOfModIndices + " Time taken " + (System.currentTimeMillis() - start) + "ms");
+        System.out.println("CALL: reloadIndices() from DatabaseHelper" + "Indexes changed=" + countOfModIndices + " Time taken " + (System.currentTimeMillis() - start) + "ms");
     }
 
     private Phrase getPhraseById(long id){

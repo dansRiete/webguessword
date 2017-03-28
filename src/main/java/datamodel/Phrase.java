@@ -1,6 +1,6 @@
 package datamodel;
 
-import logic.DAO;
+import logic.DatabaseHelper;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -15,7 +15,7 @@ import java.util.HashSet;
 
 @Entity
 @Table(name = "words")
-public class Phrase implements Serializable{
+public class Phrase implements Serializable {
 
     @Transient
     private static final double RIGHT_ANSWER_MULTIPLIER = 1.44;
@@ -48,8 +48,17 @@ public class Phrase implements Serializable{
     @Column(name = "rate")
     public double multiplier;
 
-    @Column(name = "user")
-    public String user;
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id")
+    public User user;
 
     @Column(name = "is_deleted")
     public boolean isDeleted;
@@ -76,7 +85,7 @@ public class Phrase implements Serializable{
     public double previousMultiplier;
 
     @Transient
-    public DAO dao;
+    public DatabaseHelper databaseHelper;
 
     @Transient
     public boolean isModified;
@@ -88,7 +97,7 @@ public class Phrase implements Serializable{
     }
 
     public Phrase(int id, String foreignWord, String nativeWord, String transcription, double probabilityFactor,
-                  ZonedDateTime collectionAddingDateTime, String label, ZonedDateTime lastAccessDateTime, double multiplier, DAO dao){
+                  ZonedDateTime collectionAddingDateTime, String label, ZonedDateTime lastAccessDateTime, double multiplier, DatabaseHelper databaseHelper){
         this.id = id;
         this.foreignWord = foreignWord;
         this.nativeWord = nativeWord;
@@ -100,7 +109,7 @@ public class Phrase implements Serializable{
         this.lastAccessDateTime = lastAccessDateTime;
         this.multiplier = multiplier <= 1 ? 1 : multiplier;
         this.previousMultiplier = multiplier <= 1 ? 1 : multiplier;
-        this.dao = dao;
+        this.databaseHelper = databaseHelper;
     }
 
     public Phrase(Phrase givenPhrase){
@@ -117,7 +126,7 @@ public class Phrase implements Serializable{
         this.indexEnd = givenPhrase.indexEnd;
         this.multiplier = givenPhrase.multiplier;
         this.previousMultiplier = multiplier <= 1 ? 1 : multiplier;
-        this.dao = givenPhrase.dao;
+        this.databaseHelper = givenPhrase.databaseHelper;
     }
 
     public void rightAnswer(){
@@ -129,7 +138,7 @@ public class Phrase implements Serializable{
 
             if(!isTrained()){
 
-                double activeWordsAmountRatio = Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber());
+                double activeWordsAmountRatio = Math.sqrt(databaseHelper.activePhrasesNumber() / databaseHelper.totalWordsNumber());
                 double subtrahendForProb = 3 * activeWordsAmountRatio * multiplier;
                 probabilityFactor -= subtrahendForProb;
 
@@ -140,9 +149,9 @@ public class Phrase implements Serializable{
                         multiplier *= RIGHT_ANSWER_MULTIPLIER;
                     }
                 }
-                dao.updateProb(this);
+                databaseHelper.updateProb(this);
             }
-            dao.setStatistics(this);
+            databaseHelper.setStatistics(this);
 
         }else if(!hasBeenAnsweredCorrectly){
 
@@ -150,7 +159,7 @@ public class Phrase implements Serializable{
 
             if(!wasTrainedBeforeAnswer()){
 
-                double rateDepandableOnNumberOfWords = Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber());
+                double rateDepandableOnNumberOfWords = Math.sqrt(databaseHelper.activePhrasesNumber() / databaseHelper.totalWordsNumber());
                 multiplier = previousMultiplier;
                 double probFactorSubtrahend = 3 * rateDepandableOnNumberOfWords * multiplier;
                 probabilityFactor = previousProbabilityFactor -= probFactorSubtrahend;
@@ -168,8 +177,8 @@ public class Phrase implements Serializable{
                 multiplier = previousMultiplier;
             }
 
-            dao.updateStatistics(this);
-            dao.updateProb(this);
+            databaseHelper.updateStatistics(this);
+            databaseHelper.updateProb(this);
         }
     }
 
@@ -180,27 +189,27 @@ public class Phrase implements Serializable{
             hasBeenAnswered = true;
             hasBeenAnsweredCorrectly = false;
 
-            System.out.println(new BigDecimal(probabilityFactor).setScale(1, BigDecimal.ROUND_HALF_UP) + " += " + 6 + " * " + multiplier + " * " + "Math.sqrt(" + dao.activePhrasesNumber() + "/" + dao.totalWordsNumber() + ")");
-            probabilityFactor  += (6 * multiplier * Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber()));
+            System.out.println(new BigDecimal(probabilityFactor).setScale(1, BigDecimal.ROUND_HALF_UP) + " += " + 6 + " * " + multiplier + " * " + "Math.sqrt(" + databaseHelper.activePhrasesNumber() + "/" + databaseHelper.totalWordsNumber() + ")");
+            probabilityFactor  += (6 * multiplier * Math.sqrt(databaseHelper.activePhrasesNumber() / databaseHelper.totalWordsNumber()));
             multiplier = 1;
-            dao.setStatistics(this);
-            dao.updateProb(this);
+            databaseHelper.setStatistics(this);
+            databaseHelper.updateProb(this);
 
         }else if(hasBeenAnsweredCorrectly){
 
             hasBeenAnsweredCorrectly = false;
 
             if(!wasTrainedBeforeAnswer()) {
-                System.out.println(new BigDecimal(previousProbabilityFactor).setScale(1, BigDecimal.ROUND_HALF_UP) + " += " + 6 + " * " + previousMultiplier + " * " + "Math.sqrt(" + dao.activePhrasesNumber() + "/" + dao.totalWordsNumber() + ")");
-                probabilityFactor += (6 * previousMultiplier * Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber()));
+                System.out.println(new BigDecimal(previousProbabilityFactor).setScale(1, BigDecimal.ROUND_HALF_UP) + " += " + 6 + " * " + previousMultiplier + " * " + "Math.sqrt(" + databaseHelper.activePhrasesNumber() + "/" + databaseHelper.totalWordsNumber() + ")");
+                probabilityFactor += (6 * previousMultiplier * Math.sqrt(databaseHelper.activePhrasesNumber() / databaseHelper.totalWordsNumber()));
                 multiplier = 1;
             }else{
-                System.out.println(new BigDecimal(previousProbabilityFactor).setScale(1, BigDecimal.ROUND_HALF_UP) + " += " + 6 + " * " + previousMultiplier + " * " + "Math.sqrt(" + dao.activePhrasesNumber() + "/" + dao.totalWordsNumber() + ")*" + previousMultiplier);
-                probabilityFactor += (6 * previousMultiplier * Math.sqrt(dao.activePhrasesNumber() / dao.totalWordsNumber()) * previousMultiplier);
+                System.out.println(new BigDecimal(previousProbabilityFactor).setScale(1, BigDecimal.ROUND_HALF_UP) + " += " + 6 + " * " + previousMultiplier + " * " + "Math.sqrt(" + databaseHelper.activePhrasesNumber() + "/" + databaseHelper.totalWordsNumber() + ")*" + previousMultiplier);
+                probabilityFactor += (6 * previousMultiplier * Math.sqrt(databaseHelper.activePhrasesNumber() / databaseHelper.totalWordsNumber()) * previousMultiplier);
                 multiplier = 1;
             }
-            dao.updateStatistics(this);
-            dao.updateProb(this);
+            databaseHelper.updateStatistics(this);
+            databaseHelper.updateProb(this);
         }
     }
 
@@ -236,12 +245,12 @@ public class Phrase implements Serializable{
 
     public void delete(){
         System.out.println("CALL delete(), requested id=" + id);
-        dao.deletePhrase(this);
+        databaseHelper.deletePhrase(this);
     }
 
     public void update(){
-        if(dao != null)
-            dao.updatePhrase(this);
+        if(databaseHelper != null)
+            databaseHelper.updatePhrase(this);
     }
 
     public boolean isTrained(){
@@ -346,11 +355,11 @@ public class Phrase implements Serializable{
     public void setIndexEnd(int indexEnd) {
         this.indexEnd = indexEnd;
     }
-    public DAO getDao() {
-        return dao;
+    public DatabaseHelper getDatabaseHelper() {
+        return databaseHelper;
     }
-    public void setDao(DAO dao) {
-        this.dao = dao;
+    public void setDatabaseHelper(DatabaseHelper databaseHelper) {
+        this.databaseHelper = databaseHelper;
     }
 
 

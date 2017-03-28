@@ -44,6 +44,8 @@ public class QuestionLine {
             makeStrong(result);
         }
 
+        result = makeNewLine(result);
+
         resultString = result;
     }
 
@@ -59,6 +61,10 @@ public class QuestionLine {
 
     private String applyColor(String givenString, String color){
         return "<font color=\"" + color + "\">" + givenString + "</font>";
+    }
+
+    private String makeNewLine(String givenString){
+        return givenString + "</br>";
     }
 
     private String makeRightWrongMsg(Question givenQuestion){

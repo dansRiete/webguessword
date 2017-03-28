@@ -1,7 +1,7 @@
 package beans;
 
 import datamodel.Phrase;
-import logic.DAO;
+import logic.DatabaseHelper;
 
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
@@ -26,7 +26,7 @@ public class EditBean implements Serializable{
     @ManagedProperty(value="#{login}")
     private LoginBean loginBean;
 
-    private DAO dao;
+    private DatabaseHelper databaseHelper;
     private ArrayList<Phrase> myList;
     private List<String> labelsList;
     private String foreignWord;
@@ -43,9 +43,9 @@ public class EditBean implements Serializable{
     private void init(){
         System.out.println("EDITBEAN CALL init()");
         if(loginBean != null)
-            dao = loginBean.getDao();
-        if(dao != null){
-            myList = dao.getActivePhrases();
+            databaseHelper = loginBean.getDatabaseHelper();
+        if(databaseHelper != null){
+            myList = databaseHelper.getActivePhrases();
             Collections.sort(myList, ((phrase1, phrase2) -> {
                 if(phrase1.collectionAddingDateTime.isAfter(phrase2.collectionAddingDateTime)){
                     return -1;
@@ -59,7 +59,7 @@ public class EditBean implements Serializable{
                     }
                 }
             }));
-            labelsList = dao.retievePossibleLabels();
+            labelsList = databaseHelper.retievePossibleLabels();
             labelsList.add("All");
         }
     }
@@ -71,11 +71,11 @@ public class EditBean implements Serializable{
         if( this.foreignWord != null && this.nativeWord != null && !this.foreignWord.equalsIgnoreCase("") && !this.nativeWord.equalsIgnoreCase("")){
 
             Phrase phrase = new Phrase(0, this.foreignWord, this.nativeWord, this.transcription, 30,
-                    ZonedDateTime.now(ZoneId.of("UTC")), this.label, null, 1, dao);
+                    ZonedDateTime.now(ZoneId.of("UTC")), this.label, null, 1, databaseHelper);
             this.foreignWord = this.nativeWord = this.transcription = this.label = "";
             probabilityFactor = null;
             myList.add(0, phrase);
-            dao.insertPhrase(phrase);
+            databaseHelper.insertPhrase(phrase);
 
         }
 
@@ -85,9 +85,9 @@ public class EditBean implements Serializable{
     public void deleteById(Phrase phr){
 
         System.out.println("EDITBEAN CALL START deleteById(Phrase phr)  mylist.size=" + myList.size() + " deleted phrase is " + phr.foreignWord);
-        dao.deletePhrase(phr);
-        myList = dao.getActivePhrases();
-        labelsList = dao.retievePossibleLabels();
+        databaseHelper.deletePhrase(phr);
+        myList = databaseHelper.getActivePhrases();
+        labelsList = databaseHelper.retievePossibleLabels();
         System.out.println("EDITBEAN CALL END deleteById(Phrase phr)  mylist.size=" + myList.size());
 
     }

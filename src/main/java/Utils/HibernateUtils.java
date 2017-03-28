@@ -14,10 +14,12 @@ import javax.faces.context.FacesContext;
  */
 public class HibernateUtils {
 
+    SessionFactory sessionFactory;
+
     public SessionFactory buildSessionFactory() {
+
         ELContext elContext = FacesContext.getCurrentInstance().getELContext();
         LoginBean loginBean = (LoginBean) elContext.getELResolver().getValue(elContext, null, "login");
-        SessionFactory sessionFactory = null;
 
         if (loginBean != null) {
             try {
@@ -42,4 +44,6 @@ public class HibernateUtils {
 
         return sessionFactory;
     }
+
+
 }

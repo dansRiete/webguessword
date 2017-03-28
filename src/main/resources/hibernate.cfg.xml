@@ -4,5 +4,5 @@
         "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
 <hibernate-configuration>
     <session-factory>
-    </session-factory>
+        <mapping class="datamodel.User"></mapping></session-factory>
 </hibernate-configuration>
