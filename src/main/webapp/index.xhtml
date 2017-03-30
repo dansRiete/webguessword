@@ -17,9 +17,9 @@
         <h:panelGroup>
             <h:panelGrid columns="2">
                 <h:outputText value="Login"/>
-                <h:inputText value="#{login.user}"/>
+                <h:inputText value="#{login.userTextField}"/>
                 <h:outputText value="Password"/>
-                <h:inputSecret value="#{login.password}"/>
+                <h:inputSecret value="#{login.passwordTextField}"/>
             </h:panelGrid>
             <h:commandButton id="submit" value="Sign In" action="#{login.checkCredentialsAndRedirectUser()}"/>
             <h3 style="color: #1c6bbf">Credentials for guests. Login: guest - Password: guest <br/>

@@ -20,6 +20,9 @@ public class Phrase implements Serializable {
     @Transient
     private static final double RIGHT_ANSWER_MULTIPLIER = 1.44;
 
+    @Transient
+    private static final double TRAINED_PROBABILITY_FACTOR = 3;
+
     @javax.persistence.Id
     @GeneratedValue(strategy=GenerationType.AUTO)
     public long id;
@@ -44,6 +47,14 @@ public class Phrase implements Serializable {
 
     @Column(name = "last_accs_date")
     public ZonedDateTime lastAccessDateTime;
+
+    public double getMultiplier() {
+        return multiplier;
+    }
+
+    public void setMultiplier(double multiplier) {
+        this.multiplier = multiplier;
+    }
 
     @Column(name = "rate")
     public double multiplier;
@@ -246,7 +257,7 @@ public class Phrase implements Serializable {
     }
 
     public boolean isTrained(){
-        return probabilityFactor <= 3;
+        return probabilityFactor <= TRAINED_PROBABILITY_FACTOR;
     }
 
     public boolean wasTrainedBeforeAnswer(){

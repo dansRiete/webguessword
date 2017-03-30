@@ -25,9 +25,14 @@ import java.util.List;
 @SessionScoped
 public class LoginBean implements Serializable {
 
-    private String user;
-    private String password;
-    private User currentUser;
+    private String userTextField;
+    private String passwordTextField;
+
+    public User getLoggedUser() {
+        return loggedUser;
+    }
+
+    private User loggedUser;
     private DatabaseHelper databaseHelper;
     private Connection mainDbConn;
     private List<User> usersList = new ArrayList<>();
@@ -56,7 +61,7 @@ public class LoginBean implements Serializable {
             rs = st.executeQuery("SELECT * FROM users");
             while (rs.next()){
                 usersList.add(new User(rs.getInt("id"), rs.getString("login"), rs.getString("name"),
-                        rs.getString("password"), rs.getString("email")));
+                        rs.getString("passwordTextField"), rs.getString("email")));
             }
         } catch (SQLException e) {
             System.out.println("EXCEPTION: in LoginBean constructor");
@@ -121,18 +126,21 @@ public class LoginBean implements Serializable {
         FacesContext context = FacesContext.getCurrentInstance();
         HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getResponse();
 
+        User loggedUser = null;
+
         //Check if there is such owner
         for(User user : usersList){
-            if(this.user.equalsIgnoreCase(user.login)){
+            if(this.userTextField.equalsIgnoreCase(user.login)){
                 userExist = true;
-                currentUser = user;
+                loggedUser = user;
                 break;
             }
         }
 
-        //If owner exists and password is correct then dispatch to "learn.xhtml" otherwise sendRedirect("error.xhtml")
+        //If owner exists and passwordTextField is correct then dispatch to "learn.xhtml" otherwise sendRedirect("error.xhtml")
         try{
-            if (userExist && password.equals(currentUser.password)) {
+            if (userExist && passwordTextField.equals(loggedUser.password)) {
+                this.loggedUser = loggedUser;
                 databaseHelper = new DatabaseHelper(this, sessionFactory);
                 response.sendRedirect("learn.xhtml");
             } else {
@@ -180,19 +188,19 @@ public class LoginBean implements Serializable {
         return this.databaseHelper;
     }
 
-    public String getUser() {
-        return user;
+    public String getUserTextField() {
+        return userTextField;
     }
 
-    public void setUser(String user){
-        this.user = user;
+    public void setUserTextField(String userTextField){
+        this.userTextField = userTextField;
     }
 
-    public String getPassword() {
-        return password;
+    public String getPasswordTextField() {
+        return passwordTextField;
     }
 
-    public void setPassword(String password){
-        this.password = password;
+    public void setPasswordTextField(String passwordTextField){
+        this.passwordTextField = passwordTextField;
     }
 }

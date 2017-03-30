@@ -6,7 +6,7 @@ import logic.DatabaseHelper;
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.SessionScoped;
+import javax.faces.bean.RequestScoped;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.ZoneId;
@@ -20,7 +20,7 @@ import java.util.List;
  */
 
 @ManagedBean
-@SessionScoped
+@RequestScoped
 public class EditBean implements Serializable{
 
     @ManagedProperty(value="#{login}")
@@ -76,6 +76,7 @@ public class EditBean implements Serializable{
             probabilityFactor = null;
             myList.add(0, phrase);
             databaseHelper.insertPhrase(phrase);
+            databaseHelper.reloadPhrasesAndIndices();
 
         }
 
@@ -88,6 +89,7 @@ public class EditBean implements Serializable{
         databaseHelper.deletePhrase(phr);
         myList = databaseHelper.getActivePhrases();
         labelsList = databaseHelper.retievePossibleLabels();
+        databaseHelper.reloadPhrasesAndIndices();
         System.out.println("EDITBEAN CALL END deleteById(Phrase phr)  mylist.size=" + myList.size());
 
     }

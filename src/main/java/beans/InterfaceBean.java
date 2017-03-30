@@ -55,7 +55,7 @@ public class InterfaceBean implements Serializable{
     public Question selectedQuestion;
     private String question ="";
     private String answerField = "";
-    private TrainingLog trainingLog = new TrainingLog();
+    private TrainingLog trainingLog;
     private ArrayList<String> availableLabels;
     private String choosedLabel;
     private String resultChosenLabel;
@@ -77,7 +77,9 @@ public class InterfaceBean implements Serializable{
             throw new RuntimeException("loginBean in InterfaceBean was null");
         }
 
+
         if(databaseHelper != null){
+            trainingLog = new TrainingLog(databaseHelper);
             availableLabels = databaseHelper.getAllAvailableLabels();
             List<Question> todayQuestions = databaseHelper.retrieveTodayQuestions();
             trainingLog.setTodayQuestions(todayQuestions);
@@ -111,43 +113,8 @@ public class InterfaceBean implements Serializable{
 
         if(!resultChosenLabel.equals(previousResultChoosedLabel)){ //If clause was changed
             databaseHelper.setActiveLabels(chosenLabelsForLearningWords);
-            databaseHelper.reloadPhrasesCollection();
+            databaseHelper.reloadPhrasesAndIndices();
             previousResultChoosedLabel = resultChosenLabel;
-        }
-    }
-
-    public void rightAnswer(){
-
-        System.out.println("CALL: rightAnswer() from InterfaceBean");
-        selectedQuestion = trainingLog.getQuestion(currentlySelectedPhraseIndex);
-        selectedQuestion.rightAnswer();
-        nextQuestion();
-
-    }
-
-    public void wrongAnswer(){
-
-        System.out.println("CALL: wrongAnswer() from InterfaceBean");
-        selectedQuestion = trainingLog.getQuestion(currentlySelectedPhraseIndex);
-        selectedQuestion.wrongAnswer();
-        nextQuestion();
-    }
-
-    public void previousQuestionRight(){
-
-        System.out.println("CALL: previousQuestionRight() from InterfaceBean");
-        // previousQuestionRight() method is not alowed in the middle of the phrases list and at first question per session
-        if(currentlySelectedPhraseIndex == trainingLog.size() - 1 && trainingLog.size() - trainingLog.getTodayQuestions().size() > 1){
-            trainingLog.getQuestion(currentlySelectedPhraseIndex - 1).rightAnswer();
-        }
-    }
-
-    public void previousQuestionWrong(){
-
-        System.out.println("CALL: previousQuestionWrong() from InterfaceBean");
-        // previousQuestionWrong() method is not alowed in the middle of the phrases list and at first question per session
-        if(currentlySelectedPhraseIndex == trainingLog.size() - 1 && trainingLog.size() - trainingLog.getTodayQuestions().size() > 1) {
-            trainingLog.getQuestion(currentlySelectedPhraseIndex - 1).wrongAnswer();
         }
     }
 
@@ -185,9 +152,8 @@ public class InterfaceBean implements Serializable{
             selectedQuestion.selected = false;
         }
         if(currentlySelectedPhraseIndex == 0) {
-            selectedQuestion = new Question(databaseHelper.retrieveRandomPhrase());
+            selectedQuestion = new Question(databaseHelper.retrieveRandomPhrase(), databaseHelper);
             trainingLog.addQuestion(selectedQuestion);
-//            currentlySelectedPhraseIndex = 0;
             question = selectedQuestion.getAskedPhrase().nativeWord + " " + hint.shortHint(selectedQuestion.getAskedPhrase().foreignWord);
         }else {
             currentlySelectedPhraseIndex--;
@@ -210,9 +176,46 @@ public class InterfaceBean implements Serializable{
         trainingLog.reloadLog();
     }
 
+    public void rightAnswer(){
+
+        System.out.println("CALL: rightAnswer() from InterfaceBean");
+        selectedQuestion = trainingLog.getQuestion(currentlySelectedPhraseIndex);
+        selectedQuestion.rightAnswer();
+        nextQuestion();
+
+    }
+
+    public void wrongAnswer(){
+
+        System.out.println("CALL: wrongAnswer() from InterfaceBean");
+        selectedQuestion = trainingLog.getQuestion(currentlySelectedPhraseIndex);
+        selectedQuestion.wrongAnswer();
+        nextQuestion();
+    }
+
+    public void previousQuestionRight(){
+
+        System.out.println("CALL: previousQuestionRight() from InterfaceBean");
+        // previousQuestionRight() method is not alowed in the middle of the phrases list and at first question per session
+        if(currentlySelectedPhraseIndex != trainingLog.size() - 1){
+            trainingLog.getQuestion(currentlySelectedPhraseIndex + 1).rightAnswer();
+        }
+        trainingLog.reloadLog();
+    }
+
+    public void previousQuestionWrong(){
+
+        System.out.println("CALL: previousQuestionWrong() from InterfaceBean");
+        // previousQuestionWrong() method is not alowed in the middle of the phrases list and at first question per session
+        if(currentlySelectedPhraseIndex != trainingLog.size() - 1) {
+            trainingLog.getQuestion(currentlySelectedPhraseIndex + 1).wrongAnswer();
+        }
+        trainingLog.reloadLog();
+    }
+
     public void deletePhrase(){
         System.out.println("CALL: delete() from InterfaceBean");
-        selectedQuestion.deletePhrase();
+        trainingLog.deletePhrase(selectedQuestion);
     }
 
     public void exitSession(){

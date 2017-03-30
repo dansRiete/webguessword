@@ -59,7 +59,7 @@ public class DatabaseHelper {
         questionDao = new QuestionDao(sessionFactory);
         userDao = new UserDao(sessionFactory);
         phraseDao = new PhraseDao(sessionFactory);
-        reloadPhrasesCollection();
+        reloadPhrasesAndIndices();
         retievePossibleLabels();
         initThisDayStatistics();
     }
@@ -181,7 +181,7 @@ public class DatabaseHelper {
         return activePhrases.size();
     }
 
-    public void reloadPhrasesCollection() {
+    public void reloadPhrasesAndIndices() {
 
         activePhrases.clear();
         allAvailablePhrases.clear();
@@ -191,8 +191,8 @@ public class DatabaseHelper {
         CriteriaQuery<Phrase> criteriaQuery = builder.createQuery(Phrase.class);
         Root<Phrase> phraseRoot = criteriaQuery.from(Phrase.class);
         criteriaQuery.select(phraseRoot);
-        System.out.println("user=" + loginBean.getUser());
-        criteriaQuery.where(builder.equal(phraseRoot.get("owner"), 1), builder.equal(phraseRoot.get("isDeleted"), false));
+        System.out.println("user=" + loginBean.getUserTextField());
+        criteriaQuery.where(builder.equal(phraseRoot.get("owner"), loginBean.getLoggedUser()), builder.equal(phraseRoot.get("isDeleted"), false));
 //        criteriaQuery.where(builder.equal(phraseRoot.get("isDeleted"), false));
         Query<Phrase> allPhrasesQuery = session.createQuery(criteriaQuery);
         allAvailablePhrases = allPhrasesQuery.list();
@@ -230,7 +230,7 @@ public class DatabaseHelper {
     public void insertPhrase(Phrase phrase) {
         System.out.println("CALL: insertPhrase(Phrase phrase) from DatabaseHelper");
         String insertSql = "INSERT INTO " + "words" + " (for_word, nat_word, transcr, prob_factor, create_date," +
-                " label, last_accs_date, rate, user) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                " label, last_accs_date, rate, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement ps = mainDbConn.prepareStatement(insertSql)) {
             ps.setString(1, phrase.foreignWord);
@@ -241,7 +241,7 @@ public class DatabaseHelper {
             ps.setString(6, phrase.label);
             ps.setTimestamp(7, toTimestamp(phrase.lastAccessDateTime));
             ps.setDouble(8, phrase.multiplier);
-            ps.setString(9, loginBean.getUser());
+            ps.setLong(9, loginBean.getLoggedUser().getId());
             ps.execute();
         } catch (SQLException e) {
             System.out.println("EXCEPTION inside: in insertPhrase(Phrase phrase) from DatabaseHelper");
@@ -249,13 +249,13 @@ public class DatabaseHelper {
             throw new RuntimeException();
         }
         activePhrases.add(phrase);
-//        reloadPhrasesCollection();
+//        reloadPhrasesAndIndices();
 
     }
 
     public void deletePhrase(Phrase phr) {
         System.out.println("CALL: deletePhrase(int id) from DatabaseHelper");
-        String deleteSql = "DELETE FROM " + loginBean.getUser() + " WHERE ID=" + phr.id;
+        String deleteSql = "DELETE FROM words WHERE ID=" + phr.id;
         try (Statement st = mainDbConn.createStatement()) {
             st.execute(deleteSql);
         } catch (SQLException e) {
@@ -263,7 +263,8 @@ public class DatabaseHelper {
             e.printStackTrace();
             throw new RuntimeException();
         }
-        activePhrases.remove(phr);
+//        activePhrases.remove(phr);
+        reloadPhrasesAndIndices();
 
     }
 
@@ -309,7 +310,7 @@ public class DatabaseHelper {
             throw new RuntimeException();
         }
 
-//        reloadPhrasesCollection();
+//        reloadPhrasesAndIndices();
 
     }
 
@@ -514,6 +515,15 @@ public class DatabaseHelper {
 
     public int getTotalTrainingAnswers() {
         return totalTrainingAnswers;
+    }
+
+    public Phrase getPhrase(Phrase requestedPhrase) {
+        for(Phrase currentPhrase : allAvailablePhrases){
+            if(currentPhrase.equals(requestedPhrase)){
+                return currentPhrase;
+            }
+        }
+        throw new RuntimeException("There was no such phrase");
     }
 }
 

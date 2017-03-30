@@ -15,7 +15,12 @@ public class TrainingLog {
     private List<Question> todayQuestions = new ArrayList<>();
     private List<Question> allQuestions = new LinkedList<>();
     private StringBuilder log = new StringBuilder();
+    private DatabaseHelper databaseHelper;
     private int position;
+
+    public TrainingLog(DatabaseHelper databaseHelper) {
+        this.databaseHelper = databaseHelper;
+    }
 
     public Question getQuestion(int position){
         return allQuestions.get(position);
@@ -51,6 +56,11 @@ public class TrainingLog {
     public void setTodayQuestions(List<Question> todayQuestions) {
         this.todayQuestions = todayQuestions;
         allQuestions.addAll(todayQuestions);
+        reloadLog();
+    }
+
+    public void deletePhrase(Question deletedQuestion){
+        databaseHelper.deletePhrase(deletedQuestion.getAskedPhrase());
         reloadLog();
     }
 

@@ -16,9 +16,9 @@
         <h:panelGroup>
             <h:panelGrid columns="2">
                 <h:outputText value="Логин"/>
-                <h:inputText value="#{login.user}"/>
+                <h:inputText value="#{login.userTextField}"/>
                 <h:outputText value="Пароль"/>
-                <h:inputSecret value="#{login.password}"/>
+                <h:inputSecret value="#{login.passwordTextField}"/>
             </h:panelGrid>
             <h:commandButton id="submit" value="submit" action="#{login.checkCredentialsAndRedirectUser()}"/>
         </h:panelGroup>
