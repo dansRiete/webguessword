@@ -48,17 +48,9 @@ public class Phrase implements Serializable {
     @Column(name = "rate")
     public double multiplier;
 
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")
-    public User user;
+    public User owner;
 
     @Column(name = "is_deleted")
     public boolean isDeleted;
@@ -360,6 +352,14 @@ public class Phrase implements Serializable {
     }
     public void setDatabaseHelper(DatabaseHelper databaseHelper) {
         this.databaseHelper = databaseHelper;
+    }
+
+    public User getOwner() {
+        return owner;
+    }
+
+    public void setOwner(User owner) {
+        this.owner = owner;
     }
 
 

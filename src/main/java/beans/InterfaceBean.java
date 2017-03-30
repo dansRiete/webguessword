@@ -81,7 +81,6 @@ public class InterfaceBean implements Serializable{
             availableLabels = databaseHelper.getAllAvailableLabels();
             List<Question> todayQuestions = databaseHelper.retrieveTodayQuestions();
             trainingLog.setTodayQuestions(todayQuestions);
-            currentlySelectedPhraseIndex = todayQuestions.size() - 1;
             nextQuestion();
         }else {
             throw new RuntimeException("DatabaseHelper was null");
@@ -185,28 +184,30 @@ public class InterfaceBean implements Serializable{
         if(selectedQuestion != null){
             selectedQuestion.selected = false;
         }
-        if(currentlySelectedPhraseIndex == trainingLog.size() - 1) {
+        if(currentlySelectedPhraseIndex == 0) {
             selectedQuestion = new Question(databaseHelper.retrieveRandomPhrase());
             trainingLog.addQuestion(selectedQuestion);
-            currentlySelectedPhraseIndex = trainingLog.size() - 1;
+//            currentlySelectedPhraseIndex = 0;
             question = selectedQuestion.getAskedPhrase().nativeWord + " " + hint.shortHint(selectedQuestion.getAskedPhrase().foreignWord);
         }else {
-            currentlySelectedPhraseIndex++;
+            currentlySelectedPhraseIndex--;
             selectedQuestion = trainingLog.getQuestion(currentlySelectedPhraseIndex);
             question = selectedQuestion.getAskedPhrase().nativeWord + " " + hint.shortHint(selectedQuestion.getAskedPhrase().foreignWord);
         }
         selectedQuestion.selected = true;
+        trainingLog.reloadLog();
     }
 
     public void previousQuestion() {
         System.out.println("CALL: previousQuestion() from InterfaceBean");
         selectedQuestion.selected = false;
         //Prevents selecting today answered phrases and negative index
-        if(currentlySelectedPhraseIndex > trainingLog.size()){
-            selectedQuestion = trainingLog.getQuestion(--currentlySelectedPhraseIndex);
+        if(currentlySelectedPhraseIndex != trainingLog.size() - 1){
+            selectedQuestion = trainingLog.getQuestion(++currentlySelectedPhraseIndex);
             question = selectedQuestion.getAskedPhrase().nativeWord;
         }
         selectedQuestion.selected = true;
+        trainingLog.reloadLog();
     }
 
     public void deletePhrase(){

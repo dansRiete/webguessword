@@ -8,8 +8,8 @@ import java.time.format.DateTimeFormatter;
  */
 public class QuestionLine {
 
-    private final static String WRONG_MESSAGE_COLOR = "green";
-    private final static String RIGHT_MESSAGE_COLOR = "#FF0000";
+    private final static String RIGHT_MESSAGE_COLOR = "green";
+    private final static String WRONG_MESSAGE_COLOR = "#FF0000";
     private final static String NON_ANSWERED_MESSAGE_COLOR = "#BBBBB9";
     private final static String WRONG_MESSAGE = "wrong";
     private final static String RIGHT_MESSAGE = "right";
@@ -41,7 +41,7 @@ public class QuestionLine {
         }
 
         if(question.isSelected()){
-            makeStrong(result);
+            result = makeStrong(result);
         }
 
         result = makeNewLine(result);

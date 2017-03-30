@@ -15,6 +15,7 @@ public class TrainingLog {
     private List<Question> todayQuestions = new ArrayList<>();
     private List<Question> allQuestions = new LinkedList<>();
     private StringBuilder log = new StringBuilder();
+    private int position;
 
     public Question getQuestion(int position){
         return allQuestions.get(position);
@@ -30,6 +31,19 @@ public class TrainingLog {
         allQuestions.forEach(question -> log.append(new QuestionLine(question).getResultString()));
     }
 
+    public List<Question> getAllQuestions() {
+        return allQuestions;
+    }
+
+    public int size(){
+        return allQuestions.size();
+    }
+
+    @Override
+    public String toString() {
+        return log.toString();
+    }
+
     public List<Question> getTodayQuestions() {
         return todayQuestions;
     }
@@ -38,19 +52,6 @@ public class TrainingLog {
         this.todayQuestions = todayQuestions;
         allQuestions.addAll(todayQuestions);
         reloadLog();
-    }
-
-    public List<Question> getAllQuestions() {
-        return allQuestions;
-    }
-
-    @Override
-    public String toString() {
-        return log.toString();
-    }
-
-    public int size(){
-        return allQuestions.size();
     }
 
     /*private void reloadStatisticsTable(){

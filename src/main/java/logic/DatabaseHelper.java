@@ -192,7 +192,7 @@ public class DatabaseHelper {
         Root<Phrase> phraseRoot = criteriaQuery.from(Phrase.class);
         criteriaQuery.select(phraseRoot);
         System.out.println("user=" + loginBean.getUser());
-        criteriaQuery.where(builder.equal(phraseRoot.get("user"), 1), builder.equal(phraseRoot.get("isDeleted"), false));
+        criteriaQuery.where(builder.equal(phraseRoot.get("owner"), 1), builder.equal(phraseRoot.get("isDeleted"), false));
 //        criteriaQuery.where(builder.equal(phraseRoot.get("isDeleted"), false));
         Query<Phrase> allPhrasesQuery = session.createQuery(criteriaQuery);
         allAvailablePhrases = allPhrasesQuery.list();

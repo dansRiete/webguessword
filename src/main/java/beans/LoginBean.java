@@ -121,7 +121,7 @@ public class LoginBean implements Serializable {
         FacesContext context = FacesContext.getCurrentInstance();
         HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getResponse();
 
-        //Check if there is such user
+        //Check if there is such owner
         for(User user : usersList){
             if(this.user.equalsIgnoreCase(user.login)){
                 userExist = true;
@@ -130,7 +130,7 @@ public class LoginBean implements Serializable {
             }
         }
 
-        //If user exists and password is correct then dispatch to "learn.xhtml" otherwise sendRedirect("error.xhtml")
+        //If owner exists and password is correct then dispatch to "learn.xhtml" otherwise sendRedirect("error.xhtml")
         try{
             if (userExist && password.equals(currentUser.password)) {
                 databaseHelper = new DatabaseHelper(this, sessionFactory);
