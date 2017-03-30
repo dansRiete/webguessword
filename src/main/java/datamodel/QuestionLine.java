@@ -30,21 +30,29 @@ public class QuestionLine {
 
     public QuestionLine(Question question){
 
-        String result = "[" + formatTime(question.getAskDate()) + " " + makeRightWrongMsg(question) + "] " + question.getAskedPhrase().getNativeWord();
+        String timeAndRightWrongMessage = "[" + formatTime(question.getAskDate()) + " " + makeRightWrongMsg(question) + "] ";
+        String phrase = question.getAskedPhrase().getNativeWord();
+        String result;
+        Phrase askedPhrase = question.getAskedPhrase();
 
         if (question.answered()){
-            Phrase askedPhrase = question.getAskedPhrase();
-            result += " - " + askedPhrase.getForeignWord();
+            phrase += " - " + askedPhrase.getForeignWord();
             if(askedPhrase.getTranscription() != null && !askedPhrase.getTranscription().equals("")){
-                result += " [" + askedPhrase.getTranscription() + "]";
+                phrase += " [" + askedPhrase.getTranscription() + "]";
             }
         }
 
-        if(question.isSelected()){
-            result = makeStrong(result);
+        if(askedPhrase.isTrained()){
+            phrase = applyColor(phrase, RIGHT_MESSAGE_COLOR);
         }
 
+        result = timeAndRightWrongMessage + phrase;
+
         result = makeNewLine(result);
+
+        if(question.selected){
+            result = makeStrong(result);
+        }
 
         resultString = result;
     }

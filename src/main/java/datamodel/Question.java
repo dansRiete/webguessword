@@ -1,5 +1,7 @@
 package datamodel;
 
+import logic.DatabaseHelper;
+
 import javax.persistence.*;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -12,6 +14,18 @@ import java.util.List;
 @Entity
 @Table(name = "questions")
 public class Question {
+
+    @Transient
+    private static final double RIGHT_ANSWER_MULTIPLIER = 1.44;
+
+    @Transient
+    private static final double RIGHT_ANSWER_SUBTRAHEND = 3;
+
+    @Transient
+    private static final double WRONG_ANSWER_ADDEND = 6;
+
+    @Transient
+    private static final double TRAINED_PROBABILITY_FACTOR = 3;
 
     @javax.persistence.Id
     @GeneratedValue(strategy= GenerationType.AUTO)
@@ -33,28 +47,59 @@ public class Question {
     @JoinColumn(name = "user_id")
     private User user;
 
-    public boolean isSelected() {
-        return selected;
-    }
+    @Transient
+    private double initialProbabilityFactor;
+
+    @Transient
+    private double initialProbabilityMultiplier;
+
+    @Transient
+    private double afterAnswerProbabilityFactor;
+
+    @Transient
+    private double afterAnswerProbabilityMultiplier;
 
     @Transient
     public boolean selected;
 
-    public Question(Phrase askedPhrase) {
+    @Transient
+    private DatabaseHelper databaseHelper;
+
+    public Question(Phrase askedPhrase, DatabaseHelper databaseHelper) {
         this.askedPhrase = askedPhrase;
+        this.databaseHelper = databaseHelper;
+        initialProbabilityFactor = askedPhrase.getProbabilityFactor();
+        initialProbabilityMultiplier = askedPhrase.getMultiplier();
     }
-
-
 
     public static Question compose(Phrase askedPhrase){
         if(askedPhrase == null){
             throw new IllegalArgumentException("Phrases foreign and native literals can not be null");
         }
-        return new Question(askedPhrase);
+        return new Question(askedPhrase, null);
+    }
+
+    public static Question compose(Phrase askedPhrase, DatabaseHelper dbHelper){
+        if(askedPhrase == null){
+            throw new IllegalArgumentException("Phrases foreign and native literals can not be null");
+        }
+        return new Question(askedPhrase, dbHelper);
     }
 
     public void deletePhrase(){
 
+    }
+
+    public void select(){
+        this.selected = true;
+    }
+
+    public void unselect(){
+        this.selected = false;
+    }
+
+    public boolean isSelected() {
+        return selected;
     }
 
     public Question answerTheQuestion(String answer){
@@ -82,14 +127,65 @@ public class Question {
     public Question rightAnswer(){
         this.answer = askedPhrase.getForeignWord();
         this.answerCorrect = true;
+        Phrase phraseInDb = databaseHelper.getPhrase(askedPhrase);
+
+        if(!phraseIsAlreadyTrained()){
+
+            afterAnswerProbabilityFactor = initialProbabilityFactor - RIGHT_ANSWER_SUBTRAHEND * initialProbabilityMultiplier;
+            afterAnswerProbabilityMultiplier = initialProbabilityMultiplier * RIGHT_ANSWER_MULTIPLIER;
+            askedPhrase.setProbabilityFactor(afterAnswerProbabilityFactor);
+            askedPhrase.setMultiplier(afterAnswerProbabilityMultiplier);
+
+
+        }else{
+
+            afterAnswerProbabilityFactor = initialProbabilityFactor;
+            afterAnswerProbabilityMultiplier = initialProbabilityMultiplier;
+            askedPhrase.setProbabilityFactor(afterAnswerProbabilityFactor);
+            askedPhrase.setMultiplier(afterAnswerProbabilityMultiplier);
+
+        }
+
+        databaseHelper.updatePhrase(askedPhrase);
         return this;
     }
 
     public Question wrongAnswer(){
         this.answer = "Had not been given";
         this.answerCorrect = false;
+
+        if(!phraseIsAlreadyTrained()){
+
+            afterAnswerProbabilityFactor = initialProbabilityFactor + WRONG_ANSWER_ADDEND;
+            afterAnswerProbabilityMultiplier = 1;
+            askedPhrase.setProbabilityFactor(afterAnswerProbabilityFactor);
+            askedPhrase.setMultiplier(afterAnswerProbabilityMultiplier);
+
+
+        }else{
+
+            afterAnswerProbabilityFactor = initialProbabilityFactor + WRONG_ANSWER_ADDEND * initialProbabilityMultiplier;
+            afterAnswerProbabilityMultiplier = 1;
+            askedPhrase.setProbabilityFactor(afterAnswerProbabilityFactor);
+            askedPhrase.setMultiplier(afterAnswerProbabilityMultiplier);
+
+        }
+
+        databaseHelper.updatePhrase(askedPhrase);
         return this;
     }
+
+    private boolean questionHasBeenAnswered(){
+        return answer != null;
+    }
+
+    private boolean phraseIsAlreadyTrained(){
+        return initialProbabilityFactor <= TRAINED_PROBABILITY_FACTOR;
+    }
+
+    /*private boolean phraseHadBeenTrainedBeforeAnswer(){
+
+    }*/
 
     private boolean phrasesEquals(String givenPhrase, String referencePhrase){
         List<String> givenPhraseWords = splitToWords(givenPhrase);
