@@ -2,8 +2,6 @@ package logic;
 
 import datamodel.Question;
 import datamodel.QuestionLine;
-import exceptions.EmptyTrainingLogException;
-import exceptions.IllegalTrainingLogPositionException;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -19,6 +17,7 @@ public class TrainingLog {
     private StringBuilder log = new StringBuilder();
     private DatabaseHelper databaseHelper;
     private int position;
+    private Hints hint = new Hints();
 
     public TrainingLog(DatabaseHelper databaseHelper) {
         this.databaseHelper = databaseHelper;
@@ -28,13 +27,8 @@ public class TrainingLog {
         return allQuestions.get(position);
     }
 
-    public void setPosition(int position)/* throws EmptyTrainingLogException, IllegalTrainingLogPositionException*/{
-        retrieveSelectedQuestion().unselect();
-        /*if(position >= allQuestions.size() || position < 0){
-            throw new IllegalTrainingLogPositionException();
-        }*/
+    public void setPosition(int position){
         this.position = position;
-        retrieveSelectedQuestion().select();
         reloadLog();
     }
 
@@ -44,32 +38,37 @@ public class TrainingLog {
         }
     }
 
-    public
+    public String questionString(){
+        return allQuestions.get(position).getAskedPhrase().nativeWord + " " + hint.shortHint(allQuestions.get(position).getAskedPhrase().foreignWord);
+    }
 
     public void nextQuestion(){
         if(position == 0){
-            addQuestion(new Question(databaseHelper.retrieveRandomPhrase(), databaseHelper));
-            setPosition(0);
+            addQuestion(Question.compose(databaseHelper.retrieveRandomPhrase(), databaseHelper));
         }else {
             setPosition(--position);
         }
     }
 
-    public Question retrieveSelectedQuestion()/* throws EmptyTrainingLogException*/{
-        /*if(allQuestions.size() == 0){
-            throw new EmptyTrainingLogException();
-        }*/
+    public Question selectedQuestion(){
         return allQuestions.get(position);
     }
 
     public void addQuestion(Question addedQuestion){
         allQuestions.add(0, addedQuestion);
+        setPosition(0);
         reloadLog();
     }
 
     public void reloadLog(){
         log = new StringBuilder();
-        allQuestions.forEach(question -> log.append(new QuestionLine(question).getResultString()));
+        for(int i = 0; i < allQuestions.size(); i++){
+            StringBuilder str = new StringBuilder(new QuestionLine(allQuestions.get(i)).getResultString());
+            if(i == position){
+                str.insert(0, "<strong>").append("</strong>");
+            }
+            log.append(str.toString());
+        }
     }
 
     public List<Question> getAllQuestions() {
@@ -95,8 +94,8 @@ public class TrainingLog {
         reloadLog();
     }
 
-    public void deletePhrase(Question deletedQuestion){
-        databaseHelper.deletePhrase(deletedQuestion.getAskedPhrase());
+    public void deleteSelectedPhrase(){
+        databaseHelper.deletePhrase(selectedQuestion().getAskedPhrase());
         reloadLog();
     }
 

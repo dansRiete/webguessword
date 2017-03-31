@@ -50,10 +50,6 @@ public class QuestionLine {
 
         result = makeNewLine(result);
 
-        if(question.selected){
-            result = makeStrong(result);
-        }
-
         resultString = result;
     }
 

@@ -60,12 +60,9 @@ public class Question {
     private double afterAnswerProbabilityMultiplier;
 
     @Transient
-    public boolean selected;
-
-    @Transient
     private DatabaseHelper databaseHelper;
 
-    public Question(Phrase askedPhrase, DatabaseHelper databaseHelper) {
+    private Question(Phrase askedPhrase, DatabaseHelper databaseHelper) {
         this.askedPhrase = askedPhrase;
         this.databaseHelper = databaseHelper;
         initialProbabilityFactor = askedPhrase.getProbabilityFactor();
@@ -88,18 +85,6 @@ public class Question {
 
     public void deletePhrase(){
 
-    }
-
-    public void select(){
-        this.selected = true;
-    }
-
-    public void unselect(){
-        this.selected = false;
-    }
-
-    public boolean isSelected() {
-        return selected;
     }
 
     public Question answerTheQuestion(String answer){

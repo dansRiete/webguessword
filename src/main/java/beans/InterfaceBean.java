@@ -2,7 +2,6 @@ package beans;
 
 import datamodel.Question;
 import logic.DatabaseHelper;
-import logic.Hints;
 import logic.RetDiff;
 import logic.TrainingLog;
 
@@ -52,9 +51,10 @@ public class InterfaceBean implements Serializable{
 
     private RetDiff retDiff = new RetDiff();
     private DatabaseHelper databaseHelper;
-    public Question selectedQuestion;
+//    public Question selectedQuestion;
     private String question ="";
     private String answerField = "";
+
     private TrainingLog trainingLog;
     private ArrayList<String> availableLabels;
     private String choosedLabel;
@@ -62,7 +62,7 @@ public class InterfaceBean implements Serializable{
     private String previousResultChoosedLabel = "";
     private HashSet<String> chosenLabelsForLearningWords = new HashSet<>();
     private int currentlySelectedPhraseIndex;
-    private Hints hint = new Hints();
+//    private Hints hint = new Hints();
 
 
     public InterfaceBean(){
@@ -135,8 +135,8 @@ public class InterfaceBean implements Serializable{
         }else if (answerField.equals("*")){
             nextQuestion();
         }else {
-            selectedQuestion.answerTheQuestion(answerField);
-            if(selectedQuestion.answerIsCorrect()){
+            trainingLog.selectedQuestion().answerTheQuestion(answerField);
+            if(trainingLog.selectedQuestion().answerIsCorrect()){
                 rightAnswer();
             } else {
                 wrongAnswer();
@@ -149,7 +149,7 @@ public class InterfaceBean implements Serializable{
         System.out.println();
         System.out.println("CALL: nextQuestion() from InterfaceBean");
         trainingLog.nextQuestion();
-        question =
+        question = trainingLog.questionString();
         /*if(selectedQuestion != null){
             selectedQuestion.selected = false;
         }
@@ -168,13 +168,13 @@ public class InterfaceBean implements Serializable{
     public void previousQuestion() {
         System.out.println("CALL: previousQuestion() from InterfaceBean");
         trainingLog.previousQuestion();
+        question = trainingLog.questionString();
     }
 
     public void rightAnswer(){
 
         System.out.println("CALL: rightAnswer() from InterfaceBean");
-        selectedQuestion = trainingLog.getQuestion(currentlySelectedPhraseIndex);
-        selectedQuestion.rightAnswer();
+        trainingLog.selectedQuestion().rightAnswer();
         nextQuestion();
 
     }
@@ -182,8 +182,7 @@ public class InterfaceBean implements Serializable{
     public void wrongAnswer(){
 
         System.out.println("CALL: wrongAnswer() from InterfaceBean");
-        selectedQuestion = trainingLog.getQuestion(currentlySelectedPhraseIndex);
-        selectedQuestion.wrongAnswer();
+        trainingLog.selectedQuestion().wrongAnswer();
         nextQuestion();
     }
 
@@ -209,7 +208,7 @@ public class InterfaceBean implements Serializable{
 
     public void deletePhrase(){
         System.out.println("CALL: delete() from InterfaceBean");
-        trainingLog.deletePhrase(selectedQuestion);
+        trainingLog.deleteSelectedPhrase();
     }
 
     public void exitSession(){
@@ -259,9 +258,9 @@ public class InterfaceBean implements Serializable{
     public TrainingLog getTrainingLog() {
         return trainingLog;
     }
-    public void setTrainingLog(TrainingLog res) {
-        this.trainingLog = res;
-    }
+//    public void setTrainingLog(TrainingLog res) {
+//        this.trainingLog = res;
+//    }
 
     public String getRightAnswersPercentage() {
         return rightAnswersPercentage;
@@ -439,10 +438,6 @@ public class InterfaceBean implements Serializable{
     }
     public void setCurrentPhraseRate(String currentPhraseRate) {
         this.currentPhraseRate = currentPhraseRate;
-    }
-
-    public Question getSelectedQuestion() {
-        return selectedQuestion;
     }
 }
 
