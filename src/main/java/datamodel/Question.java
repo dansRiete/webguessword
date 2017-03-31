@@ -90,6 +90,14 @@ public class Question {
 
     }
 
+    public void select(){
+        this.selected = true;
+    }
+
+    public void unselect(){
+        this.selected = false;
+    }
+
     public boolean isSelected() {
         return selected;
     }

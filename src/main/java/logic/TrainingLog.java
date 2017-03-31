@@ -2,6 +2,8 @@ package logic;
 
 import datamodel.Question;
 import datamodel.QuestionLine;
+import exceptions.EmptyTrainingLogException;
+import exceptions.IllegalTrainingLogPositionException;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -23,6 +25,40 @@ public class TrainingLog {
     }
 
     public Question getQuestion(int position){
+        return allQuestions.get(position);
+    }
+
+    public void setPosition(int position)/* throws EmptyTrainingLogException, IllegalTrainingLogPositionException*/{
+        retrieveSelectedQuestion().unselect();
+        /*if(position >= allQuestions.size() || position < 0){
+            throw new IllegalTrainingLogPositionException();
+        }*/
+        this.position = position;
+        retrieveSelectedQuestion().select();
+        reloadLog();
+    }
+
+    public void previousQuestion(){
+        if(position + 1 < allQuestions.size() - todayQuestions.size()){
+            setPosition(++position);
+        }
+    }
+
+    public
+
+    public void nextQuestion(){
+        if(position == 0){
+            addQuestion(new Question(databaseHelper.retrieveRandomPhrase(), databaseHelper));
+            setPosition(0);
+        }else {
+            setPosition(--position);
+        }
+    }
+
+    public Question retrieveSelectedQuestion()/* throws EmptyTrainingLogException*/{
+        /*if(allQuestions.size() == 0){
+            throw new EmptyTrainingLogException();
+        }*/
         return allQuestions.get(position);
     }
 

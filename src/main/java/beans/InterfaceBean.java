@@ -148,12 +148,13 @@ public class InterfaceBean implements Serializable{
     public void nextQuestion(){
         System.out.println();
         System.out.println("CALL: nextQuestion() from InterfaceBean");
-        if(selectedQuestion != null){
+        trainingLog.nextQuestion();
+        question =
+        /*if(selectedQuestion != null){
             selectedQuestion.selected = false;
         }
         if(currentlySelectedPhraseIndex == 0) {
-            selectedQuestion = new Question(databaseHelper.retrieveRandomPhrase(), databaseHelper);
-            trainingLog.addQuestion(selectedQuestion);
+
             question = selectedQuestion.getAskedPhrase().nativeWord + " " + hint.shortHint(selectedQuestion.getAskedPhrase().foreignWord);
         }else {
             currentlySelectedPhraseIndex--;
@@ -161,19 +162,12 @@ public class InterfaceBean implements Serializable{
             question = selectedQuestion.getAskedPhrase().nativeWord + " " + hint.shortHint(selectedQuestion.getAskedPhrase().foreignWord);
         }
         selectedQuestion.selected = true;
-        trainingLog.reloadLog();
+        trainingLog.reloadLog();*/
     }
 
     public void previousQuestion() {
         System.out.println("CALL: previousQuestion() from InterfaceBean");
-        selectedQuestion.selected = false;
-        //Prevents selecting today answered phrases and negative index
-        if(currentlySelectedPhraseIndex != trainingLog.size() - 1){
-            selectedQuestion = trainingLog.getQuestion(++currentlySelectedPhraseIndex);
-            question = selectedQuestion.getAskedPhrase().nativeWord;
-        }
-        selectedQuestion.selected = true;
-        trainingLog.reloadLog();
+        trainingLog.previousQuestion();
     }
 
     public void rightAnswer(){
