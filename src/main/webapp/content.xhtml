@@ -13,7 +13,9 @@
 
 <h:body>
 
-    <p:commandLink type="submit" value="Back to learn" action="learn"> </p:commandLink>
+    <p:commandLink type="submit" value="Back to learn" action="learn">
+        <f:actionListener binding="#{editBean.updateAll()}" />
+    </p:commandLink>
 
     <h:form>
 
@@ -52,6 +54,7 @@
                         <p:inputText value="#{phrase.foreignWord}" style="width:96%"/>
                     </f:facet>
                 </p:cellEditor>
+
             </p:column>
 
             <p:column width="20%" filterBy="#{phrase.nativeWord}" sortBy="#{phrase.nativeWord}" filterMatchMode="contains">

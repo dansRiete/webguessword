@@ -7,6 +7,26 @@
 
 <h:head>
     <title>Guess Number Facelets Application</title>
+    <link href="https://fonts.googleapis.com/css?family=Jura" rel="stylesheet"/>
+    <style type="text/css">
+
+        .richButton {
+            font-family: 'Jura', sans-serif;
+            font-weight: 600;
+        }
+
+        html {
+            font-family: 'Jura', sans-serif;
+            font-weight: 500;
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Jura', sans-serif;
+            font-weight: 500;
+            height: 100%;
+        }
+    </style>
 </h:head>
 
 <h:body>
@@ -16,11 +36,11 @@
         <h:panelGroup>
             <h:panelGrid columns="2">
                 <h:outputText value="Логин"/>
-                <h:inputText value="#{login.userTextField}"/>
+                <h:inputText value="#{login.userTextField}" styleClass="richButton"/>
                 <h:outputText value="Пароль"/>
-                <h:inputSecret value="#{login.passwordTextField}"/>
+                <h:inputSecret value="#{login.passwordTextField}" styleClass="richButton"/>
             </h:panelGrid>
-            <h:commandButton id="submit" value="submit" action="#{login.checkCredentialsAndRedirectUser()}"/>
+            <h:commandButton id="submit" styleClass="richButton" value="submit" action="#{login.checkCredentialsAndRedirectUser()}"/>
         </h:panelGroup>
         <h4 style="color:orangered">Неверная комбинация логин-пароль.</h4>
     </h:form>

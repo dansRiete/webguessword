@@ -17,13 +17,21 @@ public class TrainingLog {
     private StringBuilder log = new StringBuilder();
     private DatabaseHelper databaseHelper;
     private int position;
-    private Hints hint = new Hints();
+    private String todayRightAnswersPercentage;
+    private int todayTrainedPhrasesNumber;
+    private int totalTrainedPhrasesNumber;
+    private int totalUntrainedPhrasesNumber;
+    private int totalPhrasesNumber;
+    private String trainingCompletionPercentage = "NOT YET IMPLEMENTED";
+    private int averageAnswersPerDayNumber;
 
     public TrainingLog(DatabaseHelper databaseHelper) {
+        System.out.println("CALL: TrainingLog(DatabaseHelper databaseHelper) from TrainingLog");
         this.databaseHelper = databaseHelper;
     }
 
-    public Question getQuestion(int position){
+    public Question retrieveQuestion(int position){
+        System.out.println("CALL: retrieveQuestion(int position) from TrainingLog");
         Question question = null;
         if(position > 0 && position < allQuestions.size()){
             question = allQuestions.get(position);
@@ -32,42 +40,38 @@ public class TrainingLog {
     }
 
     public Question retrieveSelectedQuestion(){
+        System.out.println("CALL: retrieveSelectedQuestion() from TrainingLog");
         Question question = null;
-        if(position > 0 && position < allQuestions.size()){
+        if(position >= 0 && position < allQuestions.size()){
             question = allQuestions.get(position);
         }
         return question;
     }
 
-    public Question getPreviousQuestion(){
+    public Question retrievePreviousQuestion(){
+        System.out.println("CALL: retrievePreviousQuestion() from TrainingLog");
         Question question = null;
         if(position - 1 < allQuestions.size()){
-            question = allQuestions.get(position - 1);
+            question = allQuestions.get(position + 1);
         }
         return question;
     }
 
     public void selectQuestion(int position){
+        System.out.println("CALL: selectQuestion(int position) from TrainingLog");
         this.position = position;
         reload();
     }
 
     public void selectPreviousQuestion(){
+        System.out.println("CALL: selectPreviousQuestion() from TrainingLog");
         if(position + 1 < allQuestions.size() - todayQuestions.size()){
             selectQuestion(++position);
         }
     }
 
-    /*public String questionString(){
-        Question question = retrieveSelectedQuestion();
-        if(question != null) {
-            return question.getAskedPhrase().nativeWord + " " + hint.shortHint(question.getAskedPhrase().foreignWord);
-        }else {
-            return "";
-        }
-    }*/
-
     public void nextQuestion(){
+        System.out.println("CALL: nextQuestion() from TrainingLog");
         if(position == 0){
             appendToLog(Question.compose(databaseHelper.retrieveRandomPhrase(), databaseHelper));
         }else {
@@ -75,27 +79,51 @@ public class TrainingLog {
         }
     }
 
+    public void updateSelectedQuestionsPhrase(){
+        databaseHelper.updatePhrase(retrieveSelectedQuestion().getAskedPhrase());
+    }
+
     public void deleteSelectedPhrase(){
+        System.out.println("CALL: deleteSelectedPhrase() from TrainingLog");
         databaseHelper.deletePhrase(retrieveSelectedQuestion().getAskedPhrase());
         reload();
     }
 
     public void appendToLog(Question addedQuestion){
+        System.out.println("CALL: appendToLog(Question addedQuestion) from TrainingLog");
         allQuestions.add(0, addedQuestion);
         selectQuestion(0);
-        reload();
+//        reload();
     }
 
     public void reload(){
+        System.out.println("CALL: reload() from TrainingLog");
         log = new StringBuilder();
+        int rightAnswersNumber = 0;
+        int wrongAnswersNumber = 0;
+        todayTrainedPhrasesNumber = 0;
         for(int i = 0; i < allQuestions.size(); i++){
-            StringBuilder str = new StringBuilder(new QuestionLine(allQuestions.get(i)).getResultString());
+            Question currentQuestion = allQuestions.get(i);
+            if(currentQuestion.answered()){
+                todayTrainedPhrasesNumber += currentQuestion.trainedAfterAnswer();
+                if(currentQuestion.isAnswerCorrect()){
+                    rightAnswersNumber++;
+                }else {
+                    wrongAnswersNumber++;
+                }
+            }
+
+            StringBuilder str = new StringBuilder(new QuestionLine(currentQuestion).getResultString());
             if(i == position){
                 str.insert(0, "<strong>").append("</strong>");
             }
             log.append(str.toString());
         }
+        todayAnswersNumber = rightAnswersNumber + wrongAnswersNumber;
+        todayRightAnswersPercentage = String.valueOf((int) ((double) rightAnswersNumber / (double) todayAnswersNumber * 100)) + "%";
     }
+
+
 
     @Override
     public String toString() {
@@ -110,6 +138,40 @@ public class TrainingLog {
         this.todayQuestions = todayQuestions;
         allQuestions.addAll(todayQuestions);
         reload();
+    }
+
+    public int getTodayAnswersNumber() {
+        return todayAnswersNumber;
+    }
+
+    private int todayAnswersNumber;
+
+    public String getTodayRightAnswersPercentage() {
+        return todayRightAnswersPercentage;
+    }
+
+    public int getTodayTrainedPhrasesNumber() {
+        return todayTrainedPhrasesNumber;
+    }
+
+    public int getTotalPhrasesNumber() {
+        return totalPhrasesNumber;
+    }
+
+    public int getTotalTrainedPhrasesNumber() {
+        return totalTrainedPhrasesNumber;
+    }
+
+    public int getTotalUntrainedPhrasesNumber() {
+        return totalUntrainedPhrasesNumber;
+    }
+
+    public String getTrainingCompletionPercentage() {
+        return trainingCompletionPercentage;
+    }
+
+    public int getAverageAnswersPerDayNumber() {
+        return averageAnswersPerDayNumber;
     }
 
     /*private void reloadStatisticsTable(){
@@ -166,7 +228,7 @@ public class TrainingLog {
 
         answersForSessionNumber = numOfPhrForSession - numOfNonAnswForSession;
         //Generates a string with the percentage of correct answers to the total number of answers
-        rightAnswersPercentage = ((new BigDecimal(numOfRightAnswForSession)).divide(new BigDecimal(answersForSessionNumber ==0?1: answersForSessionNumber),2, RoundingMode.HALF_UP).multiply(new BigDecimal(100))).setScale(0, RoundingMode.HALF_UP)+"%";
+        todayRightAnswersPercentage = ((new BigDecimal(numOfRightAnswForSession)).divide(new BigDecimal(answersForSessionNumber ==0?1: answersForSessionNumber),2, RoundingMode.HALF_UP).multiply(new BigDecimal(100))).setScale(0, RoundingMode.HALF_UP)+"%";
         trainedPhrasesNumber = databaseHelper.getLearntWordsAmount();
         nonTrainedPhrasesNumber = databaseHelper.getNonLearntWordsAmount();
         totalPhrasesNumber = trainedPhrasesNumber + nonTrainedPhrasesNumber;

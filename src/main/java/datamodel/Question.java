@@ -3,7 +3,9 @@ package datamodel;
 import logic.DatabaseHelper;
 
 import javax.persistence.*;
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +29,12 @@ public class Question {
     @Transient
     private static final double TRAINED_PROBABILITY_FACTOR = 3;
 
+    @Transient
+    private static final int PROBABILITY_FACTOR_ACCURACY = 1;
+
+    @Transient
+    private static final int MULTIPLIER_ACCURACY = 2;
+
     @javax.persistence.Id
     @GeneratedValue(strategy= GenerationType.AUTO)
     private long id;
@@ -40,12 +48,28 @@ public class Question {
     @Column(name = "phrase_key")
     private final Phrase askedPhrase;
 
+    public boolean isAnswerCorrect() {
+        return answerCorrect;
+    }
+
     @Column(name = "answered_correctly")
     private boolean answerCorrect;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")
     private User user;
+
+    @Transient
+    private long initStartIndex;
+
+    @Transient
+    private long initEndIndex;
+
+    @Transient
+    private long afterAnswerStartIndex;
+
+    @Transient
+    private long afterAnswerEndIndex;
 
     @Transient
     private double initialProbabilityFactor;
@@ -66,32 +90,26 @@ public class Question {
     private String questionRepresentation;
 
     private Question(Phrase askedPhrase, DatabaseHelper databaseHelper) {
+        System.out.println("CALL: Question(Phrase askedPhrase, DatabaseHelper databaseHelper) from Question");
         this.askedPhrase = askedPhrase;
         this.databaseHelper = databaseHelper;
         initialProbabilityFactor = askedPhrase.getProbabilityFactor();
         initialProbabilityMultiplier = askedPhrase.getMultiplier();
-        questionRepresentation = askedPhrase.foreignWord + " " + shortHint();
-    }
-
-    public static Question compose(Phrase askedPhrase){
-        if(askedPhrase == null){
-            throw new IllegalArgumentException("Phrases foreign and native literals can not be null");
-        }
-        return new Question(askedPhrase, null);
+        initStartIndex = askedPhrase.getIndexStart();
+        initEndIndex = askedPhrase.getIndexEnd();
+        questionRepresentation = askedPhrase.nativeWord + " " + shortHint();
     }
 
     public static Question compose(Phrase askedPhrase, DatabaseHelper dbHelper){
+        System.out.println("CALL: compose(Phrase askedPhrase, DatabaseHelper dbHelper) from Question");
         if(askedPhrase == null){
             throw new IllegalArgumentException("Phrases foreign and native literals can not be null");
         }
         return new Question(askedPhrase, dbHelper);
     }
 
-    public void deletePhrase(){
-
-    }
-
     public Question answerTheQuestion(String answer){
+        System.out.println("CALL: answerTheQuestion(String answer) from Question");
         this.answer = answer;
         if(this.answer.equals("") || askedPhrase.getForeignWord().equals("")){
             answerCorrect = false;
@@ -114,9 +132,9 @@ public class Question {
     }
 
     public Question rightAnswer(){
+        System.out.println("CALL: rightAnswer() from Question");
         this.answer = askedPhrase.getForeignWord();
         this.answerCorrect = true;
-        Phrase phraseInDb = databaseHelper.getPhrase(askedPhrase);
 
         if(!phraseIsAlreadyTrained()){
 
@@ -135,11 +153,14 @@ public class Question {
 
         }
 
-        databaseHelper.updatePhrase(askedPhrase);
+        databaseHelper.updateProb(askedPhrase);
+        afterAnswerStartIndex = askedPhrase.getIndexStart();
+        afterAnswerEndIndex = askedPhrase.getIndexEnd();
         return this;
     }
 
     public Question wrongAnswer(){
+        System.out.println("CALL: wrongAnswer() from Question");
         this.answer = "Had not been given";
         this.answerCorrect = false;
 
@@ -160,7 +181,11 @@ public class Question {
 
         }
 
-        databaseHelper.updatePhrase(askedPhrase);
+
+
+        databaseHelper.updateProb(askedPhrase);
+        afterAnswerStartIndex = askedPhrase.getIndexStart();
+        afterAnswerEndIndex = askedPhrase.getIndexEnd();
         return this;
     }
 
@@ -170,6 +195,58 @@ public class Question {
 
     private boolean phraseIsAlreadyTrained(){
         return initialProbabilityFactor <= TRAINED_PROBABILITY_FACTOR;
+    }
+
+    public String composeProbabilityFactorHistory(){
+        if(!questionHasBeenAnswered()){
+            return new BigDecimal(initialProbabilityFactor).setScale(PROBABILITY_FACTOR_ACCURACY, BigDecimal.ROUND_HALF_UP).toString();
+        }else {
+            BigDecimal beforeProbabilityFactor = new BigDecimal(initialProbabilityFactor).setScale(MULTIPLIER_ACCURACY, BigDecimal.ROUND_HALF_UP);
+            BigDecimal afterProbabilityFactor = new BigDecimal(afterAnswerProbabilityFactor).setScale(MULTIPLIER_ACCURACY, BigDecimal.ROUND_HALF_UP);
+            return beforeProbabilityFactor.toString() + " ➩ " + afterProbabilityFactor.toString() + " (" +
+                    (afterProbabilityFactor.doubleValue() > beforeProbabilityFactor.doubleValue() ? "+" : "") +
+                    afterProbabilityFactor.subtract(beforeProbabilityFactor) + ")";
+        }
+    }
+
+    public String composeMultiplierHistory(){
+        if(!questionHasBeenAnswered()){
+            return new BigDecimal(initialProbabilityMultiplier).setScale(MULTIPLIER_ACCURACY, BigDecimal.ROUND_HALF_UP).toString();
+        }else {
+            BigDecimal beforeMultiplier = new BigDecimal(initialProbabilityMultiplier).setScale(MULTIPLIER_ACCURACY, BigDecimal.ROUND_HALF_UP);
+            BigDecimal afterMultiplier = new BigDecimal(afterAnswerProbabilityMultiplier).setScale(MULTIPLIER_ACCURACY, BigDecimal.ROUND_HALF_UP);
+            return beforeMultiplier.toString() + " ➩ " + afterMultiplier.toString()  + " (" +
+                    (afterMultiplier.doubleValue() > beforeMultiplier.doubleValue() ? "+" : "") + afterMultiplier.subtract(beforeMultiplier) + ")";
+        }
+    }
+
+    public String composeLastAccessDate(){
+        if(this.askedPhrase.getLastAccessDateTime() != null){
+            return this.askedPhrase.getLastAccessDateTime().format(DateTimeFormatter.ofPattern("d MMM yyyy HH:mm"));
+        }else {
+            return "NEVER ACCESSED";
+        }
+    }
+
+    public String composeCreationDate(){
+        return this.askedPhrase.getCollectionAddingDateTime().format(DateTimeFormatter.ofPattern("d MMM yyyy HH:mm"));
+    }
+
+    public String composeLabel(){
+        if(this.askedPhrase.getLabel() != null){
+            return this.askedPhrase.getLabel();
+        }else {
+            return "";
+        }
+    }
+
+    public String composeAppearingPercentage(){
+        String appearingPercentage =  new BigDecimal((double) (initEndIndex - initStartIndex) / (double) databaseHelper.getTheGreatestPhrasesIndex() * 100).setScale(5, BigDecimal.ROUND_HALF_UP).toString();
+        if(answered()){
+            appearingPercentage +=  " ➩ " +
+                    new BigDecimal((double) (afterAnswerEndIndex - afterAnswerStartIndex) / (double) databaseHelper.getTheGreatestPhrasesIndex() * 100).setScale(5, BigDecimal.ROUND_HALF_UP);
+        }
+        return appearingPercentage;
     }
 
     /**
@@ -296,6 +373,35 @@ public class Question {
         return false;
     }
 
+    public boolean answerIsCorrect() {
+        return answered() && answerCorrect;
+    }
+
+    public boolean answered(){
+        return answer != null;
+    }
+
+    public int trainedAfterAnswer(){
+        if(answered()){
+            if(initialProbabilityFactor > Phrase.TRAINED_PROBABILITY_FACTOR && afterAnswerProbabilityFactor <= Phrase.TRAINED_PROBABILITY_FACTOR){
+                return 1;
+            }else  if(initialProbabilityFactor <= Phrase.TRAINED_PROBABILITY_FACTOR && afterAnswerProbabilityFactor > Phrase.TRAINED_PROBABILITY_FACTOR){
+                return -1;
+            }
+        }
+        return 0;
+    }
+
+    //Getters and setters
+
+    public ZonedDateTime getAskDate() {
+        return askDate;
+    }
+
+    public Phrase getAskedPhrase() {
+        return askedPhrase;
+    }
+
     public long getId() {
         return id;
     }
@@ -306,21 +412,5 @@ public class Question {
 
     public String getAnswer() {
         return answer;
-    }
-
-    public ZonedDateTime getAskDate() {
-        return askDate;
-    }
-
-    public Phrase getAskedPhrase() {
-        return askedPhrase;
-    }
-
-    public boolean answerIsCorrect() {
-        return answered() && answerCorrect;
-    }
-
-    public boolean answered(){
-        return answer != null;
     }
 }

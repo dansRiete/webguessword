@@ -6,6 +6,26 @@
 
 <h:head>
     <title>Guess Number Facelets Application</title>
+    <link href="https://fonts.googleapis.com/css?family=Jura" rel="stylesheet"/>
+    <style type="text/css">
+
+        .richButton {
+            font-family: 'Jura', sans-serif;
+            font-weight: 600;
+        }
+
+        html {
+            font-family: 'Jura', sans-serif;
+            font-weight: 500;
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Jura', sans-serif;
+            font-weight: 500;
+            height: 100%;
+        }
+    </style>
 </h:head>
 
 
@@ -17,11 +37,11 @@
         <h:panelGroup>
             <h:panelGrid columns="2">
                 <h:outputText value="Login"/>
-                <h:inputText value="#{login.userTextField}"/>
+                <h:inputText value="#{login.userTextField}" styleClass="richButton"/>
                 <h:outputText value="Password"/>
-                <h:inputSecret value="#{login.passwordTextField}"/>
+                <h:inputSecret value="#{login.passwordTextField}" styleClass="richButton"/>
             </h:panelGrid>
-            <h:commandButton id="submit" value="Sign In" action="#{login.checkCredentialsAndRedirectUser()}"/>
+            <h:commandButton id="submit" styleClass="richButton" value="Sign In" action="#{login.checkCredentialsAndRedirectUser()}"/>
             <h3 style="color: #1c6bbf">Credentials for guests. Login: guest - Password: guest <br/>
                 If you want to Sign Up, feel comfortable to ask me on aleks.ce267@gmail.com. Registration page curently is in progress.</h3>
         </h:panelGroup>

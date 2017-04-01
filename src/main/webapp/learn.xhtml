@@ -12,19 +12,34 @@
 <h:head>
     <meta content="charset=UTF-8"/>
     <title>GuessWord</title>
+    <link href="https://fonts.googleapis.com/css?family=Jura" rel="stylesheet"/>
     <style type="text/css">
 
+
+        .richButton {
+            font-family: 'Jura', sans-serif;
+            font-weight: 600;
+        }
+
         html {
+            font-family: 'Jura', sans-serif;
+            font-weight: 500;
             height: 100%;
         }
 
         body {
+            font-family: 'Jura', sans-serif;
+            font-weight: 500;
             height: 100%;
         }
 
         th {
             background-color: #4CAF50;
             color: white;
+        }
+
+        table{
+            font-weight: bold;
         }
 
         tr:nth-child(even) {
@@ -42,9 +57,9 @@
 
         <div>
             <h:form>
-                <h:inputText size="50" id="answerField" value="#{interfaceBean.answerField}" lang="en"
+                <h:inputText size="50" id="answerField" styleClass="richButton" value="#{interfaceBean.answerField}" lang="en"
                              autocomplete="off"> </h:inputText>
-                <h:commandButton style="margin-left: 3px" type="submit" id="answerAction" value="Answer"
+                <h:commandButton style="margin-left: 3px" type="submit" id="answerAction" styleClass="richButton" value="Answer"
                                  action="#{interfaceBean.answerButtonAction()}">
                     <f:ajax execute="answerField" render="@all"> </f:ajax>
                 </h:commandButton>
@@ -58,65 +73,58 @@
         <div>
 
             <h:panelGroup>
-                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="previous" value="Previous"
+                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="previous" styleClass="richButton" value="Previous"
                                  action="#{interfaceBean.previousButtonAction()}">
                     <f:ajax render="@all"> </f:ajax>
                 </h:commandButton>
 
-                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="next" value="Next"
+                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="next" styleClass="richButton" value="Next"
                                  action="#{interfaceBean.nextButtonAction()}">
 
                     <f:ajax render="@all"> </f:ajax>
                 </h:commandButton>
 
-                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="know" value="I know it"
+                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="know" styleClass="richButton" value="I know it"
                                  action="#{interfaceBean.iKnowItButtonAction()}">
                     <f:ajax render="@all"> </f:ajax>
                 </h:commandButton>
 
-                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="donotknow"
+                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="donotknow" styleClass="richButton"
                                  value="I don't know it"
                                  action="#{interfaceBean.iDontKnowItButtonAction()}">
                     <f:ajax render="@all"> </f:ajax>
                 </h:commandButton>
 
-                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevWrong"
+                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevWrong" styleClass="richButton"
                                  value="Prev.Wrong"
                                  action="#{interfaceBean.previousWrongButtonAction()}">
                     <f:ajax render="@all"> </f:ajax>
                 </h:commandButton>
-                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevRight"
+                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="prevRight" styleClass="richButton"
                                  value="Prev.Right"
                                  action="#{interfaceBean.previousRightButtonAction()}">
                     <f:ajax render="@all"> </f:ajax>
                 </h:commandButton>
 
-                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="dialogButton"
+                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="dialogButton" styleClass="richButton"
                                  value="Modificate"
                                  onclick="PF('modDialog').show();">
                 </h:commandButton>
 
-                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="deleteButton"
+                <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="deleteButton" styleClass="richButton"
                                  value="Delete"
                                  onclick="PF('deleteDialog').show();">
                 </h:commandButton>
 
                 <h:form style="display: inline-block">
-                    <h:commandButton style="margin-right: 3px; margin-top: 3px" type="submit" id="content"
+                    <h:commandButton style="margin-right: 3px; margin-top: 3px" type="submit" id="content" styleClass="richButton"
                                      value="Show All"
                                      action="content">
                     </h:commandButton>
                 </h:form>
 
                 <h:form style="display: inline-block">
-                    <h:commandButton style="margin-right: 3px; margin-top: 3px" type="submit" id="mobile" value="Mobile"
-                                     action="weblearn?faces-redirect=true">
-                    </h:commandButton>
-                </h:form>
-
-
-                <h:form style="display: inline-block">
-                    <h:commandButton id="exit" type="submit" value="Exit" action="#{interfaceBean.exitButtonAction()}">
+                    <h:commandButton id="exit" styleClass="richButton" type="submit" value="Exit" action="#{interfaceBean.exitButtonAction()}">
                     </h:commandButton>
                 </h:form>
 
@@ -125,23 +133,30 @@
                     <h:form id="red">
                         <h:panelGrid columns="2" layout="grid">
                             <p:outputLabel value="Native word"/>
-                            <p:inputText size="40" value="#{interfaceBean.trainingLog.retrieveSelectedQuestion().getAskedPhrase().nativeWord}" title="Native word"
+                            <p:inputText size="40"
+                                         value="#{interfaceBean.trainingLog.retrieveSelectedQuestion().getAskedPhrase().nativeWord}"
+                                         title="Native word"
                                          label="Native word"> </p:inputText>
 
                             <p:outputLabel value="Foreign word"/>
-                            <p:inputText size="40" value="#{interfaceBean.trainingLog.retrieveSelectedQuestion().getAskedPhrase().foreignWord}" title="Foreign word"
+                            <p:inputText size="40"
+                                         value="#{interfaceBean.trainingLog.retrieveSelectedQuestion().getAskedPhrase().foreignWord}"
+                                         title="Foreign word"
                                          label="Foreign word"> </p:inputText>
 
                             <p:outputLabel value="Transcription"/>
-                            <p:inputText size="40" value="#{interfaceBean.trainingLog.retrieveSelectedQuestion().getAskedPhrase().transcription}" title="Transcription"
+                            <p:inputText size="40"
+                                         value="#{interfaceBean.trainingLog.retrieveSelectedQuestion().getAskedPhrase().transcription}"
+                                         title="Transcription"
                                          label="Transcription"> </p:inputText>
 
                             <p:outputLabel value="Label"/>
-                            <p:inputText size="40" value="#{interfaceBean.trainingLog.retrieveSelectedQuestion().getAskedPhrase().label}" title="Label"
+                            <p:inputText size="40"
+                                         value="#{interfaceBean.trainingLog.retrieveSelectedQuestion().getAskedPhrase().label}"
+                                         title="Label"
                                          label="Label"> </p:inputText>
                         </h:panelGrid>
-                        <p:commandButton type="submit" value="Submit" actionListener="#{messagesView.info}">
-                        </p:commandButton>
+                        <p:commandButton type="submit" value="Submit" action="${interfaceBean.trainingLog.updateSelectedQuestionsPhrase()}" actionListener="#{messagesView.info}"/>
                         <p:messages id="messages" showDetail="true" autoUpdate="true" closable="true"/>
                     </h:form>
                 </p:dialog>
@@ -176,49 +191,45 @@
             <table>
                 <thead>
                 <tr>
-                    <th scope="col">Properties within current session</th>
+                    <th scope="col">General properties</th>
                     <th scope="col">Value</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr>
-                    <td>Number of answers</td>
-                    <td>${interfaceBean.answersForSessionNumber}</td>
+                    <td>Today's number of answers</td>
+                    <td>${interfaceBean.trainingLog.todayAnswersNumber}</td>
                 </tr>
                 <tr>
-                    <td>Percent of right answers</td>
-                    <td>${interfaceBean.rightAnswersPercentage}</td>
+                    <td>Today's percent of right answers</td>
+                    <td>${interfaceBean.trainingLog.todayRightAnswersPercentage}</td>
                 </tr>
                 <tr>
-                    <td>Words've been learnt</td>
-                    <td>${interfaceBean.trainedPhrasesPerSessionNumber}</td>
+                    <td>Today's trained phrases number</td>
+                    <td>${interfaceBean.trainingLog.todayTrainedPhrasesNumber}</td>
                 </tr>
                 <tr>
-                    <td>Number of learned phrases</td>
-                    <td>${interfaceBean.trainedPhrasesNumber}</td>
+                    <td>Total trained phrases</td>
+                    <td>${interfaceBean.trainingLog.totalTrainedPhrasesNumber}</td>
                 </tr>
                 <tr>
-                    <td>Number of unlearned phrases</td>
-                    <td>${interfaceBean.nonTrainedPhrasesNumber}</td>
+                    <td>Total untrained phrases</td>
+                    <td>${interfaceBean.trainingLog.totalUntrainedPhrasesNumber}</td>
                 </tr>
                 <tr>
                     <td>Total number of phrases</td>
-                    <td>${interfaceBean.totalPhrasesNumber}</td>
+                    <td>${interfaceBean.trainingLog.totalPhrasesNumber}</td>
                 </tr>
                 <tr>
                     <td>Percent of completion of learning</td>
-                    <td>${interfaceBean.trainingCompletionPercent}</td>
+                    <td>${interfaceBean.trainingLog.trainingCompletionPercentage}</td>
                 </tr>
                 <tr>
                     <td>Average answers per day</td>
-                    <td>${interfaceBean.averageAnswersPerDay}</td>
+                    <td>${interfaceBean.trainingLog.averageAnswersPerDayNumber}</td>
                 </tr>
 
                 </tbody>
-
-
-                <!--                    Properties of current phrase                         -->
-
 
                 <thead>
                 <tr>
@@ -229,44 +240,45 @@
                 <tbody>
                 <tr>
                     <td>Chance of occurrence (points)</td>
-                    <td>${interfaceBean.trainingLog.retrieveSelectedQuestion().askedPhrase.probabilityFactor}</td>
+                    <td>${interfaceBean.trainingLog.retrieveSelectedQuestion().composeProbabilityFactorHistory()}</td>
                 </tr>
                 <tr>
-                    <td>Chance of occurrence (percents)</td>
-                    <td>${interfaceBean.currPhrPercentOfAppearance}</td>
+                    <td>Chance of occurrence (%)</td>
+                    <td>${interfaceBean.trainingLog.retrieveSelectedQuestion().composeAppearingPercentage()}</td>
                 </tr>
                 <tr>
-                    <td>Id of current phrase</td>
+                    <td>Phrase id</td>
                     <td>${interfaceBean.trainingLog.retrieveSelectedQuestion().askedPhrase.id}</td>
                 </tr>
                 <tr>
-                    <td>Rate of current phrase</td>
-                    <td>${interfaceBean.currentPhraseRate}</td>
+                    <td>Right answer multiplier</td>
+                    <td>${interfaceBean.trainingLog.retrieveSelectedQuestion().composeMultiplierHistory()}</td>
                 </tr>
 
                 <tr>
                     <td>Last access date</td>
-                    <td>${interfaceBean.trainingLog.retrieveSelectedQuestion().askedPhrase.lastAccessDateTime}</td>
+                    <td>${interfaceBean.trainingLog.retrieveSelectedQuestion().composeLastAccessDate()}</td>
                 </tr>
                 <tr>
                     <td>Create date</td>
-                    <td>${interfaceBean.trainingLog.retrieveSelectedQuestion().askedPhrase.collectionAddingDateTime}</td>
+                    <td>${interfaceBean.trainingLog.retrieveSelectedQuestion().composeCreationDate()}</td>
                 </tr>
                 <tr>
                     <td>Label</td>
-                    <td>${interfaceBean.trainingLog.retrieveSelectedQuestion().askedPhrase.label}</td>
+                    <td>${interfaceBean.trainingLog.retrieveSelectedQuestion().composeLabel()}</td>
                 </tr>
                 <tr>
-                    <td>Choosen labels
+                    <td>Choosen labels filter
                         <h:form>
-                            <h:selectOneMenu id="table" value="#{interfaceBean.choosedLabel}">
-                                <f:ajax event="change" execute="table; #{interfaceBean.reloadLabelsList()}" render="@all"/>
+                            <h:selectOneMenu id="table" styleClass="richButton" value="#{interfaceBean.choosedLabel}">
+                                <f:ajax event="change" execute="table; #{interfaceBean.reloadLabelsList()}"
+                                        render="@all"/>
                                 <f:selectItems value="#{interfaceBean.availableLabels}" var="group" itemValue="#{group}"
                                                itemLabel="#{group}"/>
                             </h:selectOneMenu>
                         </h:form>
                     </td>
-                    <td>${interfaceBean.resultChosenLabel}</td>
+                    <td>${interfaceBean.resultChosenLabel.equals("") ? "All" : interfaceBean.resultChosenLabel}</td>
                 </tr>
                 </tbody>
             </table>

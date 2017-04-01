@@ -21,7 +21,7 @@ public class Phrase implements Serializable {
     private static final double RIGHT_ANSWER_MULTIPLIER = 1.44;
 
     @Transient
-    private static final double TRAINED_PROBABILITY_FACTOR = 3;
+    public static final double TRAINED_PROBABILITY_FACTOR = 3;
 
     @javax.persistence.Id
     @GeneratedValue(strategy=GenerationType.AUTO)
@@ -252,8 +252,8 @@ public class Phrase implements Serializable {
     }
 
     public void update(){
-        if(databaseHelper != null)
-            databaseHelper.updatePhrase(this);
+        /*if(databaseHelper != null)
+            databaseHelper.updatePhrase(this);*/
     }
 
     public boolean isTrained(){

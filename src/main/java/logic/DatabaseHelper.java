@@ -38,6 +38,11 @@ public class DatabaseHelper {
     private int nonLearntWordsAmount;
     private int totalActiveWordsAmount;
     private int learntWordsProbSumm; //unused since 25/03/2017
+
+    public int getTheGreatestPhrasesIndex() {
+        return theGreatestPhrasesIndex;
+    }
+
     private int theGreatestPhrasesIndex;
     private int totalTrainingAnswers; //Number of replies to 6 am of the current day
     private int totalTrainingHoursSpent; // Number of hours spent from the very begining till 6am of the current day
@@ -155,12 +160,14 @@ public class DatabaseHelper {
         System.out.println("CALL: retievePossibleLabels() from DatabaseHelper");
         allAvailableLabels.clear();
         String temp;
+        allAvailableLabels.add("All");
 
         try (Statement st = mainDbConn.createStatement();
              ResultSet rs = st.executeQuery("SELECT DISTINCT (LABEL) FROM " + "words" + " ORDER BY LABEL")) {
             while (rs.next()) {
                 temp = rs.getString("LABEL");
-                allAvailableLabels.add(temp == null ? "null" : temp);
+                if(temp != null && !temp.equals(""))
+                allAvailableLabels.add(temp);
             }
 
         } catch (SQLException e) {
@@ -191,13 +198,11 @@ public class DatabaseHelper {
         CriteriaQuery<Phrase> criteriaQuery = builder.createQuery(Phrase.class);
         Root<Phrase> phraseRoot = criteriaQuery.from(Phrase.class);
         criteriaQuery.select(phraseRoot);
-        System.out.println("user=" + loginBean.getUserTextField());
         criteriaQuery.where(builder.equal(phraseRoot.get("owner"), loginBean.getLoggedUser()), builder.equal(phraseRoot.get("isDeleted"), false));
 //        criteriaQuery.where(builder.equal(phraseRoot.get("isDeleted"), false));
         Query<Phrase> allPhrasesQuery = session.createQuery(criteriaQuery);
         allAvailablePhrases = allPhrasesQuery.list();
         session.close();
-        System.out.println("LIST SIZE:" + allAvailablePhrases.size());
         for(Phrase currentPhrase : allAvailablePhrases){
             currentPhrase.setDatabaseHelper(this);
             if(currentPhrase.isInList(activeLabels)){
@@ -269,7 +274,7 @@ public class DatabaseHelper {
     }
 
     public void updatePhrase(Phrase givenPhrase) {
-        System.out.println("CALL: update(Phrase givenPhrase) from DatabaseHelper with id=" + givenPhrase.id);
+        System.out.println("CALL: updatePhrase(Phrase givenPhrase) from DatabaseHelper with id=" + givenPhrase.id);
         String dateTime = ZonedDateTime.now(ZoneId.of(TIMEZONE)).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
         String updateSql = "UPDATE " + "words" + " SET for_word=?, nat_word=?, transcr=?, last_accs_date=?, " +
                 "label=?, prob_factor=?, rate=?  WHERE id =" + givenPhrase.id;
@@ -310,7 +315,7 @@ public class DatabaseHelper {
             throw new RuntimeException();
         }
 
-//        reloadPhrasesAndIndices();
+        reloadIndices();
 
     }
 
@@ -329,6 +334,7 @@ public class DatabaseHelper {
             e.printStackTrace();
             throw new RuntimeException();
         }
+        reloadIndices();
     }
 
     public ArrayList<Phrase> getActivePhrases() {

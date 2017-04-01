@@ -179,7 +179,7 @@ public class InterfaceBean implements Serializable{
 
     public void previousRightButtonAction(){
         System.out.println("CALL: previousRightButtonAction() from InterfaceBean");
-        Question question = trainingLog.getPreviousQuestion();
+        Question question = trainingLog.retrievePreviousQuestion();
         if(question != null){
             question.rightAnswer();
         }
@@ -189,7 +189,7 @@ public class InterfaceBean implements Serializable{
     public void previousWrongButtonAction(){
 
         System.out.println("CALL: previousWrongButtonAction() from InterfaceBean");
-        Question question = trainingLog.getPreviousQuestion();
+        Question question = trainingLog.retrievePreviousQuestion();
         if(question != null){
             question.wrongAnswer();
         }

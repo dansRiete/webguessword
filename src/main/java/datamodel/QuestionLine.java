@@ -43,7 +43,7 @@ public class QuestionLine {
         }
 
         if(askedPhrase.isTrained()){
-            phrase = applyColor(phrase, RIGHT_MESSAGE_COLOR);
+            phrase = makeStrong(applyColor(phrase, RIGHT_MESSAGE_COLOR));
         }
 
         result = timeAndRightWrongMessage + phrase;

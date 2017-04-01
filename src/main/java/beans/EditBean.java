@@ -60,7 +60,6 @@ public class EditBean implements Serializable{
                 }
             }));
             labelsList = databaseHelper.retievePossibleLabels();
-            labelsList.add("All");
         }
     }
 
@@ -92,6 +91,14 @@ public class EditBean implements Serializable{
         databaseHelper.reloadPhrasesAndIndices();
         System.out.println("EDITBEAN CALL END deleteById(Phrase phr)  mylist.size=" + myList.size());
 
+    }
+
+    public void updateAll(){
+//        myList.forEach(databaseHelper::updatePhrase);
+    }
+
+    public void updatePhrase(Phrase phrase){
+        databaseHelper.updatePhrase(phrase);
     }
 
     public int rowNumbers(){
