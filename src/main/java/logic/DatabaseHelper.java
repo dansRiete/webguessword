@@ -254,12 +254,12 @@ public class DatabaseHelper {
     }
 
     public void deletePhrase(Phrase phr) {
-        System.out.println("CALL: deletePhrase(int id) from DatabaseHelper");
+        System.out.println("CALL: deleteButtonAction(int id) from DatabaseHelper");
         String deleteSql = "DELETE FROM words WHERE ID=" + phr.id;
         try (Statement st = mainDbConn.createStatement()) {
             st.execute(deleteSql);
         } catch (SQLException e) {
-            System.out.println("EXCEPTION#2: in deletePhrase(int id) from DatabaseHelper");
+            System.out.println("EXCEPTION#2: in deleteButtonAction(int id) from DatabaseHelper");
             e.printStackTrace();
             throw new RuntimeException();
         }

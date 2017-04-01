@@ -296,20 +296,18 @@ public class Phrase implements Serializable {
     public String getForeignWord(){
         return foreignWord;
     }
-    public Phrase setForeignWord(String foreignWord) {
+    public void setForeignWord(String foreignWord) {
         System.out.println("CALL setForeignWord("+ foreignWord +") from Phrase");
         this.foreignWord = foreignWord;
         update();
-        return this;
     }
     public String getNativeWord() {
         return nativeWord;
     }
-    public Phrase setNativeWord(String nativeWord) {
+    public void setNativeWord(String nativeWord) {
         System.out.println("CALL setNativeWord("+ nativeWord +") from Phrase");
         this.nativeWord = nativeWord;
         update();
-        return this;
     }
     public String getTranscription() {
         return transcription;

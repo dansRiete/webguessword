@@ -62,11 +62,15 @@ public class Question {
     @Transient
     private DatabaseHelper databaseHelper;
 
+    @Transient
+    private String questionRepresentation;
+
     private Question(Phrase askedPhrase, DatabaseHelper databaseHelper) {
         this.askedPhrase = askedPhrase;
         this.databaseHelper = databaseHelper;
         initialProbabilityFactor = askedPhrase.getProbabilityFactor();
         initialProbabilityMultiplier = askedPhrase.getMultiplier();
+        questionRepresentation = askedPhrase.foreignWord + " " + shortHint();
     }
 
     public static Question compose(Phrase askedPhrase){
@@ -168,9 +172,79 @@ public class Question {
         return initialProbabilityFactor <= TRAINED_PROBABILITY_FACTOR;
     }
 
-    /*private boolean phraseHadBeenTrainedBeforeAnswer(){
+    /**
+     * Gets the phrase in English as a parameter. If a slash occurs in the phrase (for example: car \ my auto) returns
+     * a hint *** \ ** ****, if the phrase does not contain a slash ("/") returns ""
+     * @return a hint *** \ ** ****, if the phrase does not contain a slash ("/") returns ""
+     */
+    public String longHint(){
+        if(askedPhrase.foreignWord.contains("/")||askedPhrase.foreignWord.contains("\\")||askedPhrase.foreignWord.contains(" ")||askedPhrase.foreignWord.contains("-")||
+                askedPhrase.foreignWord.contains("`")||askedPhrase.foreignWord.contains("'")||askedPhrase.foreignWord.contains(",")){
+            char[] hintAr = askedPhrase.foreignWord.toCharArray();
+            char[] newHintAr = new char[hintAr.length+2];
+            int i = 1;
+            newHintAr[0]='(';
+            newHintAr[newHintAr.length-1]=')';
+            for(char temp : hintAr){
+                if(temp==' '){
+                    newHintAr[i]=' ';
+                    i++;
+                }else if(temp=='/'){
+                    newHintAr[i]='/';
+                    i++;
+                }else if(temp=='-'){
+                    newHintAr[i]='-';
+                    i++;
+                }else if(temp=='`'){
+                    newHintAr[i]='`';
+                    i++;
+                }else if(temp=='\''){
+                    newHintAr[i]='\'';
+                    i++;
+                }else if(temp=='\\'){
+                    newHintAr[i]='\\';
+                    i++;
+                }else if(temp==','){
+                    newHintAr[i]=',';
+                    i++;
+                }else if(temp=='’'){
+                    newHintAr[i]='’';
+                    i++;
+                }else{
+                    newHintAr[i]='*';
+                    i++;
+                }
+            }
+            return new String(newHintAr);
+        }else
+            return "";
+    }
 
-    }*/
+    public String shortHint(){
+
+        int numberOfVariants = 1;   // There is at least one
+        int serialNumberOfHint = 0;
+        StringBuilder finalHint = new StringBuilder("");
+        boolean wasFirstSlash = false;
+
+        for(char currentChar : askedPhrase.foreignWord.toCharArray()){     //Count numbers of variants
+            if(currentChar == '/' || currentChar == '\\'){
+                numberOfVariants++;
+            }
+        }
+
+        if(numberOfVariants > 1){
+            finalHint.append('(');
+            for(int i = 0; i < numberOfVariants; i++){
+                finalHint.append(wasFirstSlash ? "/" : "").append(++serialNumberOfHint);
+                wasFirstSlash = true;
+            }
+            finalHint.append(')');
+        }
+
+        return finalHint.toString();
+
+    }
 
     private boolean phrasesEquals(String givenPhrase, String referencePhrase){
         List<String> givenPhraseWords = splitToWords(givenPhrase);
@@ -224,6 +298,10 @@ public class Question {
 
     public long getId() {
         return id;
+    }
+
+    public String getQuestionRepresentation() {
+        return questionRepresentation;
     }
 
     public String getAnswer() {

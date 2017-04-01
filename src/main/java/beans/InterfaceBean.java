@@ -51,18 +51,14 @@ public class InterfaceBean implements Serializable{
 
     private RetDiff retDiff = new RetDiff();
     private DatabaseHelper databaseHelper;
-//    public Question selectedQuestion;
-    private String question ="";
+    private String questionField ="";
     private String answerField = "";
-
     private TrainingLog trainingLog;
     private ArrayList<String> availableLabels;
     private String choosedLabel;
     private String resultChosenLabel;
     private String previousResultChoosedLabel = "";
     private HashSet<String> chosenLabelsForLearningWords = new HashSet<>();
-    private int currentlySelectedPhraseIndex;
-//    private Hints hint = new Hints();
 
 
     public InterfaceBean(){
@@ -77,13 +73,12 @@ public class InterfaceBean implements Serializable{
             throw new RuntimeException("loginBean in InterfaceBean was null");
         }
 
-
         if(databaseHelper != null){
             trainingLog = new TrainingLog(databaseHelper);
             availableLabels = databaseHelper.getAllAvailableLabels();
             List<Question> todayQuestions = databaseHelper.retrieveTodayQuestions();
             trainingLog.setTodayQuestions(todayQuestions);
-            nextQuestion();
+            nextButtonAction();
         }else {
             throw new RuntimeException("DatabaseHelper was null");
         }
@@ -118,101 +113,96 @@ public class InterfaceBean implements Serializable{
         }
     }
 
-    public void answerTheQuestion(){
+    public void answerButtonAction(){
 
-        System.out.println("CALL: answerTheQuestion() from InterfaceBean");
+        System.out.println("CALL: answerButtonAction() from InterfaceBean");
 
         if(answerField == null) {
             return;
         }else if (answerField.equals("+")){
-            rightAnswer();
+            iKnowItButtonAction();
         }else if (answerField.equals("-")){
-            wrongAnswer();
+            iDontKnowItButtonAction();
         }else if (answerField.equals("++")){
-            previousQuestionRight();
+            previousRightButtonAction();
         }else if (answerField.equals("--")){
-            previousQuestionWrong();
+            previousWrongButtonAction();
         }else if (answerField.equals("*")){
-            nextQuestion();
+            nextButtonAction();
         }else {
-            trainingLog.selectedQuestion().answerTheQuestion(answerField);
-            if(trainingLog.selectedQuestion().answerIsCorrect()){
-                rightAnswer();
+            trainingLog.retrieveSelectedQuestion().answerTheQuestion(answerField);
+            if(trainingLog.retrieveSelectedQuestion().answerIsCorrect()){
+                iKnowItButtonAction();
             } else {
-                wrongAnswer();
+                iDontKnowItButtonAction();
             }
         }
         answerField = "";
     }
 
-    public void nextQuestion(){
+    public void nextButtonAction(){
         System.out.println();
-        System.out.println("CALL: nextQuestion() from InterfaceBean");
+        System.out.println("CALL: nextButtonAction() from InterfaceBean");
         trainingLog.nextQuestion();
-        question = trainingLog.questionString();
-        /*if(selectedQuestion != null){
-            selectedQuestion.selected = false;
-        }
-        if(currentlySelectedPhraseIndex == 0) {
-
-            question = selectedQuestion.getAskedPhrase().nativeWord + " " + hint.shortHint(selectedQuestion.getAskedPhrase().foreignWord);
+        Question question = trainingLog.retrieveSelectedQuestion();
+        if(question != null){
+            questionField = question.getQuestionRepresentation();
         }else {
-            currentlySelectedPhraseIndex--;
-            selectedQuestion = trainingLog.getQuestion(currentlySelectedPhraseIndex);
-            question = selectedQuestion.getAskedPhrase().nativeWord + " " + hint.shortHint(selectedQuestion.getAskedPhrase().foreignWord);
+            questionField = "";
         }
-        selectedQuestion.selected = true;
-        trainingLog.reloadLog();*/
-    }
-
-    public void previousQuestion() {
-        System.out.println("CALL: previousQuestion() from InterfaceBean");
-        trainingLog.previousQuestion();
-        question = trainingLog.questionString();
-    }
-
-    public void rightAnswer(){
-
-        System.out.println("CALL: rightAnswer() from InterfaceBean");
-        trainingLog.selectedQuestion().rightAnswer();
-        nextQuestion();
 
     }
 
-    public void wrongAnswer(){
-
-        System.out.println("CALL: wrongAnswer() from InterfaceBean");
-        trainingLog.selectedQuestion().wrongAnswer();
-        nextQuestion();
+    public void previousButtonAction() {
+        System.out.println("CALL: previousButtonAction() from InterfaceBean");
+        trainingLog.selectPreviousQuestion();
+        questionField = trainingLog.retrieveSelectedQuestion().getQuestionRepresentation();
     }
 
-    public void previousQuestionRight(){
-
-        System.out.println("CALL: previousQuestionRight() from InterfaceBean");
-        // previousQuestionRight() method is not alowed in the middle of the phrases list and at first question per session
-        if(currentlySelectedPhraseIndex != trainingLog.size() - 1){
-            trainingLog.getQuestion(currentlySelectedPhraseIndex + 1).rightAnswer();
+    public void iKnowItButtonAction(){
+        System.out.println("CALL: iKnowItButtonAction() from InterfaceBean");
+        Question question = trainingLog.retrieveSelectedQuestion();
+        if(question != null) {
+            question.rightAnswer();
         }
-        trainingLog.reloadLog();
+        nextButtonAction();
     }
 
-    public void previousQuestionWrong(){
-
-        System.out.println("CALL: previousQuestionWrong() from InterfaceBean");
-        // previousQuestionWrong() method is not alowed in the middle of the phrases list and at first question per session
-        if(currentlySelectedPhraseIndex != trainingLog.size() - 1) {
-            trainingLog.getQuestion(currentlySelectedPhraseIndex + 1).wrongAnswer();
+    public void iDontKnowItButtonAction(){
+        System.out.println("CALL: iDontKnowItButtonAction() from InterfaceBean");
+        Question question = trainingLog.retrieveSelectedQuestion();
+        if(question != null){
+            question.wrongAnswer();
         }
-        trainingLog.reloadLog();
+        nextButtonAction();
     }
 
-    public void deletePhrase(){
+    public void previousRightButtonAction(){
+        System.out.println("CALL: previousRightButtonAction() from InterfaceBean");
+        Question question = trainingLog.getPreviousQuestion();
+        if(question != null){
+            question.rightAnswer();
+        }
+        trainingLog.reload();
+    }
+
+    public void previousWrongButtonAction(){
+
+        System.out.println("CALL: previousWrongButtonAction() from InterfaceBean");
+        Question question = trainingLog.getPreviousQuestion();
+        if(question != null){
+            question.wrongAnswer();
+        }
+        trainingLog.reload();
+    }
+
+    public void deleteButtonAction(){
         System.out.println("CALL: delete() from InterfaceBean");
         trainingLog.deleteSelectedPhrase();
     }
 
-    public void exitSession(){
-        System.out.println("CALL: exitSession() from InterfaceBean");
+    public void exitButtonAction(){
+        System.out.println("CALL: exitButtonAction() from InterfaceBean");
         FacesContext context = FacesContext.getCurrentInstance();
         HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
         HttpSession session = request.getSession();
@@ -241,11 +231,11 @@ public class InterfaceBean implements Serializable{
         this.loginBean = loginBean;
     }
 
-    public String getQuestion() {
-        return question;
+    public String getQuestionField() {
+        return questionField;
     }
-    public void setQuestion(String question) {
-        this.question = question;
+    public void setQuestionField(String questionField) {
+        this.questionField = questionField;
     }
 
     public String getAnswerField() {

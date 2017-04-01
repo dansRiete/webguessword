@@ -24,43 +24,69 @@ public class TrainingLog {
     }
 
     public Question getQuestion(int position){
-        return allQuestions.get(position);
+        Question question = null;
+        if(position > 0 && position < allQuestions.size()){
+            question = allQuestions.get(position);
+        }
+        return question;
     }
 
-    public void setPosition(int position){
+    public Question retrieveSelectedQuestion(){
+        Question question = null;
+        if(position > 0 && position < allQuestions.size()){
+            question = allQuestions.get(position);
+        }
+        return question;
+    }
+
+    public Question getPreviousQuestion(){
+        Question question = null;
+        if(position - 1 < allQuestions.size()){
+            question = allQuestions.get(position - 1);
+        }
+        return question;
+    }
+
+    public void selectQuestion(int position){
         this.position = position;
-        reloadLog();
+        reload();
     }
 
-    public void previousQuestion(){
+    public void selectPreviousQuestion(){
         if(position + 1 < allQuestions.size() - todayQuestions.size()){
-            setPosition(++position);
+            selectQuestion(++position);
         }
     }
 
-    public String questionString(){
-        return allQuestions.get(position).getAskedPhrase().nativeWord + " " + hint.shortHint(allQuestions.get(position).getAskedPhrase().foreignWord);
-    }
+    /*public String questionString(){
+        Question question = retrieveSelectedQuestion();
+        if(question != null) {
+            return question.getAskedPhrase().nativeWord + " " + hint.shortHint(question.getAskedPhrase().foreignWord);
+        }else {
+            return "";
+        }
+    }*/
 
     public void nextQuestion(){
         if(position == 0){
-            addQuestion(Question.compose(databaseHelper.retrieveRandomPhrase(), databaseHelper));
+            appendToLog(Question.compose(databaseHelper.retrieveRandomPhrase(), databaseHelper));
         }else {
-            setPosition(--position);
+            selectQuestion(--position);
         }
     }
 
-    public Question selectedQuestion(){
-        return allQuestions.get(position);
+    public void deleteSelectedPhrase(){
+        databaseHelper.deletePhrase(retrieveSelectedQuestion().getAskedPhrase());
+        reload();
     }
 
-    public void addQuestion(Question addedQuestion){
+    public void appendToLog(Question addedQuestion){
         allQuestions.add(0, addedQuestion);
-        setPosition(0);
-        reloadLog();
+        selectQuestion(0);
+        reload();
     }
 
-    public void reloadLog(){
+    public void reload(){
         log = new StringBuilder();
         for(int i = 0; i < allQuestions.size(); i++){
             StringBuilder str = new StringBuilder(new QuestionLine(allQuestions.get(i)).getResultString());
@@ -69,14 +95,6 @@ public class TrainingLog {
             }
             log.append(str.toString());
         }
-    }
-
-    public List<Question> getAllQuestions() {
-        return allQuestions;
-    }
-
-    public int size(){
-        return allQuestions.size();
     }
 
     @Override
@@ -91,12 +109,7 @@ public class TrainingLog {
     public void setTodayQuestions(List<Question> todayQuestions) {
         this.todayQuestions = todayQuestions;
         allQuestions.addAll(todayQuestions);
-        reloadLog();
-    }
-
-    public void deleteSelectedPhrase(){
-        databaseHelper.deletePhrase(selectedQuestion().getAskedPhrase());
-        reloadLog();
+        reload();
     }
 
     /*private void reloadStatisticsTable(){
