@@ -48,14 +48,6 @@ public class Phrase implements Serializable {
     @Column(name = "last_accs_date")
     public ZonedDateTime lastAccessDateTime;
 
-    public double getMultiplier() {
-        return multiplier;
-    }
-
-    public void setMultiplier(double multiplier) {
-        this.multiplier = multiplier;
-    }
-
     @Column(name = "rate")
     public double multiplier;
 
@@ -369,6 +361,14 @@ public class Phrase implements Serializable {
 
     public void setOwner(User owner) {
         this.owner = owner;
+    }
+
+    public double getMultiplier() {
+        return multiplier;
+    }
+
+    public void setMultiplier(double multiplier) {
+        this.multiplier = multiplier;
     }
 
 

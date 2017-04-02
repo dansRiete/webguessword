@@ -17,7 +17,7 @@ public class PhraseDao implements DaoInterface<Phrase, Long> {
     private Transaction currentTransaction;
 
     public PhraseDao(SessionFactory sessionFactory){
-
+        this.currentSessionFactory = sessionFactory;
     }
 
     public Session openCurrentSession(){

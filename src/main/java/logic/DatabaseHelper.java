@@ -69,6 +69,14 @@ public class DatabaseHelper {
         initThisDayStatistics();
     }
 
+    public void peristQuestion(Question question){
+        questionDao.persist(question);
+    }
+
+    public void updateQuestion(Question question){
+        questionDao.update(question);
+    }
+
     public void setStatistics(Phrase givenPhrase){
         String dateTime = givenPhrase.phraseAppearingTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
         int mlseconds = Integer.parseInt(ZonedDateTime.now(ZoneId.of(TIMEZONE)).format(DateTimeFormatter.ofPattern("SSS")));
@@ -199,7 +207,6 @@ public class DatabaseHelper {
         Root<Phrase> phraseRoot = criteriaQuery.from(Phrase.class);
         criteriaQuery.select(phraseRoot);
         criteriaQuery.where(builder.equal(phraseRoot.get("owner"), loginBean.getLoggedUser()), builder.equal(phraseRoot.get("isDeleted"), false));
-//        criteriaQuery.where(builder.equal(phraseRoot.get("isDeleted"), false));
         Query<Phrase> allPhrasesQuery = session.createQuery(criteriaQuery);
         allAvailablePhrases = allPhrasesQuery.list();
         session.close();

@@ -11,10 +11,6 @@ import java.io.Serializable;
 @Table(name = "users")
 public class User implements Serializable {
 
-    public long getId() {
-        return id;
-    }
-
     @javax.persistence.Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     public long id;
@@ -38,5 +34,9 @@ public class User implements Serializable {
         this.name = name;
         this.password = password;
         this.email = email;
+    }
+
+    public long getId() {
+        return id;
     }
 }

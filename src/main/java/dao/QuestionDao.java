@@ -17,7 +17,7 @@ public class QuestionDao implements DaoInterface<Question, Long> {
     private Transaction currentTransaction;
 
     public QuestionDao(SessionFactory sessionFactory){
-
+        this.currentSessionFactory = sessionFactory;
     }
 
     public Session openCurrentSession(){
@@ -52,12 +52,16 @@ public class QuestionDao implements DaoInterface<Question, Long> {
 
     @Override
     public void persist(Question entity) {
+        openCurrentSessionWithTransaction();
         getCurrentSession().save(entity);
+        closeCurrentSessionwithTransaction();
     }
 
     @Override
     public void update(Question entity) {
+        openCurrentSessionWithTransaction();
         getCurrentSession().update(entity);
+        closeCurrentSessionwithTransaction();
     }
 
     @Override

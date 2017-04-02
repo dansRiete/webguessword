@@ -1,8 +1,10 @@
 package datamodel;
 
 import logic.DatabaseHelper;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -15,7 +17,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "questions")
-public class Question {
+public class Question implements Serializable{
 
     @Transient
     private static final double RIGHT_ANSWER_MULTIPLIER = 1.44;
@@ -37,20 +39,18 @@ public class Question {
 
     @javax.persistence.Id
     @GeneratedValue(strategy= GenerationType.AUTO)
-    private long id;
+    private Long id;
 
     @Column(name = "answer")
     private String answer;
 
     @Column(name = "date")
-    private final ZonedDateTime askDate = ZonedDateTime.now();
+//    @Transient
+    private ZonedDateTime askDate = ZonedDateTime.now();
 
-    @Column(name = "phrase_key")
-    private final Phrase askedPhrase;
-
-    public boolean isAnswerCorrect() {
-        return answerCorrect;
-    }
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "phrase_key")
+    private Phrase askedPhrase;
 
     @Column(name = "answered_correctly")
     private boolean answerCorrect;
@@ -98,6 +98,7 @@ public class Question {
         initStartIndex = askedPhrase.getIndexStart();
         initEndIndex = askedPhrase.getIndexEnd();
         questionRepresentation = askedPhrase.nativeWord + " " + shortHint();
+        user = askedPhrase.getOwner();
     }
 
     public static Question compose(Phrase askedPhrase, DatabaseHelper dbHelper){
@@ -105,7 +106,8 @@ public class Question {
         if(askedPhrase == null){
             throw new IllegalArgumentException("Phrases foreign and native literals can not be null");
         }
-        return new Question(askedPhrase, dbHelper);
+        Question question = new Question(askedPhrase, dbHelper);
+        return question;
     }
 
     public Question answerTheQuestion(String answer){
@@ -133,7 +135,7 @@ public class Question {
 
     public Question rightAnswer(){
         System.out.println("CALL: rightAnswer() from Question");
-        this.answer = askedPhrase.getForeignWord();
+
         this.answerCorrect = true;
 
         if(!phraseIsAlreadyTrained()){
@@ -156,6 +158,12 @@ public class Question {
         databaseHelper.updateProb(askedPhrase);
         afterAnswerStartIndex = askedPhrase.getIndexStart();
         afterAnswerEndIndex = askedPhrase.getIndexEnd();
+        if(!answered()){
+            databaseHelper.peristQuestion(this);
+        }else {
+            databaseHelper.updateQuestion(this);
+        }
+        this.answer = askedPhrase.getForeignWord();
         return this;
     }
 
@@ -402,7 +410,7 @@ public class Question {
         return askedPhrase;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
@@ -412,5 +420,9 @@ public class Question {
 
     public String getAnswer() {
         return answer;
+    }
+
+    public boolean isAnswerCorrect() {
+        return answerCorrect;
     }
 }
