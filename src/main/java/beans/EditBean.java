@@ -68,9 +68,9 @@ public class EditBean implements Serializable{
         System.out.println("EDITBEAN CALL START addAction() from editBean mylist.size=" + myList.size());
 
         if( this.foreignWord != null && this.nativeWord != null && !this.foreignWord.equalsIgnoreCase("") && !this.nativeWord.equalsIgnoreCase("")){
-
-            Phrase phrase = new Phrase(0, this.foreignWord, this.nativeWord, this.transcription, 30,
-                    ZonedDateTime.now(ZoneId.of("UTC")), this.label, null, 1, databaseHelper);
+            long maxId = databaseHelper.retrieveMaxId();
+            Phrase phrase = new Phrase(++maxId, this.foreignWord, this.nativeWord, this.transcription, 30,
+                    ZonedDateTime.now(), this.label, null, 1, databaseHelper, loginBean.getLoggedUser());
             this.foreignWord = this.nativeWord = this.transcription = this.label = "";
             probabilityFactor = null;
             myList.add(0, phrase);

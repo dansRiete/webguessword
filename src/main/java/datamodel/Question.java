@@ -38,7 +38,7 @@ public class Question implements Serializable{
     private static final int MULTIPLIER_ACCURACY = 2;
 
     @javax.persistence.Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "answer")
@@ -89,6 +89,9 @@ public class Question implements Serializable{
     @Transient
     private String questionRepresentation;
 
+    @Transient
+    private boolean answered;
+
     private Question(Phrase askedPhrase, DatabaseHelper databaseHelper) {
         System.out.println("CALL: Question(Phrase askedPhrase, DatabaseHelper databaseHelper) from Question");
         this.askedPhrase = askedPhrase;
@@ -128,7 +131,12 @@ public class Question implements Serializable{
                     }
                 }
             }
-            answerCorrect = matchesAmount == referenceLiteralPhrases.length;
+            this.answerCorrect = matchesAmount == referenceLiteralPhrases.length;
+        }
+        if(this.answerCorrect){
+            rightAnswer();
+        }else {
+            wrongAnswer();
         }
         return this;
     }
@@ -158,18 +166,22 @@ public class Question implements Serializable{
         databaseHelper.updateProb(askedPhrase);
         afterAnswerStartIndex = askedPhrase.getIndexStart();
         afterAnswerEndIndex = askedPhrase.getIndexEnd();
+        if(this.answer == null || this.answer.equals("")){
+            this.answer = askedPhrase.getForeignWord();
+        }
         if(!answered()){
             databaseHelper.peristQuestion(this);
         }else {
             databaseHelper.updateQuestion(this);
         }
-        this.answer = askedPhrase.getForeignWord();
+
+        this.answered = true;
         return this;
     }
 
     public Question wrongAnswer(){
         System.out.println("CALL: wrongAnswer() from Question");
-        this.answer = "Had not been given";
+
         this.answerCorrect = false;
 
         if(!phraseIsAlreadyTrained()){
@@ -194,6 +206,17 @@ public class Question implements Serializable{
         databaseHelper.updateProb(askedPhrase);
         afterAnswerStartIndex = askedPhrase.getIndexStart();
         afterAnswerEndIndex = askedPhrase.getIndexEnd();
+
+        if(this.answer == null || this.answer.equals("")){
+            this.answer = "Had not been given";
+        }
+        if(!answered()){
+            databaseHelper.peristQuestion(this);
+        }else {
+            databaseHelper.updateQuestion(this);
+        }
+
+        this.answered = true;
         return this;
     }
 
@@ -386,7 +409,7 @@ public class Question implements Serializable{
     }
 
     public boolean answered(){
-        return answer != null;
+        return answered;
     }
 
     public int trainedAfterAnswer(){

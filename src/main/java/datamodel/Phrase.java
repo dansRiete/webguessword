@@ -24,7 +24,7 @@ public class Phrase implements Serializable {
     public static final double TRAINED_PROBABILITY_FACTOR = 3;
 
     @javax.persistence.Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
+//    @GeneratedValue(strategy=GenerationType.AUTO)
     public long id;
 
     @Column(name = "for_word")
@@ -91,9 +91,10 @@ public class Phrase implements Serializable {
     public Phrase() {
     }
 
-    public Phrase(int id, String foreignWord, String nativeWord, String transcription, double probabilityFactor,
-                  ZonedDateTime collectionAddingDateTime, String label, ZonedDateTime lastAccessDateTime, double multiplier, DatabaseHelper databaseHelper){
+    public Phrase(long id, String foreignWord, String nativeWord, String transcription, double probabilityFactor,
+                  ZonedDateTime collectionAddingDateTime, String label, ZonedDateTime lastAccessDateTime, double multiplier, DatabaseHelper databaseHelper, User owner){
         this.id = id;
+        this.owner = owner;
         this.foreignWord = foreignWord;
         this.nativeWord = nativeWord;
         this.transcription = transcription == null ? "" : transcription;

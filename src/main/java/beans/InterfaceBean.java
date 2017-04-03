@@ -131,11 +131,12 @@ public class InterfaceBean implements Serializable{
             nextButtonAction();
         }else {
             trainingLog.retrieveSelectedQuestion().answerTheQuestion(answerField);
-            if(trainingLog.retrieveSelectedQuestion().answerIsCorrect()){
+            /*if(trainingLog.retrieveSelectedQuestion().answerIsCorrect()){
                 iKnowItButtonAction();
             } else {
                 iDontKnowItButtonAction();
-            }
+            }*/
+            nextButtonAction();
         }
         answerField = "";
     }
