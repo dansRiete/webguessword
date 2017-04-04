@@ -70,10 +70,12 @@ public class DatabaseHelper {
     }
 
     public void peristQuestion(Question question){
+        System.out.println("CALL: peristQuestion(Question question) from DatabaseHelper");
         questionDao.persist(question);
     }
 
     public void updateQuestion(Question question){
+        System.out.println("CALL: updateQuestion(Question question) from DatabaseHelper");
         questionDao.update(question);
     }
 
@@ -171,7 +173,7 @@ public class DatabaseHelper {
         allAvailableLabels.add("All");
 
         try (Statement st = mainDbConn.createStatement();
-             ResultSet rs = st.executeQuery("SELECT DISTINCT (LABEL) FROM " + "words" + " ORDER BY LABEL")) {
+             ResultSet rs = st.executeQuery("SELECT DISTINCT (LABEL) FROM " + "(SELECT * FROM words WHERE user_id=" + loginBean.getLoggedUser().getId() + ") AS THIS_USER" + " ORDER BY LABEL")) {
             while (rs.next()) {
                 temp = rs.getString("LABEL");
                 if(temp != null && !temp.equals(""))
@@ -232,6 +234,17 @@ public class DatabaseHelper {
         return retrievedPhrase;
     }
 
+    public long retrieveMaxId(){
+        long maxId = 0;
+        List<Phrase> list = sessionFactory.openSession().createQuery("from Phrase").list();
+        for(Phrase currentPhrase : list){
+            if(currentPhrase.getId() > maxId){
+                maxId = currentPhrase.getId();
+            }
+        }
+        return maxId;
+    }
+
     public static Timestamp toTimestamp(ZonedDateTime dateTime) {
         if(dateTime == null){
             return null;
@@ -241,7 +254,7 @@ public class DatabaseHelper {
 
     public void insertPhrase(Phrase phrase) {
         System.out.println("CALL: insertPhrase(Phrase phrase) from DatabaseHelper");
-        String insertSql = "INSERT INTO " + "words" + " (for_word, nat_word, transcr, prob_factor, create_date," +
+        /*String insertSql = "INSERT INTO " + "words" + " (for_word, nat_word, transcr, prob_factor, create_date," +
                 " label, last_accs_date, rate, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement ps = mainDbConn.prepareStatement(insertSql)) {
@@ -259,7 +272,10 @@ public class DatabaseHelper {
             System.out.println("EXCEPTION inside: in insertPhrase(Phrase phrase) from DatabaseHelper");
             e.printStackTrace();
             throw new RuntimeException();
-        }
+        }*/
+        phraseDao.openCurrentSessionWithTransaction();
+        phraseDao.persist(phrase);
+        phraseDao.closeCurrentSessionwithTransaction();
         activePhrases.add(phrase);
 //        reloadPhrasesAndIndices();
 
