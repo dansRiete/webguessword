@@ -1,7 +1,7 @@
 package logic;
 
 import datamodel.Question;
-import datamodel.QuestionLine;
+import datamodel.TrainingLogQuestionLine;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -113,7 +113,7 @@ public class TrainingLog {
                 }
             }
 
-            StringBuilder str = new StringBuilder(new QuestionLine(currentQuestion).getResultString());
+            StringBuilder str = new StringBuilder(new TrainingLogQuestionLine(currentQuestion).getResultString());
             if(i == position){
                 str.insert(0, "<strong>").append("</strong>");
             }

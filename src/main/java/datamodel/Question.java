@@ -45,7 +45,6 @@ public class Question implements Serializable{
     private String answer;
 
     @Column(name = "date")
-//    @Transient
     private ZonedDateTime askDate = ZonedDateTime.now();
 
     @OneToOne(cascade = CascadeType.ALL)
@@ -105,8 +104,6 @@ public class Question implements Serializable{
         initEndIndex = askedPhrase.getIndexEnd();
         questionRepresentation = askedPhrase.nativeWord + " " + shortHint();
         user = askedPhrase.getOwner();
-//        long maxId = databaseHelper.retrieveMaxQuestionId();
-//        this.id = ++maxId;
     }
 
     public static Question compose(Phrase askedPhrase, DatabaseHelper dbHelper){
@@ -216,16 +213,12 @@ public class Question implements Serializable{
         return this;
     }
 
-    private boolean questionHasBeenAnswered(){
-        return answer != null;
-    }
-
     private boolean phraseIsAlreadyTrained(){
         return initialProbabilityFactor <= TRAINED_PROBABILITY_FACTOR;
     }
 
     public String composeProbabilityFactorHistory(){
-        if(!questionHasBeenAnswered()){
+        if(!answered()){
             return new BigDecimal(initialProbabilityFactor).setScale(PROBABILITY_FACTOR_ACCURACY, BigDecimal.ROUND_HALF_UP).toString();
         }else {
             BigDecimal beforeProbabilityFactor = new BigDecimal(initialProbabilityFactor).setScale(MULTIPLIER_ACCURACY, BigDecimal.ROUND_HALF_UP);
@@ -237,7 +230,7 @@ public class Question implements Serializable{
     }
 
     public String composeMultiplierHistory(){
-        if(!questionHasBeenAnswered()){
+        if(!answered()){
             return new BigDecimal(initialProbabilityMultiplier).setScale(MULTIPLIER_ACCURACY, BigDecimal.ROUND_HALF_UP).toString();
         }else {
             BigDecimal beforeMultiplier = new BigDecimal(initialProbabilityMultiplier).setScale(MULTIPLIER_ACCURACY, BigDecimal.ROUND_HALF_UP);

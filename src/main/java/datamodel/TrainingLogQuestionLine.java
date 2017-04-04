@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter;
 /**
  * Created by Aleks on 27.03.2017.
  */
-public class QuestionLine {
+public class TrainingLogQuestionLine {
 
     private final static String RIGHT_MESSAGE_COLOR = "green";
     private final static String WRONG_MESSAGE_COLOR = "#FF0000";
@@ -18,17 +18,9 @@ public class QuestionLine {
         return resultString;
     }
 
-    //    private final static String WRONG_MESSAGE = " <strong><font color=\"#BBBBB9\">right</font>/<font color=\"#FF0000\">wrong</font></strong>";
-//    private final static String RIGHT_MESSAGE = " <strong><font color=\"green\">right</font>/<font color=\"#BBBBB9\">wrong</font></strong>";
-//    private final static String NON_ANSWERED_MESSAGE = " <strong><font color=\"#BBBBB9\">right</font>/<font color=\"#BBBBB9\">wrong</font></strong>";
-//    private String time;
-//    private String rightWrong;
-//    private String foreignPhrase;
-//    private String nativePhrase;
-//    private String transcription;
     private final String resultString;
 
-    public QuestionLine(Question question){
+    public TrainingLogQuestionLine(Question question){
 
         String timeAndRightWrongMessage = "[" + formatTime(question.getAskDate()) + " " + makeRightWrongMsg(question) + "] ";
         String phrase = question.getAskedPhrase().getNativeWord();
