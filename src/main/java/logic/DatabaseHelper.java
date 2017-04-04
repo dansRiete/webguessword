@@ -234,12 +234,23 @@ public class DatabaseHelper {
         return retrievedPhrase;
     }
 
-    public long retrieveMaxId(){
+    public long retrieveMaxPhraseId(){
         long maxId = 0;
         List<Phrase> list = sessionFactory.openSession().createQuery("from Phrase").list();
         for(Phrase currentPhrase : list){
             if(currentPhrase.getId() > maxId){
                 maxId = currentPhrase.getId();
+            }
+        }
+        return maxId;
+    }
+
+    public long retrieveMaxQuestionId(){
+        long maxId = 0;
+        List<Question> list = sessionFactory.openSession().createQuery("from Question").list();
+        for(Question currentQuestion : list){
+            if(currentQuestion.getId() > maxId){
+                maxId = currentQuestion.getId();
             }
         }
         return maxId;

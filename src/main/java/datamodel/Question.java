@@ -71,16 +71,16 @@ public class Question implements Serializable{
     @Transient
     private long afterAnswerEndIndex;
 
-    @Transient
+    @Column(name = "init_probability_factor")
     private double initialProbabilityFactor;
 
-    @Transient
+    @Column(name = "init_multiplier")
     private double initialProbabilityMultiplier;
 
-    @Transient
+    @Column(name = "answered_probability_factor")
     private double afterAnswerProbabilityFactor;
 
-    @Transient
+    @Column(name = "answered_multiplier")
     private double afterAnswerProbabilityMultiplier;
 
     @Transient
@@ -92,8 +92,11 @@ public class Question implements Serializable{
     @Transient
     private boolean answered;
 
+    public Question(){}
+
     private Question(Phrase askedPhrase, DatabaseHelper databaseHelper) {
         System.out.println("CALL: Question(Phrase askedPhrase, DatabaseHelper databaseHelper) from Question");
+
         this.askedPhrase = askedPhrase;
         this.databaseHelper = databaseHelper;
         initialProbabilityFactor = askedPhrase.getProbabilityFactor();
@@ -102,6 +105,8 @@ public class Question implements Serializable{
         initEndIndex = askedPhrase.getIndexEnd();
         questionRepresentation = askedPhrase.nativeWord + " " + shortHint();
         user = askedPhrase.getOwner();
+//        long maxId = databaseHelper.retrieveMaxQuestionId();
+//        this.id = ++maxId;
     }
 
     public static Question compose(Phrase askedPhrase, DatabaseHelper dbHelper){
@@ -115,28 +120,30 @@ public class Question implements Serializable{
 
     public Question answerTheQuestion(String answer){
         System.out.println("CALL: answerTheQuestion(String answer) from Question");
-        this.answer = answer;
-        if(this.answer.equals("") || askedPhrase.getForeignWord().equals("")){
-            answerCorrect = false;
-        }else if(!this.answer.contains("\\") && !this.answer.contains("/")){
-            answerCorrect = phrasesEquals(this.answer, askedPhrase.getForeignWord());
-        }else {
-            String [] givenLiteralPhrases = this.answer.split("[/\\\\]");
-            String [] referenceLiteralPhrases = askedPhrase.getForeignWord().split("[/\\\\]");
-            int matchesAmount = 0;
-            for (String referenceLiteralPhrase : referenceLiteralPhrases) {
-                for (String givenLiteralPhrase : givenLiteralPhrases) {
-                    if (phrasesEquals(referenceLiteralPhrase, givenLiteralPhrase)) {
-                        matchesAmount++;
+        if(!answered()){
+            this.answer = answer;
+            if(this.answer.equals("") || askedPhrase.getForeignWord().equals("")){
+                answerCorrect = false;
+            }else if(!this.answer.contains("\\") && !this.answer.contains("/")){
+                answerCorrect = phrasesEquals(this.answer, askedPhrase.getForeignWord());
+            }else {
+                String [] givenLiteralPhrases = this.answer.split("[/\\\\]");
+                String [] referenceLiteralPhrases = askedPhrase.getForeignWord().split("[/\\\\]");
+                int matchesAmount = 0;
+                for (String referenceLiteralPhrase : referenceLiteralPhrases) {
+                    for (String givenLiteralPhrase : givenLiteralPhrases) {
+                        if (phrasesEquals(referenceLiteralPhrase, givenLiteralPhrase)) {
+                            matchesAmount++;
+                        }
                     }
                 }
+                this.answerCorrect = matchesAmount == referenceLiteralPhrases.length;
             }
-            this.answerCorrect = matchesAmount == referenceLiteralPhrases.length;
-        }
-        if(this.answerCorrect){
-            rightAnswer();
-        }else {
-            wrongAnswer();
+            if(this.answerCorrect){
+                rightAnswer();
+            }else {
+                wrongAnswer();
+            }
         }
         return this;
     }
@@ -144,34 +151,32 @@ public class Question implements Serializable{
     public Question rightAnswer(){
         System.out.println("CALL: rightAnswer() from Question");
 
-        this.answerCorrect = true;
-
         if(!phraseIsAlreadyTrained()){
-
             afterAnswerProbabilityFactor = initialProbabilityFactor - RIGHT_ANSWER_SUBTRAHEND * initialProbabilityMultiplier;
             afterAnswerProbabilityMultiplier = initialProbabilityMultiplier * RIGHT_ANSWER_MULTIPLIER;
             askedPhrase.setProbabilityFactor(afterAnswerProbabilityFactor);
             askedPhrase.setMultiplier(afterAnswerProbabilityMultiplier);
-
-
         }else{
-
             afterAnswerProbabilityFactor = initialProbabilityFactor;
             afterAnswerProbabilityMultiplier = initialProbabilityMultiplier;
             askedPhrase.setProbabilityFactor(afterAnswerProbabilityFactor);
             askedPhrase.setMultiplier(afterAnswerProbabilityMultiplier);
-
         }
 
         databaseHelper.updateProb(askedPhrase);
         afterAnswerStartIndex = askedPhrase.getIndexStart();
         afterAnswerEndIndex = askedPhrase.getIndexEnd();
-        if(this.answer == null || this.answer.equals("")){
-            this.answer = askedPhrase.getForeignWord();
-        }
+
+        this.answerCorrect = true;
+
         if(!answered()){
+            if(this.answer == null || this.answer.equals("")){
+                this.answer = askedPhrase.getForeignWord();
+            }
             databaseHelper.peristQuestion(this);
+
         }else {
+            this.answer = askedPhrase.getForeignWord();
             databaseHelper.updateQuestion(this);
         }
 
@@ -182,37 +187,28 @@ public class Question implements Serializable{
     public Question wrongAnswer(){
         System.out.println("CALL: wrongAnswer() from Question");
 
-        this.answerCorrect = false;
-
         if(!phraseIsAlreadyTrained()){
-
             afterAnswerProbabilityFactor = initialProbabilityFactor + WRONG_ANSWER_ADDEND;
             afterAnswerProbabilityMultiplier = 1;
             askedPhrase.setProbabilityFactor(afterAnswerProbabilityFactor);
             askedPhrase.setMultiplier(afterAnswerProbabilityMultiplier);
-
-
         }else{
-
             afterAnswerProbabilityFactor = initialProbabilityFactor + WRONG_ANSWER_ADDEND * initialProbabilityMultiplier;
             afterAnswerProbabilityMultiplier = 1;
             askedPhrase.setProbabilityFactor(afterAnswerProbabilityFactor);
             askedPhrase.setMultiplier(afterAnswerProbabilityMultiplier);
-
         }
-
-
 
         databaseHelper.updateProb(askedPhrase);
         afterAnswerStartIndex = askedPhrase.getIndexStart();
         afterAnswerEndIndex = askedPhrase.getIndexEnd();
 
-        if(this.answer == null || this.answer.equals("")){
-            this.answer = "Had not been given";
-        }
+        this.answerCorrect = false;
+
         if(!answered()){
             databaseHelper.peristQuestion(this);
         }else {
+            this.answer = null;
             databaseHelper.updateQuestion(this);
         }
 
@@ -363,6 +359,7 @@ public class Question implements Serializable{
                 return false;
             }
         }
+
         return true;
     }
 
