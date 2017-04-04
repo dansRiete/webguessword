@@ -38,7 +38,7 @@ public class Question implements Serializable{
     private static final int MULTIPLIER_ACCURACY = 2;
 
     @javax.persistence.Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
+//    @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "answer")
@@ -92,8 +92,11 @@ public class Question implements Serializable{
     @Transient
     private boolean answered;
 
+    public Question(){}
+
     private Question(Phrase askedPhrase, DatabaseHelper databaseHelper) {
         System.out.println("CALL: Question(Phrase askedPhrase, DatabaseHelper databaseHelper) from Question");
+
         this.askedPhrase = askedPhrase;
         this.databaseHelper = databaseHelper;
         initialProbabilityFactor = askedPhrase.getProbabilityFactor();
@@ -102,6 +105,8 @@ public class Question implements Serializable{
         initEndIndex = askedPhrase.getIndexEnd();
         questionRepresentation = askedPhrase.nativeWord + " " + shortHint();
         user = askedPhrase.getOwner();
+        long maxId = databaseHelper.retrieveMaxQuestionId();
+        this.id = ++maxId;
     }
 
     public static Question compose(Phrase askedPhrase, DatabaseHelper dbHelper){

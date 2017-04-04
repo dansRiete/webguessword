@@ -9,7 +9,6 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -68,7 +67,7 @@ public class EditBean implements Serializable{
         System.out.println("EDITBEAN CALL START addAction() from editBean mylist.size=" + myList.size());
 
         if( this.foreignWord != null && this.nativeWord != null && !this.foreignWord.equalsIgnoreCase("") && !this.nativeWord.equalsIgnoreCase("")){
-            long maxId = databaseHelper.retrieveMaxId();
+            long maxId = databaseHelper.retrieveMaxPhraseId();
             Phrase phrase = new Phrase(++maxId, this.foreignWord, this.nativeWord, this.transcription, 30,
                     ZonedDateTime.now(), this.label, null, 1, databaseHelper, loginBean.getLoggedUser());
             this.foreignWord = this.nativeWord = this.transcription = this.label = "";
