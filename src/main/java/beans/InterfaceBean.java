@@ -76,7 +76,7 @@ public class InterfaceBean implements Serializable{
         if(databaseHelper != null){
             trainingLog = new TrainingLog(databaseHelper);
             availableLabels = databaseHelper.getAllAvailableLabels();
-            List<Question> todayQuestions = databaseHelper.retrieveTodayQuestions();
+            List<Question> todayQuestions = databaseHelper.loadTodayAnsweredQuestions();
             trainingLog.setTodayQuestions(todayQuestions);
             nextButtonAction();
         }else {

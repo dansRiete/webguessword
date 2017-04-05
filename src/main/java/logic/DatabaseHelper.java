@@ -133,13 +133,18 @@ public class DatabaseHelper {
         }
     }
 
-    public ArrayList<Question> retrieveTodayQuestions(){
-        ArrayList<Question> list = new ArrayList<>();
+    public List<Question> loadTodayAnsweredQuestions(){
+        Session session = sessionFactory.openSession();
+        Timestamp orderTime = new Timestamp(System.currentTimeMillis() - 6 * 60L * 60L * 1000L);
+        String queryString = "FROM Question WHERE date > :orderTime";
+        Query query = session.createQuery(queryString);
+        query.setTimestamp("orderTime", orderTime);
+        @SuppressWarnings("unchecked")
+        List<Question> list = query.list();
 
         /*try (Statement statement = mainDbConn.createStatement();
              ResultSet rs = statement.executeQuery
-                     ("SELECT * FROM " + "statistics" + " WHERE " +
-                             "date > DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR) ORDER BY DATE , ms")) {
+                     ("SELECT * FROM " + "statistics" + " WHERE " + "date > DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR) ORDER BY DATE , ms")) {
 
             while (rs.next()){
                 Phrase currentPhrase = null;
@@ -240,17 +245,6 @@ public class DatabaseHelper {
         for(Phrase currentPhrase : list){
             if(currentPhrase.getId() > maxId){
                 maxId = currentPhrase.getId();
-            }
-        }
-        return maxId;
-    }
-
-    public long retrieveMaxQuestionId(){
-        long maxId = 0;
-        List<Question> list = sessionFactory.openSession().createQuery("from Question").list();
-        for(Question currentQuestion : list){
-            if(currentQuestion.getId() > maxId){
-                maxId = currentQuestion.getId();
             }
         }
         return maxId;
