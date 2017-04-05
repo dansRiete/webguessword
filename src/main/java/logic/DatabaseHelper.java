@@ -141,6 +141,7 @@ public class DatabaseHelper {
         query.setTimestamp("orderTime", orderTime);
         @SuppressWarnings("unchecked")
         List<Question> list = query.list();
+        list.forEach(question -> question.setAnswered(true));
 
         /*try (Statement statement = mainDbConn.createStatement();
              ResultSet rs = statement.executeQuery

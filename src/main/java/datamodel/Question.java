@@ -89,6 +89,17 @@ public class Question implements Serializable{
     private String questionRepresentation;
 
     @Transient
+    private ZonedDateTime initLastAccessDate;
+
+    public boolean isAnswered() {
+        return answered;
+    }
+
+    public void setAnswered(boolean answered) {
+        this.answered = answered;
+    }
+
+    @Transient
     private boolean answered;
 
     public Question(){}
@@ -102,6 +113,7 @@ public class Question implements Serializable{
         initialProbabilityMultiplier = askedPhrase.getMultiplier();
         initStartIndex = askedPhrase.getIndexStart();
         initEndIndex = askedPhrase.getIndexEnd();
+        initLastAccessDate = askedPhrase.getLastAccessDateTime();
         questionRepresentation = askedPhrase.nativeWord + " " + shortHint();
         user = askedPhrase.getOwner();
     }
@@ -112,6 +124,7 @@ public class Question implements Serializable{
             throw new IllegalArgumentException("Phrases foreign and native literals can not be null");
         }
         Question question = new Question(askedPhrase, dbHelper);
+        askedPhrase.lastAccessDateTime = ZonedDateTime.now();
         return question;
     }
 
@@ -241,11 +254,11 @@ public class Question implements Serializable{
     }
 
     public String composeLastAccessDate(){
-        if(this.askedPhrase.getLastAccessDateTime() != null){
-            return this.askedPhrase.getLastAccessDateTime().format(DateTimeFormatter.ofPattern("d MMM yyyy HH:mm"));
-        }else {
-            return "NEVER ACCESSED";
-        }
+            if(this.initLastAccessDate != null){
+                return this.initLastAccessDate.format(DateTimeFormatter.ofPattern("d MMM yyyy HH:mm"));
+            }else {
+                return "NEVER ACCESSED";
+            }
     }
 
     public String composeCreationDate(){
