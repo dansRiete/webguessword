@@ -158,8 +158,12 @@ public class Question implements Serializable{
         return this;
     }
 
-    public Question rightAnswer(){
+    public void rightAnswer(){
         System.out.println("CALL: rightAnswer() from Question");
+
+        if(databaseHelper == null){
+            return;
+        }
 
         if(!phraseIsAlreadyTrained()){
             afterAnswerProbabilityFactor = initialProbabilityFactor - RIGHT_ANSWER_SUBTRAHEND * initialProbabilityMultiplier;
@@ -191,11 +195,14 @@ public class Question implements Serializable{
         }
 
         this.answered = true;
-        return this;
     }
 
-    public Question wrongAnswer(){
+    public void wrongAnswer(){
         System.out.println("CALL: wrongAnswer() from Question");
+
+        if(databaseHelper == null){
+            return;
+        }
 
         if(!phraseIsAlreadyTrained()){
             afterAnswerProbabilityFactor = initialProbabilityFactor + WRONG_ANSWER_ADDEND;
@@ -223,7 +230,6 @@ public class Question implements Serializable{
         }
 
         this.answered = true;
-        return this;
     }
 
     private boolean phraseIsAlreadyTrained(){
@@ -274,10 +280,13 @@ public class Question implements Serializable{
     }
 
     public String composeAppearingPercentage(){
-        String appearingPercentage =  new BigDecimal((double) (initEndIndex - initStartIndex) / (double) databaseHelper.getTheGreatestPhrasesIndex() * 100).setScale(5, BigDecimal.ROUND_HALF_UP).toString();
-        if(answered()){
-            appearingPercentage +=  " ➩ " +
-                    new BigDecimal((double) (afterAnswerEndIndex - afterAnswerStartIndex) / (double) databaseHelper.getTheGreatestPhrasesIndex() * 100).setScale(5, BigDecimal.ROUND_HALF_UP);
+        String appearingPercentage = "";
+        if(databaseHelper != null){
+            appearingPercentage =  new BigDecimal((double) (initEndIndex - initStartIndex) / (double) databaseHelper.getTheGreatestPhrasesIndex() * 100).setScale(5, BigDecimal.ROUND_HALF_UP).toString();
+            if(answered()){
+                appearingPercentage +=  " ➩ " +
+                        new BigDecimal((double) (afterAnswerEndIndex - afterAnswerStartIndex) / (double) databaseHelper.getTheGreatestPhrasesIndex() * 100).setScale(5, BigDecimal.ROUND_HALF_UP);
+            }
         }
         return appearingPercentage;
     }

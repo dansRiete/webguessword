@@ -99,8 +99,8 @@ public class TrainingLog {
         this.databaseHelper = databaseHelper;
     }
 
-    public Question retrieveQuestion(int position){
-        System.out.println("CALL: retrieveQuestion(int position) from TrainingLog");
+    public Question retrieve(int position){
+        System.out.println("CALL: retrieve(int position) from TrainingLog");
         Question question = null;
         if(position > 0 && position < allQuestions.size()){
             question = allQuestions.get(position);
@@ -108,8 +108,8 @@ public class TrainingLog {
         return question;
     }
 
-    public Question retrieveSelectedQuestion(){
-        System.out.println("CALL: retrieveSelectedQuestion() from TrainingLog");
+    public Question retrieveSelected(){
+        System.out.println("CALL: retrieveSelected() from TrainingLog");
         Question question = null;
         if(position >= 0 && position < allQuestions.size()){
             question = allQuestions.get(position);
@@ -117,8 +117,8 @@ public class TrainingLog {
         return question;
     }
 
-    public Question retrievePreviousQuestion(){
-        System.out.println("CALL: retrievePreviousQuestion() from TrainingLog");
+    public Question retrievePrevious(){
+        System.out.println("CALL: retrievePrevious() from TrainingLog");
         Question question = null;
         if(position - 1 < allQuestions.size()){
             question = allQuestions.get(position + 1);
@@ -126,16 +126,16 @@ public class TrainingLog {
         return question;
     }
 
-    public void selectQuestion(int position){
-        System.out.println("CALL: selectQuestion(int position) from TrainingLog");
+    public void select(int position){
+        System.out.println("CALL: select(int position) from TrainingLog");
         this.position = position;
         reload();
     }
 
-    public void selectPreviousQuestion(){
-        System.out.println("CALL: selectPreviousQuestion() from TrainingLog");
-        if(position + 1 < allQuestions.size() - todayQuestions.size()){
-            selectQuestion(++position);
+    public void selectPrevious(){
+        System.out.println("CALL: selectPrevious() from TrainingLog");
+        if(position + 1 < allQuestions.size()){
+            select(++position);
         }
     }
 
@@ -144,24 +144,24 @@ public class TrainingLog {
         if(position == 0){
             appendToLog(Question.compose(databaseHelper.retrieveRandomPhrase(), databaseHelper));
         }else {
-            selectQuestion(--position);
+            select(--position);
         }
     }
 
     public void updateSelectedQuestionsPhrase(){
-        databaseHelper.updatePhrase(retrieveSelectedQuestion().getAskedPhrase());
+        databaseHelper.updatePhrase(retrieveSelected().getAskedPhrase());
     }
 
     public void deleteSelectedPhrase(){
         System.out.println("CALL: deleteSelectedPhrase() from TrainingLog");
-        databaseHelper.deletePhrase(retrieveSelectedQuestion().getAskedPhrase());
+        databaseHelper.deletePhrase(retrieveSelected().getAskedPhrase());
         reload();
     }
 
     public void appendToLog(Question addedQuestion){
         System.out.println("CALL: appendToLog(Question addedQuestion) from TrainingLog");
         allQuestions.add(0, addedQuestion);
-        selectQuestion(0);
+        select(0);
 //        reload();
     }
 
