@@ -76,7 +76,7 @@ public class InterfaceBean implements Serializable{
         if(databaseHelper != null){
             trainingLog = new TrainingLog(databaseHelper);
             availableLabels = databaseHelper.getAllAvailableLabels();
-            List<Question> todayQuestions = databaseHelper.retrieveTodayQuestions();
+            List<Question> todayQuestions = databaseHelper.loadTodayAnsweredQuestions();
             trainingLog.setTodayQuestions(todayQuestions);
             nextButtonAction();
         }else {
@@ -130,8 +130,8 @@ public class InterfaceBean implements Serializable{
         }else if (answerField.equals("*")){
             nextButtonAction();
         }else {
-            trainingLog.retrieveSelectedQuestion().answerTheQuestion(answerField);
-            /*if(trainingLog.retrieveSelectedQuestion().answerIsCorrect()){
+            trainingLog.retrieveSelected().answerTheQuestion(answerField);
+            /*if(trainingLog.retrieveSelected().answerIsCorrect()){
                 iKnowItButtonAction();
             } else {
                 iDontKnowItButtonAction();
@@ -145,7 +145,7 @@ public class InterfaceBean implements Serializable{
         System.out.println();
         System.out.println("CALL: nextButtonAction() from InterfaceBean");
         trainingLog.nextQuestion();
-        Question question = trainingLog.retrieveSelectedQuestion();
+        Question question = trainingLog.retrieveSelected();
         if(question != null){
             questionField = question.getQuestionRepresentation();
         }else {
@@ -156,13 +156,13 @@ public class InterfaceBean implements Serializable{
 
     public void previousButtonAction() {
         System.out.println("CALL: previousButtonAction() from InterfaceBean");
-        trainingLog.selectPreviousQuestion();
-        questionField = trainingLog.retrieveSelectedQuestion().getQuestionRepresentation();
+        trainingLog.selectPrevious();
+        questionField = trainingLog.retrieveSelected().getQuestionRepresentation();
     }
 
     public void iKnowItButtonAction(){
         System.out.println("CALL: iKnowItButtonAction() from InterfaceBean");
-        Question question = trainingLog.retrieveSelectedQuestion();
+        Question question = trainingLog.retrieveSelected();
         if(question != null) {
             question.rightAnswer();
         }
@@ -171,7 +171,7 @@ public class InterfaceBean implements Serializable{
 
     public void iDontKnowItButtonAction(){
         System.out.println("CALL: iDontKnowItButtonAction() from InterfaceBean");
-        Question question = trainingLog.retrieveSelectedQuestion();
+        Question question = trainingLog.retrieveSelected();
         if(question != null){
             question.wrongAnswer();
         }
@@ -180,7 +180,7 @@ public class InterfaceBean implements Serializable{
 
     public void previousRightButtonAction(){
         System.out.println("CALL: previousRightButtonAction() from InterfaceBean");
-        Question question = trainingLog.retrievePreviousQuestion();
+        Question question = trainingLog.retrievePrevious();
         if(question != null){
             question.rightAnswer();
         }
@@ -190,7 +190,7 @@ public class InterfaceBean implements Serializable{
     public void previousWrongButtonAction(){
 
         System.out.println("CALL: previousWrongButtonAction() from InterfaceBean");
-        Question question = trainingLog.retrievePreviousQuestion();
+        Question question = trainingLog.retrievePrevious();
         if(question != null){
             question.wrongAnswer();
         }

@@ -1,8 +1,10 @@
 package logic;
 
+import datamodel.Phrase;
 import datamodel.Question;
-import datamodel.QuestionLine;
 
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,14 +26,81 @@ public class TrainingLog {
     private int totalPhrasesNumber;
     private String trainingCompletionPercentage = "NOT YET IMPLEMENTED";
     private int averageAnswersPerDayNumber;
+    private class TrainingLogQuestionLine {
+
+        private final static String RIGHT_MESSAGE_COLOR = "green";
+        private final static String WRONG_MESSAGE_COLOR = "#FF0000";
+        private final static String NON_ANSWERED_MESSAGE_COLOR = "#BBBBB9";
+        private final static String WRONG_MESSAGE = "wrong";
+        private final static String RIGHT_MESSAGE = "right";
+
+        public String getResultString() {
+            return resultString;
+        }
+
+        private final String resultString;
+
+        public TrainingLogQuestionLine(Question question){
+
+            String timeAndRightWrongMessage = "[" + formatTime(question.getAskDate()) + " " + makeRightWrongMsg(question) + "] ";
+            String phrase = question.getAskedPhrase().getNativeWord();
+            String result;
+            Phrase askedPhrase = question.getAskedPhrase();
+
+            if (question.answered()){
+                phrase += " - " + askedPhrase.getForeignWord();
+                if(askedPhrase.getTranscription() != null && !askedPhrase.getTranscription().equals("")){
+                    phrase += " [" + askedPhrase.getTranscription() + "]";
+                }
+            }
+
+            if(askedPhrase.isTrained()){
+                phrase = makeStrong(applyColor(phrase, RIGHT_MESSAGE_COLOR));
+            }
+
+            result = timeAndRightWrongMessage + phrase;
+
+            result = makeNewLine(result);
+
+            resultString = result;
+        }
+
+        private String formatTime(ZonedDateTime givenTime){
+            return givenTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+        }
+
+        private String makeStrong(String givenString){
+            return "<strong>" + givenString + "</strong>";
+        }
+
+        private String applyColor(String givenString, String color){
+            return "<font color=\"" + color + "\">" + givenString + "</font>";
+        }
+
+        private String makeNewLine(String givenString){
+            return givenString + "</br>";
+        }
+
+        private String makeRightWrongMsg(Question givenQuestion){
+            String result;
+            if(!givenQuestion.answered()){
+                result = applyColor(RIGHT_MESSAGE, NON_ANSWERED_MESSAGE_COLOR) + "/" + applyColor(WRONG_MESSAGE, NON_ANSWERED_MESSAGE_COLOR);
+            }else if (givenQuestion.answerIsCorrect()){
+                result = applyColor(RIGHT_MESSAGE, RIGHT_MESSAGE_COLOR) + "/" + applyColor(WRONG_MESSAGE, NON_ANSWERED_MESSAGE_COLOR);
+            }else {
+                result = applyColor(RIGHT_MESSAGE, NON_ANSWERED_MESSAGE_COLOR) + "/" + applyColor(WRONG_MESSAGE, WRONG_MESSAGE_COLOR);
+            }
+            return makeStrong(result);
+        }
+    }
 
     public TrainingLog(DatabaseHelper databaseHelper) {
         System.out.println("CALL: TrainingLog(DatabaseHelper databaseHelper) from TrainingLog");
         this.databaseHelper = databaseHelper;
     }
 
-    public Question retrieveQuestion(int position){
-        System.out.println("CALL: retrieveQuestion(int position) from TrainingLog");
+    public Question retrieve(int position){
+        System.out.println("CALL: retrieve(int position) from TrainingLog");
         Question question = null;
         if(position > 0 && position < allQuestions.size()){
             question = allQuestions.get(position);
@@ -39,8 +108,8 @@ public class TrainingLog {
         return question;
     }
 
-    public Question retrieveSelectedQuestion(){
-        System.out.println("CALL: retrieveSelectedQuestion() from TrainingLog");
+    public Question retrieveSelected(){
+        System.out.println("CALL: retrieveSelected() from TrainingLog");
         Question question = null;
         if(position >= 0 && position < allQuestions.size()){
             question = allQuestions.get(position);
@@ -48,8 +117,8 @@ public class TrainingLog {
         return question;
     }
 
-    public Question retrievePreviousQuestion(){
-        System.out.println("CALL: retrievePreviousQuestion() from TrainingLog");
+    public Question retrievePrevious(){
+        System.out.println("CALL: retrievePrevious() from TrainingLog");
         Question question = null;
         if(position - 1 < allQuestions.size()){
             question = allQuestions.get(position + 1);
@@ -57,16 +126,16 @@ public class TrainingLog {
         return question;
     }
 
-    public void selectQuestion(int position){
-        System.out.println("CALL: selectQuestion(int position) from TrainingLog");
+    public void select(int position){
+        System.out.println("CALL: select(int position) from TrainingLog");
         this.position = position;
         reload();
     }
 
-    public void selectPreviousQuestion(){
-        System.out.println("CALL: selectPreviousQuestion() from TrainingLog");
-        if(position + 1 < allQuestions.size() - todayQuestions.size()){
-            selectQuestion(++position);
+    public void selectPrevious(){
+        System.out.println("CALL: selectPrevious() from TrainingLog");
+        if(position + 1 < allQuestions.size()){
+            select(++position);
         }
     }
 
@@ -75,24 +144,24 @@ public class TrainingLog {
         if(position == 0){
             appendToLog(Question.compose(databaseHelper.retrieveRandomPhrase(), databaseHelper));
         }else {
-            selectQuestion(--position);
+            select(--position);
         }
     }
 
     public void updateSelectedQuestionsPhrase(){
-        databaseHelper.updatePhrase(retrieveSelectedQuestion().getAskedPhrase());
+        databaseHelper.updatePhrase(retrieveSelected().getAskedPhrase());
     }
 
     public void deleteSelectedPhrase(){
         System.out.println("CALL: deleteSelectedPhrase() from TrainingLog");
-        databaseHelper.deletePhrase(retrieveSelectedQuestion().getAskedPhrase());
+        databaseHelper.deletePhrase(retrieveSelected().getAskedPhrase());
         reload();
     }
 
     public void appendToLog(Question addedQuestion){
         System.out.println("CALL: appendToLog(Question addedQuestion) from TrainingLog");
         allQuestions.add(0, addedQuestion);
-        selectQuestion(0);
+        select(0);
 //        reload();
     }
 
@@ -113,7 +182,7 @@ public class TrainingLog {
                 }
             }
 
-            StringBuilder str = new StringBuilder(new QuestionLine(currentQuestion).getResultString());
+            StringBuilder str = new StringBuilder(new TrainingLogQuestionLine(currentQuestion).getResultString());
             if(i == position){
                 str.insert(0, "<strong>").append("</strong>");
             }

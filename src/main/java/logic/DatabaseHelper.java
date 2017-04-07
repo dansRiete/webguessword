@@ -133,13 +133,19 @@ public class DatabaseHelper {
         }
     }
 
-    public ArrayList<Question> retrieveTodayQuestions(){
-        ArrayList<Question> list = new ArrayList<>();
+    public List<Question> loadTodayAnsweredQuestions(){
+        Session session = sessionFactory.openSession();
+        Timestamp orderTime = new Timestamp(System.currentTimeMillis() - 6 * 60L * 60L * 1000L);
+        String queryString = "FROM Question WHERE date > :orderTime ORDER BY date DESC";
+        Query query = session.createQuery(queryString);
+        query.setTimestamp("orderTime", orderTime);
+        @SuppressWarnings("unchecked")
+        List<Question> list = query.list();
+        list.forEach(question -> question.setAnswered(true));
 
         /*try (Statement statement = mainDbConn.createStatement();
              ResultSet rs = statement.executeQuery
-                     ("SELECT * FROM " + "statistics" + " WHERE " +
-                             "date > DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR) ORDER BY DATE , ms")) {
+                     ("SELECT * FROM " + "statistics" + " WHERE " + "date > DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR) ORDER BY DATE , ms")) {
 
             while (rs.next()){
                 Phrase currentPhrase = null;

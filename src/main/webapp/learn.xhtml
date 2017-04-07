@@ -134,25 +134,25 @@
                         <h:panelGrid columns="2" layout="grid">
                             <p:outputLabel value="Native word"/>
                             <p:inputText size="40"
-                                         value="#{interfaceBean.trainingLog.retrieveSelectedQuestion().getAskedPhrase().nativeWord}"
+                                         value="#{interfaceBean.trainingLog.retrieveSelected().getAskedPhrase().nativeWord}"
                                          title="Native word"
                                          label="Native word"> </p:inputText>
 
                             <p:outputLabel value="Foreign word"/>
                             <p:inputText size="40"
-                                         value="#{interfaceBean.trainingLog.retrieveSelectedQuestion().getAskedPhrase().foreignWord}"
+                                         value="#{interfaceBean.trainingLog.retrieveSelected().getAskedPhrase().foreignWord}"
                                          title="Foreign word"
                                          label="Foreign word"> </p:inputText>
 
                             <p:outputLabel value="Transcription"/>
                             <p:inputText size="40"
-                                         value="#{interfaceBean.trainingLog.retrieveSelectedQuestion().getAskedPhrase().transcription}"
+                                         value="#{interfaceBean.trainingLog.retrieveSelected().getAskedPhrase().transcription}"
                                          title="Transcription"
                                          label="Transcription"> </p:inputText>
 
                             <p:outputLabel value="Label"/>
                             <p:inputText size="40"
-                                         value="#{interfaceBean.trainingLog.retrieveSelectedQuestion().getAskedPhrase().label}"
+                                         value="#{interfaceBean.trainingLog.retrieveSelected().getAskedPhrase().label}"
                                          title="Label"
                                          label="Label"> </p:inputText>
                         </h:panelGrid>
@@ -244,32 +244,32 @@
                 <tbody>
                 <tr>
                     <td>Chance of occurrence (points)</td>
-                    <td>${interfaceBean.trainingLog.retrieveSelectedQuestion().composeProbabilityFactorHistory()}</td>
+                    <td>${interfaceBean.trainingLog.retrieveSelected().composeProbabilityFactorHistory()}</td>
                 </tr>
                 <tr>
                     <td>Chance of occurrence (%)</td>
-                    <td>${interfaceBean.trainingLog.retrieveSelectedQuestion().composeAppearingPercentage()}</td>
+                    <td>${interfaceBean.trainingLog.retrieveSelected().composeAppearingPercentage()}</td>
                 </tr>
                 <tr>
                     <td>Phrase id</td>
-                    <td>${interfaceBean.trainingLog.retrieveSelectedQuestion().askedPhrase.id}</td>
+                    <td>${interfaceBean.trainingLog.retrieveSelected().askedPhrase.id}</td>
                 </tr>
                 <tr>
                     <td>Right answer multiplier</td>
-                    <td>${interfaceBean.trainingLog.retrieveSelectedQuestion().composeMultiplierHistory()}</td>
+                    <td>${interfaceBean.trainingLog.retrieveSelected().composeMultiplierHistory()}</td>
                 </tr>
 
                 <tr>
                     <td>Last access date</td>
-                    <td>${interfaceBean.trainingLog.retrieveSelectedQuestion().composeLastAccessDate()}</td>
+                    <td>${interfaceBean.trainingLog.retrieveSelected().composeLastAccessDate()}</td>
                 </tr>
                 <tr>
                     <td>Create date</td>
-                    <td>${interfaceBean.trainingLog.retrieveSelectedQuestion().composeCreationDate()}</td>
+                    <td>${interfaceBean.trainingLog.retrieveSelected().composeCreationDate()}</td>
                 </tr>
                 <tr>
                     <td>Label</td>
-                    <td>${interfaceBean.trainingLog.retrieveSelectedQuestion().composeLabel()}</td>
+                    <td>${interfaceBean.trainingLog.retrieveSelected().composeLabel()}</td>
                 </tr>
                 <tr>
                     <td>Labels filter
