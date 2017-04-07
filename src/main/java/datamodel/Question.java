@@ -1,7 +1,6 @@
 package datamodel;
 
 import logic.DatabaseHelper;
-import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -45,7 +44,7 @@ public class Question implements Serializable{
     private String answer;
 
     @Column(name = "date")
-    private ZonedDateTime askDate = ZonedDateTime.now();
+    private ZonedDateTime askDate;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "phrase_key")
@@ -116,6 +115,7 @@ public class Question implements Serializable{
         initLastAccessDate = askedPhrase.getLastAccessDateTime();
         questionRepresentation = askedPhrase.nativeWord + " " + shortHint();
         user = askedPhrase.getOwner();
+        askDate = askedPhrase.lastAccessDateTime;
         long maxId = databaseHelper.retrieveMaxQuestionId();
         this.id = ++maxId;
     }
@@ -125,8 +125,8 @@ public class Question implements Serializable{
         if(askedPhrase == null){
             throw new IllegalArgumentException("Phrases foreign and native literals can not be null");
         }
-        Question question = new Question(askedPhrase, dbHelper);
         askedPhrase.lastAccessDateTime = ZonedDateTime.now();
+        Question question = new Question(askedPhrase, dbHelper);
         return question;
     }
 
@@ -167,36 +167,40 @@ public class Question implements Serializable{
             return;
         }
 
-        if(!phraseIsAlreadyTrained()){
-            afterAnswerProbabilityFactor = initialProbabilityFactor - RIGHT_ANSWER_SUBTRAHEND * initialProbabilityMultiplier;
-            afterAnswerProbabilityMultiplier = initialProbabilityMultiplier * RIGHT_ANSWER_MULTIPLIER;
-            askedPhrase.setProbabilityFactor(afterAnswerProbabilityFactor);
-            askedPhrase.setMultiplier(afterAnswerProbabilityMultiplier);
-        }else{
-            afterAnswerProbabilityFactor = initialProbabilityFactor;
-            afterAnswerProbabilityMultiplier = initialProbabilityMultiplier;
-            askedPhrase.setProbabilityFactor(afterAnswerProbabilityFactor);
-            askedPhrase.setMultiplier(afterAnswerProbabilityMultiplier);
-        }
-
-        databaseHelper.updateProb(askedPhrase);
-        afterAnswerStartIndex = askedPhrase.getIndexStart();
-        afterAnswerEndIndex = askedPhrase.getIndexEnd();
-
-        this.answerCorrect = true;
-
-        if(!answered()){
-            if(this.answer == null || this.answer.equals("")){
-                this.answer = askedPhrase.getForeignWord();
+        if(askedPhrase.getLastAccessDateTime().equals(this.askDate)){
+            if(!phraseIsAlreadyTrained()){
+                afterAnswerProbabilityFactor = initialProbabilityFactor - RIGHT_ANSWER_SUBTRAHEND * initialProbabilityMultiplier;
+                afterAnswerProbabilityMultiplier = initialProbabilityMultiplier * RIGHT_ANSWER_MULTIPLIER;
+                askedPhrase.setProbabilityFactor(afterAnswerProbabilityFactor);
+                askedPhrase.setMultiplier(afterAnswerProbabilityMultiplier);
+            }else{
+                afterAnswerProbabilityFactor = initialProbabilityFactor;
+                afterAnswerProbabilityMultiplier = initialProbabilityMultiplier;
+                askedPhrase.setProbabilityFactor(afterAnswerProbabilityFactor);
+                askedPhrase.setMultiplier(afterAnswerProbabilityMultiplier);
             }
-            databaseHelper.peristQuestion(this);
 
-        }else {
-            this.answer = askedPhrase.getForeignWord();
-            databaseHelper.updateQuestion(this);
+            databaseHelper.updateProb(askedPhrase);
+            afterAnswerStartIndex = askedPhrase.getIndexStart();
+            afterAnswerEndIndex = askedPhrase.getIndexEnd();
+
+            this.answerCorrect = true;
+
+            if(!answered()){
+                if(this.answer == null || this.answer.equals("")){
+                    this.answer = askedPhrase.getForeignWord();
+                }
+                databaseHelper.peristQuestion(this);
+
+            }else {
+                this.answer = askedPhrase.getForeignWord();
+                databaseHelper.updateQuestion(this);
+            }
+
+            this.answered = true;
         }
 
-        this.answered = true;
+
     }
 
     public void wrongAnswer(){
@@ -206,32 +210,34 @@ public class Question implements Serializable{
             return;
         }
 
-        if(!phraseIsAlreadyTrained()){
-            afterAnswerProbabilityFactor = initialProbabilityFactor + WRONG_ANSWER_ADDEND;
-            afterAnswerProbabilityMultiplier = 1;
-            askedPhrase.setProbabilityFactor(afterAnswerProbabilityFactor);
-            askedPhrase.setMultiplier(afterAnswerProbabilityMultiplier);
-        }else{
-            afterAnswerProbabilityFactor = initialProbabilityFactor + WRONG_ANSWER_ADDEND * initialProbabilityMultiplier;
-            afterAnswerProbabilityMultiplier = 1;
-            askedPhrase.setProbabilityFactor(afterAnswerProbabilityFactor);
-            askedPhrase.setMultiplier(afterAnswerProbabilityMultiplier);
+        if(askedPhrase.getLastAccessDateTime().equals(this.askDate)) {
+            if (!phraseIsAlreadyTrained()) {
+                afterAnswerProbabilityFactor = initialProbabilityFactor + WRONG_ANSWER_ADDEND;
+                afterAnswerProbabilityMultiplier = 1;
+                askedPhrase.setProbabilityFactor(afterAnswerProbabilityFactor);
+                askedPhrase.setMultiplier(afterAnswerProbabilityMultiplier);
+            } else {
+                afterAnswerProbabilityFactor = initialProbabilityFactor + WRONG_ANSWER_ADDEND * initialProbabilityMultiplier;
+                afterAnswerProbabilityMultiplier = 1;
+                askedPhrase.setProbabilityFactor(afterAnswerProbabilityFactor);
+                askedPhrase.setMultiplier(afterAnswerProbabilityMultiplier);
+            }
+
+            databaseHelper.updateProb(askedPhrase);
+            afterAnswerStartIndex = askedPhrase.getIndexStart();
+            afterAnswerEndIndex = askedPhrase.getIndexEnd();
+
+            this.answerCorrect = false;
+
+            if (!answered()) {
+                databaseHelper.peristQuestion(this);
+            } else {
+                this.answer = null;
+                databaseHelper.updateQuestion(this);
+            }
+
+            this.answered = true;
         }
-
-        databaseHelper.updateProb(askedPhrase);
-        afterAnswerStartIndex = askedPhrase.getIndexStart();
-        afterAnswerEndIndex = askedPhrase.getIndexEnd();
-
-        this.answerCorrect = false;
-
-        if(!answered()){
-            databaseHelper.peristQuestion(this);
-        }else {
-            this.answer = null;
-            databaseHelper.updateQuestion(this);
-        }
-
-        this.answered = true;
     }
 
     private boolean phraseIsAlreadyTrained(){
