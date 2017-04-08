@@ -54,7 +54,7 @@ public class InterfaceBean implements Serializable{
     private String questionField ="";
     private String answerField = "";
     private TrainingLog trainingLog;
-    private ArrayList<String> availableLabels;
+    private List<String> availableLabels;
     private String choosedLabel;
     private String resultChosenLabel;
     private String previousResultChoosedLabel = "";
@@ -75,7 +75,7 @@ public class InterfaceBean implements Serializable{
 
         if(databaseHelper != null){
             trainingLog = new TrainingLog(databaseHelper);
-            availableLabels = databaseHelper.getAllAvailableLabels();
+            availableLabels = databaseHelper.getAvailableLabels();
             List<Question> todayQuestions = databaseHelper.loadTodayAnsweredQuestions();
             trainingLog.setTodayQuestions(todayQuestions);
             nextButtonAction();
@@ -107,7 +107,7 @@ public class InterfaceBean implements Serializable{
         }
 
         if(!resultChosenLabel.equals(previousResultChoosedLabel)){ //If clause was changed
-            databaseHelper.setActiveLabels(chosenLabelsForLearningWords);
+            databaseHelper.setSelectedLabels(chosenLabelsForLearningWords);
             databaseHelper.reloadPhrasesAndIndices();
             previousResultChoosedLabel = resultChosenLabel;
         }
@@ -151,7 +151,6 @@ public class InterfaceBean implements Serializable{
         }else {
             questionField = "";
         }
-
     }
 
     public void previousButtonAction() {
@@ -309,7 +308,7 @@ public class InterfaceBean implements Serializable{
         this.choosedLabel = choosedLabel;
     }
 
-    public ArrayList<String> getAvailableLabels() {
+    public List<String> getAvailableLabels() {
         return availableLabels;
     }
     public void setAvailableLabels(ArrayList<String> availableLabels) {

@@ -37,7 +37,7 @@ public class Question implements Serializable{
     private static final int MULTIPLIER_ACCURACY = 2;
 
     @javax.persistence.Id
-//    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "answer")
@@ -114,25 +114,24 @@ public class Question implements Serializable{
         initEndIndex = askedPhrase.getIndexEnd();
         initLastAccessDate = askedPhrase.getLastAccessDateTime();
         questionRepresentation = askedPhrase.nativeWord + " " + shortHint();
+        askDate = askedPhrase.lastAccessDateTime = ZonedDateTime.now();
         user = askedPhrase.getOwner();
-        askDate = askedPhrase.lastAccessDateTime;
-        long maxId = databaseHelper.retrieveMaxQuestionId();
-        this.id = ++maxId;
     }
+
 
     public static Question compose(Phrase askedPhrase, DatabaseHelper dbHelper){
         System.out.println("CALL: compose(Phrase askedPhrase, DatabaseHelper dbHelper) from Question");
         if(askedPhrase == null){
             throw new IllegalArgumentException("Phrases foreign and native literals can not be null");
         }
-        askedPhrase.lastAccessDateTime = ZonedDateTime.now();
         Question question = new Question(askedPhrase, dbHelper);
+//        askedPhrase.lastAccessDateTime = ZonedDateTime.now();
         return question;
     }
 
     public Question answerTheQuestion(String answer){
         System.out.println("CALL: answerTheQuestion(String answer) from Question");
-        if(!answered()){
+        if(!answered){
             this.answer = answer;
             if(this.answer.equals("") || askedPhrase.getForeignWord().equals("")){
                 answerCorrect = false;
@@ -167,15 +166,16 @@ public class Question implements Serializable{
             return;
         }
 
-        if(askedPhrase.getLastAccessDateTime().equals(this.askDate)){
-            if(!phraseIsAlreadyTrained()){
-                afterAnswerProbabilityFactor = initialProbabilityFactor - RIGHT_ANSWER_SUBTRAHEND * initialProbabilityMultiplier;
-                afterAnswerProbabilityMultiplier = initialProbabilityMultiplier * RIGHT_ANSWER_MULTIPLIER;
+        if(theLastInQuestionLogWithSuchPhrase()){
+
+            if(phraseIsAlreadyTrained()){
+                afterAnswerProbabilityFactor = initialProbabilityFactor;
+                afterAnswerProbabilityMultiplier = initialProbabilityMultiplier;
                 askedPhrase.setProbabilityFactor(afterAnswerProbabilityFactor);
                 askedPhrase.setMultiplier(afterAnswerProbabilityMultiplier);
             }else{
-                afterAnswerProbabilityFactor = initialProbabilityFactor;
-                afterAnswerProbabilityMultiplier = initialProbabilityMultiplier;
+                afterAnswerProbabilityFactor = initialProbabilityFactor - RIGHT_ANSWER_SUBTRAHEND * initialProbabilityMultiplier;
+                afterAnswerProbabilityMultiplier = initialProbabilityMultiplier * RIGHT_ANSWER_MULTIPLIER;
                 askedPhrase.setProbabilityFactor(afterAnswerProbabilityFactor);
                 askedPhrase.setMultiplier(afterAnswerProbabilityMultiplier);
             }
@@ -183,24 +183,25 @@ public class Question implements Serializable{
             databaseHelper.updateProb(askedPhrase);
             afterAnswerStartIndex = askedPhrase.getIndexStart();
             afterAnswerEndIndex = askedPhrase.getIndexEnd();
-
             this.answerCorrect = true;
-
-            if(!answered()){
+            if(answered){
+                this.answer = askedPhrase.getForeignWord();
+            }else {
                 if(this.answer == null || this.answer.equals("")){
                     this.answer = askedPhrase.getForeignWord();
                 }
-                databaseHelper.peristQuestion(this);
-
-            }else {
-                this.answer = askedPhrase.getForeignWord();
-                databaseHelper.updateQuestion(this);
             }
-
+            persistQuestion();
             this.answered = true;
         }
+    }
 
-
+    public void persistQuestion(){
+        if(answered){
+            databaseHelper.updateQuestion(this);
+        }else {
+            databaseHelper.peristQuestion(this);
+        }
     }
 
     public void wrongAnswer(){
@@ -210,14 +211,14 @@ public class Question implements Serializable{
             return;
         }
 
-        if(askedPhrase.getLastAccessDateTime().equals(this.askDate)) {
-            if (!phraseIsAlreadyTrained()) {
-                afterAnswerProbabilityFactor = initialProbabilityFactor + WRONG_ANSWER_ADDEND;
+        if(theLastInQuestionLogWithSuchPhrase()){
+            if(!phraseIsAlreadyTrained()){
+                afterAnswerProbabilityFactor = initialProbabilityFactor + WRONG_ANSWER_ADDEND * initialProbabilityMultiplier;
                 afterAnswerProbabilityMultiplier = 1;
                 askedPhrase.setProbabilityFactor(afterAnswerProbabilityFactor);
                 askedPhrase.setMultiplier(afterAnswerProbabilityMultiplier);
-            } else {
-                afterAnswerProbabilityFactor = initialProbabilityFactor + WRONG_ANSWER_ADDEND * initialProbabilityMultiplier;
+            }else{
+                afterAnswerProbabilityFactor = initialProbabilityFactor + WRONG_ANSWER_ADDEND;
                 afterAnswerProbabilityMultiplier = 1;
                 askedPhrase.setProbabilityFactor(afterAnswerProbabilityFactor);
                 askedPhrase.setMultiplier(afterAnswerProbabilityMultiplier);
@@ -226,18 +227,18 @@ public class Question implements Serializable{
             databaseHelper.updateProb(askedPhrase);
             afterAnswerStartIndex = askedPhrase.getIndexStart();
             afterAnswerEndIndex = askedPhrase.getIndexEnd();
-
             this.answerCorrect = false;
 
-            if (!answered()) {
-                databaseHelper.peristQuestion(this);
-            } else {
+            if(answered) {
                 this.answer = null;
-                databaseHelper.updateQuestion(this);
             }
-
+            persistQuestion();
             this.answered = true;
         }
+    }
+
+    private boolean theLastInQuestionLogWithSuchPhrase(){
+        return askedPhrase.lastAccessDateTime == askDate;
     }
 
     private boolean phraseIsAlreadyTrained(){
@@ -245,7 +246,7 @@ public class Question implements Serializable{
     }
 
     public String composeProbabilityFactorHistory(){
-        if(!answered()){
+        if(!answered){
             return new BigDecimal(initialProbabilityFactor).setScale(PROBABILITY_FACTOR_ACCURACY, BigDecimal.ROUND_HALF_UP).toString();
         }else {
             BigDecimal beforeProbabilityFactor = new BigDecimal(initialProbabilityFactor).setScale(MULTIPLIER_ACCURACY, BigDecimal.ROUND_HALF_UP);
@@ -257,7 +258,7 @@ public class Question implements Serializable{
     }
 
     public String composeMultiplierHistory(){
-        if(!answered()){
+        if(!answered){
             return new BigDecimal(initialProbabilityMultiplier).setScale(MULTIPLIER_ACCURACY, BigDecimal.ROUND_HALF_UP).toString();
         }else {
             BigDecimal beforeMultiplier = new BigDecimal(initialProbabilityMultiplier).setScale(MULTIPLIER_ACCURACY, BigDecimal.ROUND_HALF_UP);
@@ -291,7 +292,7 @@ public class Question implements Serializable{
         String appearingPercentage = "";
         if(databaseHelper != null){
             appearingPercentage =  new BigDecimal((double) (initEndIndex - initStartIndex) / (double) databaseHelper.getTheGreatestPhrasesIndex() * 100).setScale(5, BigDecimal.ROUND_HALF_UP).toString();
-            if(answered()){
+            if(answered){
                 appearingPercentage +=  " ➩ " +
                         new BigDecimal((double) (afterAnswerEndIndex - afterAnswerStartIndex) / (double) databaseHelper.getTheGreatestPhrasesIndex() * 100).setScale(5, BigDecimal.ROUND_HALF_UP);
             }
@@ -425,15 +426,11 @@ public class Question implements Serializable{
     }
 
     public boolean answerIsCorrect() {
-        return answered() && answerCorrect;
-    }
-
-    public boolean answered(){
-        return answered;
+        return answered && answerCorrect;
     }
 
     public int trainedAfterAnswer(){
-        if(answered()){
+        if(answered){
             if(initialProbabilityFactor > Phrase.TRAINED_PROBABILITY_FACTOR && afterAnswerProbabilityFactor <= Phrase.TRAINED_PROBABILITY_FACTOR){
                 return 1;
             }else  if(initialProbabilityFactor <= Phrase.TRAINED_PROBABILITY_FACTOR && afterAnswerProbabilityFactor > Phrase.TRAINED_PROBABILITY_FACTOR){

@@ -24,7 +24,7 @@ public class TrainingLog {
     private int totalTrainedPhrasesNumber;
     private int totalUntrainedPhrasesNumber;
     private int totalPhrasesNumber;
-    private String trainingCompletionPercentage = "NOT YET IMPLEMENTED";
+    private String trainingCompletionPercentage;
     private int averageAnswersPerDayNumber;
     private class TrainingLogQuestionLine {
 
@@ -47,7 +47,7 @@ public class TrainingLog {
             String result;
             Phrase askedPhrase = question.getAskedPhrase();
 
-            if (question.answered()){
+            if (question.isAnswered()){
                 phrase += " - " + askedPhrase.getForeignWord();
                 if(askedPhrase.getTranscription() != null && !askedPhrase.getTranscription().equals("")){
                     phrase += " [" + askedPhrase.getTranscription() + "]";
@@ -55,7 +55,7 @@ public class TrainingLog {
             }
 
             if(askedPhrase.isTrained()){
-                phrase = makeStrong(applyColor(phrase, RIGHT_MESSAGE_COLOR));
+                phrase = applyColor(phrase, RIGHT_MESSAGE_COLOR);
             }
 
             result = timeAndRightWrongMessage + phrase;
@@ -83,7 +83,7 @@ public class TrainingLog {
 
         private String makeRightWrongMsg(Question givenQuestion){
             String result;
-            if(!givenQuestion.answered()){
+            if(!givenQuestion.isAnswered()){
                 result = applyColor(RIGHT_MESSAGE, NON_ANSWERED_MESSAGE_COLOR) + "/" + applyColor(WRONG_MESSAGE, NON_ANSWERED_MESSAGE_COLOR);
             }else if (givenQuestion.answerIsCorrect()){
                 result = applyColor(RIGHT_MESSAGE, RIGHT_MESSAGE_COLOR) + "/" + applyColor(WRONG_MESSAGE, NON_ANSWERED_MESSAGE_COLOR);
@@ -171,9 +171,13 @@ public class TrainingLog {
         int rightAnswersNumber = 0;
         int wrongAnswersNumber = 0;
         todayTrainedPhrasesNumber = 0;
+        totalTrainedPhrasesNumber = databaseHelper.getTrainedPhrasesNumber();
+        totalUntrainedPhrasesNumber = databaseHelper.getUntrainedPhrasesNumber();
+        averageAnswersPerDayNumber = databaseHelper.getUntilTodayAnswersNumber() / databaseHelper.getUntilTodayTrainingHoursSpent() / 24;
+//        trainingCompletionPercentage = databaseHelper.ge
         for(int i = 0; i < allQuestions.size(); i++){
             Question currentQuestion = allQuestions.get(i);
-            if(currentQuestion.answered()){
+            if(currentQuestion.isAnswered()){
                 todayTrainedPhrasesNumber += currentQuestion.trainedAfterAnswer();
                 if(currentQuestion.isAnswerCorrect()){
                     rightAnswersNumber++;
@@ -298,12 +302,12 @@ public class TrainingLog {
         answersForSessionNumber = numOfPhrForSession - numOfNonAnswForSession;
         //Generates a string with the percentage of correct answers to the total number of answers
         todayRightAnswersPercentage = ((new BigDecimal(numOfRightAnswForSession)).divide(new BigDecimal(answersForSessionNumber ==0?1: answersForSessionNumber),2, RoundingMode.HALF_UP).multiply(new BigDecimal(100))).setScale(0, RoundingMode.HALF_UP)+"%";
-        trainedPhrasesNumber = databaseHelper.getLearntWordsAmount();
-        nonTrainedPhrasesNumber = databaseHelper.getNonLearntWordsAmount();
+        trainedPhrasesNumber = databaseHelper.getTrainedPhrasesNumber();
+        nonTrainedPhrasesNumber = databaseHelper.getUntrainedPhrasesNumber();
         totalPhrasesNumber = trainedPhrasesNumber + nonTrainedPhrasesNumber;
 
          try{
-             averageAnswersPerDay = (int) ((float) (databaseHelper.getTotalTrainingAnswers() + answersForSessionNumber) / (float) (databaseHelper.getTotalTrainingHoursSpent() + ZonedDateTime.now(ZoneId.of("Europe/Kiev")).getHour() - 6) * 24);
+             averageAnswersPerDay = (int) ((float) (databaseHelper.getUntilTodayAnswersNumber() + answersForSessionNumber) / (float) (databaseHelper.getUntilTodayTrainingHoursSpent() + ZonedDateTime.now(ZoneId.of("Europe/Kiev")).getHour() - 6) * 24);
          }catch (ArithmeticException e){
              averageAnswersPerDay = 0;
          }

@@ -29,24 +29,17 @@ import java.util.Random;
 public class DatabaseHelper {
 
     private static final String TIMEZONE = "Europe/Kiev";
-    private static final double CHANCE_OF_APPEARING_LEARNT_WORDS = 1d / 15d;
-    private HashSet<String> activeLabels;
-    private ArrayList<String> allAvailableLabels = new ArrayList<>();
-    private ArrayList<Phrase> activePhrases = new ArrayList<>();
-    private List<Phrase> allAvailablePhrases = new ArrayList<>();
-    private int learntWordsAmount;
-    private int nonLearntWordsAmount;
-    private int totalActiveWordsAmount;
+    private static final double CHANCE_OF_APPEARING_TRAINED_PHRASES = 1d / 15d;
+    private HashSet<String> selectedLabels;
+    private List<String> availableLabels = new ArrayList<>();
+    private List<Phrase> activePhrases = new ArrayList<>();
+    private List<Phrase> availablePhrases = new ArrayList<>();
+    private int trainedPhrasesNumber;
+    private int untrainedPhrasesNumber;
+    private int activeWordsNumber;
     private int learntWordsProbSumm; //unused since 25/03/2017
-
-    public int getTheGreatestPhrasesIndex() {
-        return theGreatestPhrasesIndex;
-    }
-
     private int theGreatestPhrasesIndex;
-    private int totalTrainingAnswers; //Number of replies to 6 am of the current day
-    private int totalTrainingHoursSpent; // Number of hours spent from the very begining till 6am of the current day
-    private int lastSevenStackIndex;
+    private int lastSevenStackPosition;
     private Phrase[] lastSevenPhrasesStack;
     private Random random = new Random();
     private Connection mainDbConn;
@@ -55,6 +48,14 @@ public class DatabaseHelper {
     private QuestionDao questionDao;
     private UserDao userDao;
     private PhraseDao phraseDao;
+    /**
+     * Number of replies to 6 am of the current day
+     */
+    private final int untilTodayAnswersNumber;
+    /**
+     * Number of hours spent from the very begining till 6am of the current day
+     */
+    private final int untilTodayTrainingHoursSpent;
 
 
     public DatabaseHelper(LoginBean loginBean, SessionFactory sessionFactory) {
@@ -64,9 +65,10 @@ public class DatabaseHelper {
         questionDao = new QuestionDao(sessionFactory);
         userDao = new UserDao(sessionFactory);
         phraseDao = new PhraseDao(sessionFactory);
+        untilTodayAnswersNumber = calculateUntilTodayAnswersNumber();
+        untilTodayTrainingHoursSpent = calculateUntilTodayTrainingHoursSpent();
+        availableLabels = retievePossibleLabels();
         reloadPhrasesAndIndices();
-        retievePossibleLabels();
-        initThisDayStatistics();
     }
 
     public void peristQuestion(Question question){
@@ -79,6 +81,7 @@ public class DatabaseHelper {
         questionDao.update(question);
     }
 
+    @SuppressWarnings("Duplicates")
     public void setStatistics(Phrase givenPhrase){
         String dateTime = givenPhrase.phraseAppearingTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
         int mlseconds = Integer.parseInt(ZonedDateTime.now(ZoneId.of(TIMEZONE)).format(DateTimeFormatter.ofPattern("SSS")));
@@ -98,8 +101,6 @@ public class DatabaseHelper {
         try (Statement statement = mainDbConn.createStatement()) {
             String sql = "INSERT INTO " + "statistics" + " VALUES ('" + dateTime + "', " + mlseconds +
                     ", '" + mode + "', " + givenPhrase.id + ", " + learnt + ")";
-
-//            System.out.println(sql);
             statement.execute(sql);
 
         } catch (SQLException e) {
@@ -138,7 +139,7 @@ public class DatabaseHelper {
         Timestamp orderTime = new Timestamp(System.currentTimeMillis() - 6 * 60L * 60L * 1000L);
         String queryString = "FROM Question WHERE date > :orderTime ORDER BY date DESC";
         Query query = session.createQuery(queryString);
-        query.setTimestamp("orderTime", orderTime);
+        query.setParameter("orderTime", orderTime);
         @SuppressWarnings("unchecked")
         List<Question> list = query.list();
         list.forEach(question -> question.setAnswered(true));
@@ -159,8 +160,6 @@ public class DatabaseHelper {
                     }
                     currentPhrase.phraseAppearingTime = rs.getTimestamp("date").toLocalDateTime().atZone(ZoneId.of("Europe/Helsinki"));
                     list.add(currentPhrase);
-
-
             }
 
         } catch (SQLException e) {
@@ -174,16 +173,17 @@ public class DatabaseHelper {
     public List<String> retievePossibleLabels() {
         //Returns list of possible labels
         System.out.println("CALL: retievePossibleLabels() from DatabaseHelper");
-        allAvailableLabels.clear();
+        List<String> availableLabels = new ArrayList<>();
+        availableLabels.clear();
         String temp;
-        allAvailableLabels.add("All");
+        availableLabels.add("All");
 
         try (Statement st = mainDbConn.createStatement();
              ResultSet rs = st.executeQuery("SELECT DISTINCT (LABEL) FROM " + "(SELECT * FROM words WHERE user_id=" + loginBean.getLoggedUser().getId() + ") AS THIS_USER" + " ORDER BY LABEL")) {
             while (rs.next()) {
                 temp = rs.getString("LABEL");
                 if(temp != null && !temp.equals(""))
-                allAvailableLabels.add(temp);
+                availableLabels.add(temp);
             }
 
         } catch (SQLException e) {
@@ -192,12 +192,12 @@ public class DatabaseHelper {
             throw new RuntimeException();
         }
 
-        return allAvailableLabels;
+        return availableLabels;
 
     }
 
     public int totalWordsNumber(){
-        return allAvailablePhrases.size();
+        return availablePhrases.size();
     }
 
     public int activePhrasesNumber(){
@@ -207,8 +207,7 @@ public class DatabaseHelper {
     public void reloadPhrasesAndIndices() {
 
         activePhrases.clear();
-        allAvailablePhrases.clear();
-
+        availablePhrases.clear();
         Session session = sessionFactory.openSession();
         CriteriaBuilder builder = session.getCriteriaBuilder();
         CriteriaQuery<Phrase> criteriaQuery = builder.createQuery(Phrase.class);
@@ -216,11 +215,11 @@ public class DatabaseHelper {
         criteriaQuery.select(phraseRoot);
         criteriaQuery.where(builder.equal(phraseRoot.get("owner"), loginBean.getLoggedUser()), builder.equal(phraseRoot.get("isDeleted"), false));
         Query<Phrase> allPhrasesQuery = session.createQuery(criteriaQuery);
-        allAvailablePhrases = allPhrasesQuery.list();
+        availablePhrases = allPhrasesQuery.list();
         session.close();
-        for(Phrase currentPhrase : allAvailablePhrases){
+        for(Phrase currentPhrase : availablePhrases){
             currentPhrase.setDatabaseHelper(this);
-            if(currentPhrase.isInList(activeLabels)){
+            if(currentPhrase.isInList(selectedLabels)){
                 activePhrases.add(currentPhrase);
             }
         }
@@ -383,21 +382,36 @@ public class DatabaseHelper {
 
     }
 
-    private void initThisDayStatistics(){
-        try(
-                ResultSet rs1 = mainDbConn.createStatement().executeQuery
-                        ("SELECT COUNT(*) FROM statistics WHERE date < DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)");
-                ResultSet rs2 = mainDbConn.createStatement().executeQuery(
-                        "SELECT TIMESTAMPDIFF(HOUR, (SELECT MIN(date) FROM statistics WHERE date < DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)), DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR))")
-        ){
-            rs1.next();
-            totalTrainingAnswers = rs1.getInt(1);
-            rs2.next();
-            totalTrainingHoursSpent = rs2.getInt(1);
+    @SuppressWarnings("Duplicates")
+    private int calculateUntilTodayAnswersNumber(){
+        int untilTodayAnswersNumber = 0;
+        try {
+            Statement statement = mainDbConn.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT COUNT(*) FROM questions WHERE date < DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)");
+            resultSet.next();
+            untilTodayAnswersNumber = resultSet.getInt(1);
+            statement.close();
+            resultSet.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return untilTodayAnswersNumber;
+    }
 
+    @SuppressWarnings("Duplicates")
+    private int calculateUntilTodayTrainingHoursSpent(){
+        int untilTodayTrainingHoursSpent = 0;
+        try{
+            Statement statement = mainDbConn.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT TIMESTAMPDIFF(HOUR, (SELECT MIN(date) FROM questions WHERE date < DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)), DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR))");
+            resultSet.next();
+            untilTodayTrainingHoursSpent = resultSet.getInt(1);
+            statement.close();
+            resultSet.close();
         }catch (SQLException e){
             e.printStackTrace();
         }
+        return untilTodayTrainingHoursSpent;
     }
 
     private void reloadIndices() {
@@ -414,23 +428,23 @@ public class DatabaseHelper {
         double scaleOfOneProb;
         int countOfModIndices = 0;
         int nonLearntWordsProbSumm = 0;
-        totalActiveWordsAmount = activePhrases.size();
-        nonLearntWordsAmount = 0;
+        activeWordsNumber = activePhrases.size();
+        untrainedPhrasesNumber = 0;
         learntWordsProbSumm = 0;
 
         for (Phrase phr : activePhrases) {
             phr.indexStart = phr.indexEnd = 0;
             if (phr.probabilityFactor > 3) {
-                nonLearntWordsAmount++;
+                untrainedPhrasesNumber++;
                 nonLearntWordsProbSumm += phr.probabilityFactor;
             }else {
                 learntWordsProbSumm += phr.probabilityFactor;
             }
         }
 
-        learntWordsAmount = totalActiveWordsAmount - nonLearntWordsAmount;
-        indexOfLearnt = CHANCE_OF_APPEARING_LEARNT_WORDS / learntWordsAmount;
-        rangeOfNonlearnt = learntWordsAmount > 0 ? 1 - CHANCE_OF_APPEARING_LEARNT_WORDS : 1;
+        trainedPhrasesNumber = activeWordsNumber - untrainedPhrasesNumber;
+        indexOfLearnt = CHANCE_OF_APPEARING_TRAINED_PHRASES / trainedPhrasesNumber;
+        rangeOfNonlearnt = trainedPhrasesNumber > 0 ? 1 - CHANCE_OF_APPEARING_TRAINED_PHRASES : 1;
         scaleOfOneProb = rangeOfNonlearnt / nonLearntWordsProbSumm;
 
 
@@ -440,12 +454,12 @@ public class DatabaseHelper {
             double prob;
             prob = currentPhrase.probabilityFactor;
 
-            //If nonLearntWordsAmount == 0 then all words have been learnt, setting equal for all indices
-            if (nonLearntWordsAmount == 0) {
+            //If untrainedPhrasesNumber == 0 then all words have been learnt, setting equal for all indices
+            if (untrainedPhrasesNumber == 0) {
 
                 indexStart = (int) (temp * RANGE);
                 currentPhrase.indexStart = indexStart;
-                temp += CHANCE_OF_APPEARING_LEARNT_WORDS / learntWordsAmount;
+                temp += CHANCE_OF_APPEARING_TRAINED_PHRASES / trainedPhrasesNumber;
                 indexEnd = (int) ((temp * RANGE) - 1);
                 currentPhrase.indexEnd = indexEnd;
 
@@ -479,7 +493,7 @@ public class DatabaseHelper {
     }
 
     private Phrase getPhraseById(long id){
-        for (Phrase phrase : allAvailablePhrases) {
+        for (Phrase phrase : availablePhrases) {
             if (phrase.id == id)
                 return phrase;
         }
@@ -500,10 +514,10 @@ public class DatabaseHelper {
      * greater than a total active number of phrases curently trained
      */
     private void adjustLastPhrasesStackSize(){
-        if (lastSevenPhrasesStack == null || lastSevenPhrasesStack.length > totalActiveWordsAmount) {
-            if (totalActiveWordsAmount >= 7) {
+        if (lastSevenPhrasesStack == null || lastSevenPhrasesStack.length > activeWordsNumber) {
+            if (activeWordsNumber >= 7) {
                 lastSevenPhrasesStack = new Phrase[7];
-                lastSevenStackIndex = 0;
+                lastSevenStackPosition = 0;
             }else {
                 lastSevenPhrasesStack = new Phrase[0];
             }
@@ -511,8 +525,8 @@ public class DatabaseHelper {
     }
 
     private int lastPhrasesStackPosition(){
-        lastSevenStackIndex = lastSevenStackIndex > lastSevenPhrasesStack.length - 1 ? lastSevenStackIndex = 0 : lastSevenStackIndex;
-        return lastSevenStackIndex++;
+        lastSevenStackPosition = lastSevenStackPosition > lastSevenPhrasesStack.length - 1 ? lastSevenStackPosition = 0 : lastSevenStackPosition;
+        return lastSevenStackPosition++;
     }
 
     private void pushToLastPhrasesStack(Phrase pushedPhrase) {
@@ -539,37 +553,41 @@ public class DatabaseHelper {
 
     //Setters and Getters
 
-    public void setActiveLabels(HashSet<String> activeLabels) {
-        this.activeLabels = activeLabels;
+    public void setSelectedLabels(HashSet<String> selectedLabels) {
+        this.selectedLabels = selectedLabels;
     }
 
-    public int getLearntWordsAmount() {
-        return learntWordsAmount;
+    public int getTrainedPhrasesNumber() {
+        return trainedPhrasesNumber;
     }
 
-    public int getNonLearntWordsAmount() {
-        return nonLearntWordsAmount;
+    public int getUntrainedPhrasesNumber() {
+        return untrainedPhrasesNumber;
     }
 
-    public ArrayList<String> getAllAvailableLabels() {
-        return allAvailableLabels;
+    public List<String> getAvailableLabels() {
+        return availableLabels;
     }
 
-    public int getTotalTrainingHoursSpent() {
-        return totalTrainingHoursSpent;
+    public int getUntilTodayTrainingHoursSpent() {
+        return untilTodayTrainingHoursSpent;
     }
 
-    public int getTotalTrainingAnswers() {
-        return totalTrainingAnswers;
+    public int getUntilTodayAnswersNumber() {
+        return untilTodayAnswersNumber;
     }
 
     public Phrase getPhrase(Phrase requestedPhrase) {
-        for(Phrase currentPhrase : allAvailablePhrases){
+        for(Phrase currentPhrase : availablePhrases){
             if(currentPhrase.equals(requestedPhrase)){
                 return currentPhrase;
             }
         }
         throw new RuntimeException("There was no such phrase");
+    }
+
+    public int getTheGreatestPhrasesIndex() {
+        return theGreatestPhrasesIndex;
     }
 }
 
