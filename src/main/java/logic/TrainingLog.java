@@ -3,9 +3,10 @@ package logic;
 import datamodel.Phrase;
 import datamodel.Question;
 
+import java.math.BigDecimal;
+import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -14,18 +15,21 @@ import java.util.List;
  */
 public class TrainingLog {
 
-    private List<Question> todayQuestions = new ArrayList<>();
+    private int position;
+    private int todayTrainedPhrasesNumber;
+    private int totalTrainedPhrasesNumber;
+    private int activeTrainedPhrasesNumber;
+    private int totalUntrainedPhrasesNumber;
+    private int activeUntrainedPhrasesNumber;
+    private String todayRightAnswersPercentage;
+    private String totalAndActivePhrasesNumber;
+    private String totalAndActiveUntrainedPhrasesNumber;
+    private String totalAndActiveTrainedPhrasesNumber;
+    private String trainingCompletionPercentage;
+    private BigDecimal averageAnswersPerDayNumber;
     private List<Question> allQuestions = new LinkedList<>();
     private StringBuilder log = new StringBuilder();
     private DatabaseHelper databaseHelper;
-    private int position;
-    private String todayRightAnswersPercentage;
-    private int todayTrainedPhrasesNumber;
-    private int totalTrainedPhrasesNumber;
-    private int totalUntrainedPhrasesNumber;
-    private int totalPhrasesNumber;
-    private String trainingCompletionPercentage;
-    private int averageAnswersPerDayNumber;
     private class TrainingLogQuestionLine {
 
         private final static String RIGHT_MESSAGE_COLOR = "green";
@@ -56,12 +60,16 @@ public class TrainingLog {
 
             if(askedPhrase.isTrained()){
                 phrase = applyColor(phrase, RIGHT_MESSAGE_COLOR);
+                if(question.trainedAfterAnswer() == 1){
+                    phrase = makeStrong(phrase);
+                }
+            }else if(question.trainedAfterAnswer() == -1){
+                phrase = applyColor(phrase, WRONG_MESSAGE_COLOR);
+                phrase = makeStrong(phrase);
             }
 
             result = timeAndRightWrongMessage + phrase;
-
             result = makeNewLine(result);
-
             resultString = result;
         }
 
@@ -99,17 +107,7 @@ public class TrainingLog {
         this.databaseHelper = databaseHelper;
     }
 
-    public Question retrieve(int position){
-        System.out.println("CALL: retrieve(int position) from TrainingLog");
-        Question question = null;
-        if(position > 0 && position < allQuestions.size()){
-            question = allQuestions.get(position);
-        }
-        return question;
-    }
-
     public Question retrieveSelected(){
-        System.out.println("CALL: retrieveSelected() from TrainingLog");
         Question question = null;
         if(position >= 0 && position < allQuestions.size()){
             question = allQuestions.get(position);
@@ -162,7 +160,6 @@ public class TrainingLog {
         System.out.println("CALL: appendToLog(Question addedQuestion) from TrainingLog");
         allQuestions.add(0, addedQuestion);
         select(0);
-//        reload();
     }
 
     public void reload(){
@@ -171,10 +168,16 @@ public class TrainingLog {
         int rightAnswersNumber = 0;
         int wrongAnswersNumber = 0;
         todayTrainedPhrasesNumber = 0;
-        totalTrainedPhrasesNumber = databaseHelper.getTrainedPhrasesNumber();
-        totalUntrainedPhrasesNumber = databaseHelper.getUntrainedPhrasesNumber();
-        averageAnswersPerDayNumber = databaseHelper.getUntilTodayAnswersNumber() / databaseHelper.getUntilTodayTrainingHoursSpent() / 24;
-//        trainingCompletionPercentage = databaseHelper.ge
+        totalTrainedPhrasesNumber = databaseHelper.getTotalTrainedPhrasesNumber();
+        totalUntrainedPhrasesNumber = databaseHelper.getTotalUntrainedPhrasesNumber();
+        averageAnswersPerDayNumber = new BigDecimal((double) (databaseHelper.getUntilTodayAnswersNumber() + allQuestions.size()) /
+                ((double) (databaseHelper.getUntilTodayTrainingHoursSpent() + LocalTime.now().getHour() - 6) / 24D)).setScale(1, BigDecimal.ROUND_HALF_UP);
+        trainingCompletionPercentage = new BigDecimal((double) (totalTrainedPhrasesNumber + todayTrainedPhrasesNumber) / (double) (totalTrainedPhrasesNumber + totalUntrainedPhrasesNumber) * 100D).setScale(2, BigDecimal.ROUND_HALF_UP) + "%";
+        totalAndActivePhrasesNumber = databaseHelper.calculateActivePhrasesNumber() == databaseHelper.calculateTotalPhrasesNumber() ? String.valueOf(databaseHelper.calculateTotalPhrasesNumber()) : databaseHelper.calculateActivePhrasesNumber() + "/" + databaseHelper.calculateTotalPhrasesNumber();
+        activeTrainedPhrasesNumber = databaseHelper.getActiveTrainedPhrasesNumber();
+        activeUntrainedPhrasesNumber = databaseHelper.getActiveUntrainedPhrasesNumber();
+        totalAndActiveUntrainedPhrasesNumber = totalUntrainedPhrasesNumber == activeUntrainedPhrasesNumber ? String.valueOf(totalUntrainedPhrasesNumber) : activeUntrainedPhrasesNumber + "/" + totalUntrainedPhrasesNumber;
+        totalAndActiveTrainedPhrasesNumber = totalTrainedPhrasesNumber == activeTrainedPhrasesNumber ? String.valueOf(totalTrainedPhrasesNumber) : activeTrainedPhrasesNumber + "/" + totalTrainedPhrasesNumber;
         for(int i = 0; i < allQuestions.size(); i++){
             Question currentQuestion = allQuestions.get(i);
             if(currentQuestion.isAnswered()){
@@ -203,12 +206,7 @@ public class TrainingLog {
         return log.toString();
     }
 
-    public List<Question> getTodayQuestions() {
-        return todayQuestions;
-    }
-
     public void setTodayQuestions(List<Question> todayQuestions) {
-        this.todayQuestions = todayQuestions;
         allQuestions.addAll(todayQuestions);
         reload();
     }
@@ -227,91 +225,23 @@ public class TrainingLog {
         return todayTrainedPhrasesNumber;
     }
 
-    public int getTotalPhrasesNumber() {
-        return totalPhrasesNumber;
-    }
-
-    public int getTotalTrainedPhrasesNumber() {
-        return totalTrainedPhrasesNumber;
-    }
-
-    public int getTotalUntrainedPhrasesNumber() {
-        return totalUntrainedPhrasesNumber;
-    }
-
     public String getTrainingCompletionPercentage() {
         return trainingCompletionPercentage;
     }
 
-    public int getAverageAnswersPerDayNumber() {
+    public BigDecimal getAverageAnswersPerDayNumber() {
         return averageAnswersPerDayNumber;
     }
 
-    /*private void reloadStatisticsTable(){
-        System.out.println("CALL: reloadStatisticsTable() from InterfaceBean");
+    public String getTotalAndActivePhrasesNumber() {
+        return totalAndActivePhrasesNumber;
+    }
 
-        //After the answerField creates String like this - "40.2 ➩ 37.3"
-        if(!selectedQuestion.answered()){
-            BigDecimal previous = new BigDecimal(selectedQuestion.getAskedPhrase().probabilityFactor).setScale(1, RoundingMode.HALF_UP);
-            currPhrasesProbabilityFactor = previous.toString();
-        }else{
-            BigDecimal previous = new BigDecimal(selectedQuestion.getAskedPhrase().previousProbabilityFactor).setScale(1, RoundingMode.HALF_UP);
-            BigDecimal present = new BigDecimal(selectedQuestion.getAskedPhrase().probabilityFactor).setScale(1, RoundingMode.HALF_UP);
-            currPhrasesProbabilityFactor = previous + "➩" + present + "(" + present.subtract(previous) + ")";
-        }
+    public String getTotalAndActiveUntrainedPhrasesNumber() {
+        return totalAndActiveUntrainedPhrasesNumber;
+    }
 
-        //After the answerField creates String like this - "0.06116% ➩ 0.07294%"
-         currPhrPercentOfAppearance = *//*selectedQuestion.getPercentChanceView();*//* "NOT YET IMPLEMENTED";
-
-
-        if(selectedQuestion.getAskedPhrase().lastAccessDateTime != null){
-
-            currentPhraseLastAccesssDate = selectedQuestion.getAskedPhrase().lastAccessDateTime.format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
-
-            currPhrRelLastAccsDate = retDiff.retDiffInTime(System.currentTimeMillis() - selectedQuestion.getAskedPhrase().lastAccessDateTime.toEpochSecond());
-        }
-
-        if(selectedQuestion.getAskedPhrase().collectionAddingDateTime != null){
-
-            currPhrAbsCreateDate = LocalDateTime.ofInstant(selectedQuestion.getAskedPhrase().collectionAddingDateTime.toInstant(),
-                    ZoneId.of("EET")).format(DateTimeFormatter.ofPattern("d MMM y HH:mm", Locale.ENGLISH));
-
-            currPhrRelCreateDate = retDiff.retDiffInTime(System.currentTimeMillis() - selectedQuestion.getAskedPhrase().collectionAddingDateTime.toEpochSecond());
-        }
-
-//        currPhrLabel = selectedQuestion.label;
-
-        //>>Calculate session statistics
-        int numOfNonAnswForSession = 0;
-        int numOfRightAnswForSession = 0;
-        int numOfPhrForSession = trainingLog.getAllQuestions().size();
-        currPhrId = selectedQuestion.getAskedPhrase().id;
-         if(!selectedQuestion.getAskedPhrase().hasBeenAnswered){
-            currentPhraseRate = new BigDecimal(selectedQuestion.getAskedPhrase().multiplier).setScale(2, BigDecimal.ROUND_HALF_UP).toString();
-         }else {
-             currentPhraseRate = (new BigDecimal(selectedQuestion.getAskedPhrase().previousMultiplier).setScale(2, BigDecimal.ROUND_HALF_UP) + " ➩ " + new BigDecimal(selectedQuestion.getAskedPhrase().multiplier).setScale(2, BigDecimal.ROUND_HALF_UP));
-         }
-
-        for(Question phrs : trainingLog.getAllQuestions()){
-            if(!phrs.getAskedPhrase().hasBeenAnswered)
-                numOfNonAnswForSession++;
-            else if(phrs.getAskedPhrase().hasBeenAnsweredCorrectly)
-                numOfRightAnswForSession++;
-        }
-
-        answersForSessionNumber = numOfPhrForSession - numOfNonAnswForSession;
-        //Generates a string with the percentage of correct answers to the total number of answers
-        todayRightAnswersPercentage = ((new BigDecimal(numOfRightAnswForSession)).divide(new BigDecimal(answersForSessionNumber ==0?1: answersForSessionNumber),2, RoundingMode.HALF_UP).multiply(new BigDecimal(100))).setScale(0, RoundingMode.HALF_UP)+"%";
-        trainedPhrasesNumber = databaseHelper.getTrainedPhrasesNumber();
-        nonTrainedPhrasesNumber = databaseHelper.getUntrainedPhrasesNumber();
-        totalPhrasesNumber = trainedPhrasesNumber + nonTrainedPhrasesNumber;
-
-         try{
-             averageAnswersPerDay = (int) ((float) (databaseHelper.getUntilTodayAnswersNumber() + answersForSessionNumber) / (float) (databaseHelper.getUntilTodayTrainingHoursSpent() + ZonedDateTime.now(ZoneId.of("Europe/Kiev")).getHour() - 6) * 24);
-         }catch (ArithmeticException e){
-             averageAnswersPerDay = 0;
-         }
-        //<<
-
-    }*/
+    public String getTotalAndActiveTrainedPhrasesNumber() {
+        return totalAndActiveTrainedPhrasesNumber;
+    }
 }

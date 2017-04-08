@@ -4,7 +4,6 @@ import logic.DatabaseHelper;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
@@ -125,90 +124,6 @@ public class Phrase implements Serializable {
         this.databaseHelper = givenPhrase.databaseHelper;
     }
 
-    public void rightAnswer(){
-
-        if(!hasBeenAnswered){
-
-            hasBeenAnsweredCorrectly = true;
-            hasBeenAnswered = true;
-
-            if(!isTrained()){
-
-                double activeWordsAmountRatio = Math.sqrt(databaseHelper.activePhrasesNumber() / databaseHelper.totalWordsNumber());
-                double subtrahendForProb = 3 * activeWordsAmountRatio * multiplier;
-                probabilityFactor -= subtrahendForProb;
-
-                if(activeWordsAmountRatio > 0.6) {
-                    if (multiplier <= 1) {
-                        multiplier = RIGHT_ANSWER_MULTIPLIER;
-                    } else {
-                        multiplier *= RIGHT_ANSWER_MULTIPLIER;
-                    }
-                }
-                databaseHelper.updateProb(this);
-            }
-            databaseHelper.setStatistics(this);
-
-        }else if(!hasBeenAnsweredCorrectly){
-
-            hasBeenAnsweredCorrectly = true;
-
-            if(!wasTrainedBeforeAnswer()){
-
-                double rateDepandableOnNumberOfWords = Math.sqrt(databaseHelper.activePhrasesNumber() / databaseHelper.totalWordsNumber());
-                multiplier = previousMultiplier;
-                double probFactorSubtrahend = 3 * rateDepandableOnNumberOfWords * multiplier;
-                probabilityFactor = previousProbabilityFactor -= probFactorSubtrahend;
-
-                if(rateDepandableOnNumberOfWords > 0.6) {
-                    if (multiplier <= 1) {
-                        multiplier = RIGHT_ANSWER_MULTIPLIER;
-                    } else {
-                        multiplier *= RIGHT_ANSWER_MULTIPLIER;
-                    }
-                }
-
-            } else {
-                probabilityFactor = previousProbabilityFactor;
-                multiplier = previousMultiplier;
-            }
-
-            databaseHelper.updateStatistics(this);
-            databaseHelper.updateProb(this);
-        }
-    }
-
-    public void wrongAnswer(){
-
-        if(!hasBeenAnswered){
-
-            hasBeenAnswered = true;
-            hasBeenAnsweredCorrectly = false;
-
-            System.out.println(new BigDecimal(probabilityFactor).setScale(1, BigDecimal.ROUND_HALF_UP) + " += " + 6 + " * " + multiplier + " * " + "Math.sqrt(" + databaseHelper.activePhrasesNumber() + "/" + databaseHelper.totalWordsNumber() + ")");
-            probabilityFactor  += (6 * multiplier * Math.sqrt(databaseHelper.activePhrasesNumber() / databaseHelper.totalWordsNumber()));
-            multiplier = 1;
-            databaseHelper.setStatistics(this);
-            databaseHelper.updateProb(this);
-
-        }else if(hasBeenAnsweredCorrectly){
-
-            hasBeenAnsweredCorrectly = false;
-
-            if(!wasTrainedBeforeAnswer()) {
-                System.out.println(new BigDecimal(previousProbabilityFactor).setScale(1, BigDecimal.ROUND_HALF_UP) + " += " + 6 + " * " + previousMultiplier + " * " + "Math.sqrt(" + databaseHelper.activePhrasesNumber() + "/" + databaseHelper.totalWordsNumber() + ")");
-                probabilityFactor += (6 * previousMultiplier * Math.sqrt(databaseHelper.activePhrasesNumber() / databaseHelper.totalWordsNumber()));
-                multiplier = 1;
-            }else{
-                System.out.println(new BigDecimal(previousProbabilityFactor).setScale(1, BigDecimal.ROUND_HALF_UP) + " += " + 6 + " * " + previousMultiplier + " * " + "Math.sqrt(" + databaseHelper.activePhrasesNumber() + "/" + databaseHelper.totalWordsNumber() + ")*" + previousMultiplier);
-                probabilityFactor += (6 * previousMultiplier * Math.sqrt(databaseHelper.activePhrasesNumber() / databaseHelper.totalWordsNumber()) * previousMultiplier);
-                multiplier = 1;
-            }
-            databaseHelper.updateStatistics(this);
-            databaseHelper.updateProb(this);
-        }
-    }
-
     public boolean isInList(HashSet<String> phrasesList){
 
         if(phrasesList != null){
@@ -229,19 +144,6 @@ public class Phrase implements Serializable {
     public void resetPreviousValues(){
         this.previousMultiplier = multiplier;
         this.previousProbabilityFactor = probabilityFactor;
-    }
-
-    public String getForWordAndTranscription(){
-        if(transcription == null){
-            return foreignWord;
-        }else {
-            return foreignWord + (transcription.equalsIgnoreCase("") ? "" : (" [" + transcription + "]"));
-        }
-    }
-
-    public void delete(){
-        System.out.println("CALL delete(), requested id=" + id);
-        databaseHelper.deletePhrase(this);
     }
 
     public void update(){

@@ -209,19 +209,19 @@
                     <td>${interfaceBean.trainingLog.todayTrainedPhrasesNumber}</td>
                 </tr>
                 <tr>
-                    <td>Total trained phrases</td>
-                    <td>${interfaceBean.trainingLog.totalTrainedPhrasesNumber}</td>
+                    <td>Active/Total trained phrases</td>
+                    <td>${interfaceBean.trainingLog.totalAndActiveTrainedPhrasesNumber}</td>
                     <!--<td>NOT YET IMPLEMENTED</td>-->
                 </tr>
                 <tr>
-                    <td>Total untrained phrases</td>
-                    <td>${interfaceBean.trainingLog.totalUntrainedPhrasesNumber}</td>
+                    <td>Active/Total untrained phrases</td>
+                    <td>${interfaceBean.trainingLog.totalAndActiveUntrainedPhrasesNumber}</td>
                     <!--<td>NOT YET IMPLEMENTED</td>-->
                 </tr>
                 <tr>
-                    <td>Total number of phrases</td>
-                    <!--<td>${interfaceBean.trainingLog.totalPhrasesNumber}</td>-->
-                    <td>NOT YET IMPLEMENTED</td>
+                    <td>Active/Total number of phrases</td>
+                    <td>${interfaceBean.trainingLog.totalAndActivePhrasesNumber}</td>
+                    <!--<td>NOT YET IMPLEMENTED</td>-->
                 </tr>
                 <tr>
                     <td>Percent of completion of learning</td>
@@ -269,7 +269,7 @@
                 </tr>
                 <tr>
                     <td>Label</td>
-                    <td>${interfaceBean.trainingLog.retrieveSelected().composeLabel()}</td>
+                    <td>${interfaceBean.trainingLog.retrieveSelected().composeLabel().equals("") ? "NO LABEL" : interfaceBean.trainingLog.retrieveSelected().composeLabel()}</td>
                 </tr>
                 <tr>
                     <td>Labels filter
@@ -282,7 +282,7 @@
                             </h:selectOneMenu>
                         </h:form>
                     </td>
-                    <td>${interfaceBean.resultChosenLabel.equals("") ? "All" : interfaceBean.resultChosenLabel}</td>
+                    <td>${interfaceBean.resultChosenLabel.equals("") ? "ALL" : interfaceBean.resultChosenLabel}</td>
                 </tr>
                 </tbody>
             </table>

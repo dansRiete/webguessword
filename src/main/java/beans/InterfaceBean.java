@@ -65,17 +65,17 @@ public class InterfaceBean implements Serializable{
 
         System.out.println("CALL: InterfaceBean constructor");
         ELContext elContext = FacesContext.getCurrentInstance().getELContext();
-        loginBean = (LoginBean) elContext.getELResolver().getValue(elContext, null, "login");
+        this.loginBean = (LoginBean) elContext.getELResolver().getValue(elContext, null, "login");
 
         if(loginBean != null){
-            databaseHelper = loginBean.getDatabaseHelper();
+            this.databaseHelper = loginBean.getDatabaseHelper();
         }else {
             throw new RuntimeException("loginBean in InterfaceBean was null");
         }
 
         if(databaseHelper != null){
-            trainingLog = new TrainingLog(databaseHelper);
-            availableLabels = databaseHelper.getAvailableLabels();
+            this.trainingLog = new TrainingLog(databaseHelper);
+            this.availableLabels = databaseHelper.getAvailableLabels();
             List<Question> todayQuestions = databaseHelper.loadTodayAnsweredQuestions();
             trainingLog.setTodayQuestions(todayQuestions);
             nextButtonAction();
@@ -94,22 +94,22 @@ public class InterfaceBean implements Serializable{
                 chosenLabelsForLearningWords.add(choosedLabel);
             }
         }
-        resultChosenLabel = "";
+        this.resultChosenLabel = "";
 
         boolean firstLoop = true;
         for(String currentLabel : chosenLabelsForLearningWords){   //Makes a "WHERE LABEL IN" clause
             if(firstLoop){
-                resultChosenLabel += "'" + currentLabel + "'";
+                this.resultChosenLabel += "'" + currentLabel + "'";
                 firstLoop = false;
             }else {
-                resultChosenLabel += ",'" + currentLabel + "'";
+                this.resultChosenLabel += ",'" + currentLabel + "'";
             }
         }
 
         if(!resultChosenLabel.equals(previousResultChoosedLabel)){ //If clause was changed
             databaseHelper.setSelectedLabels(chosenLabelsForLearningWords);
             databaseHelper.reloadPhrasesAndIndices();
-            previousResultChoosedLabel = resultChosenLabel;
+            this.previousResultChoosedLabel = resultChosenLabel;
         }
     }
 
@@ -131,14 +131,9 @@ public class InterfaceBean implements Serializable{
             nextButtonAction();
         }else {
             trainingLog.retrieveSelected().answerTheQuestion(answerField);
-            /*if(trainingLog.retrieveSelected().answerIsCorrect()){
-                iKnowItButtonAction();
-            } else {
-                iDontKnowItButtonAction();
-            }*/
             nextButtonAction();
         }
-        answerField = "";
+        this.answerField = "";
     }
 
     public void nextButtonAction(){
@@ -147,16 +142,16 @@ public class InterfaceBean implements Serializable{
         trainingLog.nextQuestion();
         Question question = trainingLog.retrieveSelected();
         if(question != null){
-            questionField = question.getQuestionRepresentation();
+            this.questionField = question.getQuestionRepresentation();
         }else {
-            questionField = "";
+            this.questionField = "";
         }
     }
 
     public void previousButtonAction() {
         System.out.println("CALL: previousButtonAction() from InterfaceBean");
         trainingLog.selectPrevious();
-        questionField = trainingLog.retrieveSelected().getQuestionRepresentation();
+        this.questionField = trainingLog.retrieveSelected().getQuestionRepresentation();
     }
 
     public void iKnowItButtonAction(){
@@ -183,7 +178,7 @@ public class InterfaceBean implements Serializable{
         if(question != null){
             question.rightAnswer();
         }
-        trainingLog.reload();
+        this.trainingLog.reload();
     }
 
     public void previousWrongButtonAction(){

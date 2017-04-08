@@ -21,17 +21,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-@ManagedBean(name="login")
+@ManagedBean(name = "login")
 @SessionScoped
 public class LoginBean implements Serializable {
 
     private String userTextField;
     private String passwordTextField;
-
-    public User getLoggedUser() {
-        return loggedUser;
-    }
-
     private User loggedUser;
     private DatabaseHelper databaseHelper;
     private Connection mainDbConn;
@@ -43,69 +38,54 @@ public class LoginBean implements Serializable {
     private final static String FORWARDED_REMOTE_HOST_PORT3306 = "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     private final static String FORWARDED_REMOTE_HOST_PORT3307 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     public final static boolean USE_LOCAL_DB = true;
-
-
     private SessionFactory sessionFactory;
 
-    public LoginBean(){
+    public LoginBean() {
         determineAliveDbAndConnectTo();
         buildSessionFactory();
         UserDao userDao = new UserDao(sessionFactory);
         userDao.openCurrentSession();
-        usersList = userDao.findAll();
+        this.usersList = userDao.findAll();
         userDao.closeCurrentSession();
-
-        //>>Create list of users
-        /*try {
-            Statement st = mainDbConn.createStatement();
-            rs = st.executeQuery("SELECT * FROM users");
-            while (rs.next()){
-                usersList.add(new User(rs.getInt("id"), rs.getString("login"), rs.getString("name"),
-                        rs.getString("passwordTextField"), rs.getString("email")));
-            }
-        } catch (SQLException e) {
-            System.out.println("EXCEPTION: in LoginBean constructor");
-            e.printStackTrace();
-        }*/
-        //<<
     }
 
     private void determineAliveDbAndConnectTo() {
 
         System.out.println("CALL: determineAliveDbAndConnectTo() from LoginBean");
         String conectedDatabaseMessage = null;
-        if(USE_LOCAL_DB){
-            activeRemoteHost = FORWARDED_REMOTE_HOST_PORT3306;
-            activeUser = "root";
-            activePassword = "root";
+        if (USE_LOCAL_DB) {
+            this.activeRemoteHost = FORWARDED_REMOTE_HOST_PORT3306;
+            this.activeUser = "root";
+            this.activePassword = "root";
             try {
                 mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
+                conectedDatabaseMessage = "Local virtual DB connected";
+                System.out.println(conectedDatabaseMessage);
+                return;
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-            conectedDatabaseMessage = "Local virtual DB connected";
-            System.out.println(conectedDatabaseMessage);
-            return;
+
         }
         try {
-            activeRemoteHost = ORIGINAL_REMOTE_HOST;
-            activeUser = "adminLtuHq9R";
-            activePassword = "d-AUIKakd1Br";
-            mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
+            this.activeRemoteHost = ORIGINAL_REMOTE_HOST;
+            this.activeUser = "adminLtuHq9R";
+            this.activePassword = "d-AUIKakd1Br";
+            this.mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
             conectedDatabaseMessage = "Remote DB was connected";
         } catch (SQLException e) {
             try {
-                activeRemoteHost = FORWARDED_REMOTE_HOST_PORT3306;
-                activeUser = "adminLtuHq9R";
-                activePassword = "d-AUIKakd1Br";
-                mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
+                this.activeRemoteHost = FORWARDED_REMOTE_HOST_PORT3306;
+                this.activeUser = "adminLtuHq9R";
+                this.activePassword = "d-AUIKakd1Br";
+                this.mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
                 conectedDatabaseMessage = "Remote DB was connected through the local port 3306 forwarding";
             } catch (SQLException e1) {
                 try {
-                    activeRemoteHost = FORWARDED_REMOTE_HOST_PORT3307;
-                    activeUser = "adminLtuHq9R";
-                    activePassword = "d-AUIKakd1Br";
-                    mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
+                    this.activeRemoteHost = FORWARDED_REMOTE_HOST_PORT3307;
+                    this.activeUser = "adminLtuHq9R";
+                    this.activePassword = "d-AUIKakd1Br";
+                    this.mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
                     conectedDatabaseMessage = "Remote DB was connected through the local port 3307 forwarding";
                 } catch (SQLException e2) {
                     e2.printStackTrace();
@@ -114,23 +94,22 @@ public class LoginBean implements Serializable {
                 }
             }
         } finally {
-            if(conectedDatabaseMessage != null){
+            if (conectedDatabaseMessage != null) {
                 System.out.println(conectedDatabaseMessage);
             }
         }
     }
 
-    public void checkCredentialsAndRedirectUser(){
+    public void checkCredentialsAndRedirectUser() {
         System.out.println("CALL: checkCredentialsAndRedirectUser() from LoginBean");
         boolean userExist = false;
         FacesContext context = FacesContext.getCurrentInstance();
         HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getResponse();
-
         User loggedUser = null;
 
         //Check if there is such owner
-        for(User user : usersList){
-            if(this.userTextField.equalsIgnoreCase(user.login)){
+        for (User user : usersList) {
+            if (this.userTextField.equalsIgnoreCase(user.login)) {
                 userExist = true;
                 loggedUser = user;
                 break;
@@ -138,41 +117,34 @@ public class LoginBean implements Serializable {
         }
 
         //If owner exists and passwordTextField is correct then dispatch to "learn.xhtml" otherwise sendRedirect("error.xhtml")
-        try{
+        try {
             if (userExist && passwordTextField.equals(loggedUser.password)) {
                 this.loggedUser = loggedUser;
-                databaseHelper = new DatabaseHelper(this, sessionFactory);
+                this.databaseHelper = new DatabaseHelper(this, sessionFactory);
                 response.sendRedirect("learn.xhtml");
             } else {
                 response.sendRedirect("error.xhtml");
             }
-        }catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public SessionFactory buildSessionFactory(){
-        /*try {*/
+    public SessionFactory buildSessionFactory() {
 
-            Configuration configuration = new Configuration().configure();
-            configuration.addAnnotatedClass(Phrase.class);
-            configuration.addAnnotatedClass(datamodel.User.class);
-            configuration.addAnnotatedClass(Question.class);
-            configuration.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
-            configuration.setProperty("hibernate.connection.driver_class", "com.mysql.jdbc.Driver");
-            System.out.println(this.activeUser + " - " + this.activePassword + " - " + this.activeRemoteHost);
-            configuration.setProperty("hibernate.connection.username", this.activeUser);
-            configuration.setProperty("hibernate.connection.password", this.activePassword);
-            configuration.setProperty("hibernate.connection.url", this.activeRemoteHost);
+        Configuration configuration = new Configuration().configure();
+        configuration.addAnnotatedClass(Phrase.class);
+        configuration.addAnnotatedClass(datamodel.User.class);
+        configuration.addAnnotatedClass(Question.class);
+        configuration.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
+        configuration.setProperty("hibernate.connection.driver_class", "com.mysql.jdbc.Driver");
+        System.out.println(this.activeUser + " - " + this.activePassword + " - " + this.activeRemoteHost);
+        configuration.setProperty("hibernate.connection.username", this.activeUser);
+        configuration.setProperty("hibernate.connection.password", this.activePassword);
+        configuration.setProperty("hibernate.connection.url", this.activeRemoteHost);
 
-            sessionFactory = configuration.buildSessionFactory(
-                    new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build());
-
-        /*} catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException(
-                    "There was an error during Hibernate buildSessionFactory()");
-        }*/
+        this.sessionFactory = configuration.buildSessionFactory(
+                new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build());
         return sessionFactory;
     }
 
@@ -180,11 +152,11 @@ public class LoginBean implements Serializable {
         return sessionFactory;
     }
 
-    public Connection getConnection(){
+    public Connection getConnection() {
         return mainDbConn;
     }
 
-    public DatabaseHelper getDatabaseHelper(){
+    public DatabaseHelper getDatabaseHelper() {
         return this.databaseHelper;
     }
 
@@ -192,7 +164,7 @@ public class LoginBean implements Serializable {
         return userTextField;
     }
 
-    public void setUserTextField(String userTextField){
+    public void setUserTextField(String userTextField) {
         this.userTextField = userTextField;
     }
 
@@ -200,7 +172,11 @@ public class LoginBean implements Serializable {
         return passwordTextField;
     }
 
-    public void setPasswordTextField(String passwordTextField){
+    public void setPasswordTextField(String passwordTextField) {
         this.passwordTextField = passwordTextField;
+    }
+
+    public User getLoggedUser() {
+        return loggedUser;
     }
 }
