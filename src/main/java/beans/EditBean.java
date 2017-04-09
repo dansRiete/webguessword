@@ -26,7 +26,7 @@ public class EditBean implements Serializable{
     private LoginBean loginBean;
 
     private DatabaseHelper databaseHelper;
-    private ArrayList<Phrase> myList;
+    private List<Phrase> myList;
     private List<String> labelsList;
     private String foreignWord;
     private String nativeWord;
@@ -115,7 +115,7 @@ public class EditBean implements Serializable{
         this.loginBean = loginBean;
     }
 
-    public ArrayList<Phrase> getMyList() {
+    public List<Phrase> getMyList() {
         return myList;
     }
 

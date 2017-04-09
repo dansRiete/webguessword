@@ -33,14 +33,19 @@ public class DatabaseHelper {
     private int activeUntrainedPhrasesNumber;
     private int totalTrainedPhrasesNumber;
     private int totalUntrainedPhrasesNumber;
+
+    public int getActivePhrasesNumber() {
+        return activePhrasesNumber;
+    }
+
     private int activePhrasesNumber;
     private int greatestPhrasesIndex;
-    private int lastSevenStackPosition;
+//    private int lastSevenStackPosition;
     private HashSet<String> selectedLabels;
     private List<String> availableLabels = new ArrayList<>();
-    private List<Phrase> activePhrases = new ArrayList<>();
+//    private List<Phrase> activePhrases = new ArrayList<>();
     private List<Phrase> availablePhrases = new ArrayList<>();
-    private Phrase[] lastSevenPhrasesStack;
+//    private Phrase[] lastSevenPhrasesStack;
     private Random random = new Random();
     private Connection mainDbConn;
     private LoginBean loginBean;
@@ -120,21 +125,16 @@ public class DatabaseHelper {
         }
 
         return availableLabels;
-
     }
 
     public int calculateTotalPhrasesNumber(){
         return availablePhrases.size();
     }
 
-    public int calculateActivePhrasesNumber(){
-        return activePhrases.size();
-    }
-
     public void reloadPhrasesAndIndices() {
 
         System.out.println("CALL: reloadPhrasesAndIndices() from DatabaseHelper");
-        activePhrases.clear();
+//        activePhrases.clear();
         availablePhrases.clear();
         totalTrainedPhrasesNumber = totalUntrainedPhrasesNumber = 0;
 
@@ -155,25 +155,98 @@ public class DatabaseHelper {
             }else {
                 totalUntrainedPhrasesNumber++;
             }
-            if(currentPhrase.isInList(selectedLabels)){
+            /*if(currentPhrase.isInList(selectedLabels)){
                 activePhrases.add(currentPhrase);
+            }*/
+        }
+        System.out.println("availablePhrases size=" + availablePhrases.size());
+        reloadIndices();
+    }
+
+    private void reloadIndices() {
+
+        if(availablePhrases.isEmpty()){
+            throw new RuntimeException("Active Phrases list was empty. Reload indices impossible");
+        }
+
+        final long RANGE = 1_000_000_000;
+        long startTime = System.currentTimeMillis();
+        double temp = 0;
+        double indexOfTrained;     //Index of appearing learnt words
+        double rangeOfUnTrained;  //Ranhe indices non learnt words
+        double scaleOfOneProb;
+        int modificatePhrasesIndicesNumber = 0;
+        int untrainedPhrasesProbabilityFactorsSumm = 0;
+        this.activePhrasesNumber = 0;
+        this.activeUntrainedPhrasesNumber = 0;
+
+        for (Phrase phr : availablePhrases) {
+            phr.indexStart = phr.indexEnd = 0;
+            if(phr.isInList(selectedLabels)){
+                this.activePhrasesNumber++;
+                if(phr.probabilityFactor > 3){
+                    this.activeUntrainedPhrasesNumber++;
+                    untrainedPhrasesProbabilityFactorsSumm += phr.probabilityFactor;
+                }
             }
         }
-        reloadIndices();
+
+        this.activeTrainedPhrasesNumber = activePhrasesNumber - activeUntrainedPhrasesNumber;
+        indexOfTrained = CHANCE_OF_APPEARING_TRAINED_PHRASES / activeTrainedPhrasesNumber;
+        rangeOfUnTrained = activeTrainedPhrasesNumber > 0 ? 1 - CHANCE_OF_APPEARING_TRAINED_PHRASES : 1;
+        scaleOfOneProb = rangeOfUnTrained / untrainedPhrasesProbabilityFactorsSumm;
+
+        for (Phrase currentPhrase : availablePhrases) { //Sets indices for nonlearnt words
+            if(currentPhrase.isInList(selectedLabels)){
+                int indexStart;
+                int indexEnd;
+                double prob;
+                prob = currentPhrase.probabilityFactor;
+
+                //If activeUntrainedPhrasesNumber == 0 then all words have been learnt, setting equal for all indices
+                if (activeUntrainedPhrasesNumber == 0) {
+
+                    indexStart = (int) (temp * RANGE);
+                    currentPhrase.indexStart = indexStart;
+                    temp += CHANCE_OF_APPEARING_TRAINED_PHRASES / activeTrainedPhrasesNumber;
+                    indexEnd = (int) ((temp * RANGE) - 1);
+                    currentPhrase.indexEnd = indexEnd;
+
+                } else { //Otherwise, set indices by algorithm
+
+                    if (prob > 3) {
+
+                        indexStart = (int) (temp * RANGE);
+                        currentPhrase.indexStart = indexStart;
+                        temp += scaleOfOneProb * prob;
+                        indexEnd = (int) ((temp * RANGE) - 1);
+                        currentPhrase.indexEnd = indexEnd;
+//                        System.out.println("Index Start = " + indexStart + ", Index End = " + indexEnd);
+
+                    } else {
+
+                        indexStart = (int) (temp * RANGE);
+                        currentPhrase.indexStart = indexStart;
+                        temp += indexOfTrained;
+                        indexEnd = (int) ((temp * RANGE) - 1);
+                        currentPhrase.indexEnd = indexEnd;
+//                        System.out.println("Index Start = " + indexStart + ", Index End = " + indexEnd);
+                    }
+                }
+
+                modificatePhrasesIndicesNumber++;
+                if(modificatePhrasesIndicesNumber == activePhrasesNumber){
+                    this.greatestPhrasesIndex = currentPhrase.indexEnd;
+                }
+            }
+        }
+        System.out.println("CALL: reloadIndices() from DatabaseHelper," + " Indexes changed=" + modificatePhrasesIndicesNumber + ", Time taken " + (System.currentTimeMillis() - startTime) + "ms");
     }
 
     public Phrase retrieveRandomPhrase() {
 
         System.out.println("CALL: retrieveRandomPhrase() from DatabaseHelper");
-        Phrase retrievedPhrase;
-
-        do {
-            retrievedPhrase = fetchPhraseByIndex(random.nextInt(greatestPhrasesIndex));
-        } while (lastPhrasesStackContains(retrievedPhrase));
-
-        pushToLastPhrasesStack(retrievedPhrase);
-        retrievedPhrase.resetPreviousValues();
-        return retrievedPhrase;
+        return fetchPhraseByIndex(random.nextInt(greatestPhrasesIndex));
     }
 
     public long retrieveMaxPhraseId(){
@@ -195,7 +268,7 @@ public class DatabaseHelper {
         phraseDao.openCurrentSessionWithTransaction();
         phraseDao.persist(phrase);
         phraseDao.closeCurrentSessionwithTransaction();
-        activePhrases.add(phrase);
+        availablePhrases.add(phrase);
     }
 
     public void deletePhrase(Phrase phr) {
@@ -317,82 +390,6 @@ public class DatabaseHelper {
         return untilTodayTrainingHoursSpent;
     }
 
-    private void reloadIndices() {
-
-        System.out.println("CALL: reloadIndices() from DatabaseHelper");
-        if(activePhrases.isEmpty()){
-            throw new RuntimeException("Active Phrases list was empty. Reload indices impossible");
-        }
-
-        final long RANGE = 1_000_000_000;
-        long start = System.currentTimeMillis();
-        double temp = 0;
-        double indexOfLearnt;     //Index of appearing learnt words
-        double rangeOfNonlearnt;  //Ranhe indices non learnt words
-        double scaleOfOneProb;
-        int countOfModIndices = 0;
-        int nonLearntWordsProbSumm = 0;
-        activePhrasesNumber = activePhrases.size();
-        activeUntrainedPhrasesNumber = 0;
-
-        for (Phrase phr : activePhrases) {
-            phr.indexStart = phr.indexEnd = 0;
-            if (phr.probabilityFactor > 3) {
-                activeUntrainedPhrasesNumber++;
-                nonLearntWordsProbSumm += phr.probabilityFactor;
-            }
-        }
-
-        activeTrainedPhrasesNumber = activePhrasesNumber - activeUntrainedPhrasesNumber;
-        indexOfLearnt = CHANCE_OF_APPEARING_TRAINED_PHRASES / activeTrainedPhrasesNumber;
-        rangeOfNonlearnt = activeTrainedPhrasesNumber > 0 ? 1 - CHANCE_OF_APPEARING_TRAINED_PHRASES : 1;
-        scaleOfOneProb = rangeOfNonlearnt / nonLearntWordsProbSumm;
-
-
-        for (Phrase currentPhrase : activePhrases) { //Sets indices for nonlearnt words
-            int indexStart;
-            int indexEnd;
-            double prob;
-            prob = currentPhrase.probabilityFactor;
-
-            //If activeUntrainedPhrasesNumber == 0 then all words have been learnt, setting equal for all indices
-            if (activeUntrainedPhrasesNumber == 0) {
-
-                indexStart = (int) (temp * RANGE);
-                currentPhrase.indexStart = indexStart;
-                temp += CHANCE_OF_APPEARING_TRAINED_PHRASES / activeTrainedPhrasesNumber;
-                indexEnd = (int) ((temp * RANGE) - 1);
-                currentPhrase.indexEnd = indexEnd;
-
-            } else { //Otherwise, set indices by algorithm
-
-                if (prob > 3) {
-
-                    indexStart = (int) (temp * RANGE);
-                    currentPhrase.indexStart = indexStart;
-                    temp += scaleOfOneProb * prob;
-                    indexEnd = (int) ((temp * RANGE) - 1);
-                    currentPhrase.indexEnd = indexEnd;
-
-                } else {
-
-                    indexStart = (int) (temp * RANGE);
-                    currentPhrase.indexStart = indexStart;
-                    temp += indexOfLearnt;
-                    indexEnd = (int) ((temp * RANGE) - 1);
-                    currentPhrase.indexEnd = indexEnd;
-                }
-            }
-
-            countOfModIndices++;
-            if(countOfModIndices== activePhrases.size()){
-                greatestPhrasesIndex = currentPhrase.indexEnd;
-            }
-        }
-
-        System.out.println("CALL: reloadIndices() from DatabaseHelper" + "Indexes changed=" + countOfModIndices + " Time taken " + (System.currentTimeMillis() - start) + "ms");
-    }
-
     private Phrase fetchPhraseById(long id){
 
         System.out.println("CALL: fetchPhraseById(long id) from DatabaseHelper");
@@ -406,8 +403,8 @@ public class DatabaseHelper {
     private Phrase fetchPhraseByIndex(int index) {
 
         System.out.println("CALL: fetchPhraseByIndex(int index) from DatabaseHelper");
-        for (Phrase phrase : activePhrases) {
-            if (index >= phrase.indexStart && index <= phrase.indexEnd) {
+        for (Phrase phrase : availablePhrases) {
+            if (phrase.isInList(selectedLabels) && index >= phrase.indexStart && index <= phrase.indexEnd) {
                 return phrase;
             }
         }
@@ -417,7 +414,7 @@ public class DatabaseHelper {
     /**
      * Corrects phrases stack size. Phrases stack size can not be
      * greater than a total active number of phrases curently trained
-     */
+     *//*
     private void adjustLastPhrasesStackSize(){
 
         System.out.println("CALL: adjustLastPhrasesStackSize() from DatabaseHelper");
@@ -461,7 +458,7 @@ public class DatabaseHelper {
             }
         }
         return false;
-    }
+    }*/
 
     //Setters and Getters
 
@@ -501,9 +498,14 @@ public class DatabaseHelper {
         return totalTrainedPhrasesNumber;
     }
 
-    public ArrayList<Phrase> getActivePhrases() {
-
-        return new ArrayList<>(activePhrases);
+    public List<Phrase> getActivePhrases() {
+        List<Phrase> activePhrasesList = new ArrayList<>();
+        availablePhrases.forEach(phrase -> {
+            if (phrase.isInList(selectedLabels)){
+                activePhrasesList.add(phrase);
+            }
+        });
+        return activePhrasesList;
     }
 }
 

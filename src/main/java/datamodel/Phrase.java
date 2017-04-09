@@ -17,9 +17,6 @@ import java.util.HashSet;
 public class Phrase implements Serializable {
 
     @Transient
-    private static final double RIGHT_ANSWER_MULTIPLIER = 1.44;
-
-    @Transient
     public static final double TRAINED_PROBABILITY_FACTOR = 3;
 
     @javax.persistence.Id
@@ -58,31 +55,13 @@ public class Phrase implements Serializable {
     public boolean isDeleted;
 
     @Transient
-    public double previousProbabilityFactor;
-
-    @Transient
-    public ZonedDateTime phraseAppearingTime = ZonedDateTime.now(ZoneId.of("Europe/Helsinki"));
-
-    @Transient
-    public boolean hasBeenAnsweredCorrectly;
-
-    @Transient
-    public boolean hasBeenAnswered;
-
-    @Transient
     public int indexStart;
 
     @Transient
     public int indexEnd;
 
     @Transient
-    public double previousMultiplier;
-
-    @Transient
     public DatabaseHelper databaseHelper;
-
-    @Transient
-    public boolean isModified;
 
     @Transient
     public String timeOfReturningFromList;
@@ -98,12 +77,10 @@ public class Phrase implements Serializable {
         this.nativeWord = nativeWord;
         this.transcription = transcription == null ? "" : transcription;
         this.probabilityFactor = probabilityFactor;
-        this.previousProbabilityFactor = probabilityFactor;
         this.collectionAddingDateTime = collectionAddingDateTime;
         this.label = (label == null ? "" : label);
         this.lastAccessDateTime = lastAccessDateTime;
         this.multiplier = multiplier <= 1 ? 1 : multiplier;
-        this.previousMultiplier = multiplier <= 1 ? 1 : multiplier;
         this.databaseHelper = databaseHelper;
     }
 
@@ -113,14 +90,12 @@ public class Phrase implements Serializable {
         this.nativeWord = givenPhrase.nativeWord;
         this.transcription = givenPhrase.transcription;
         this.probabilityFactor = givenPhrase.probabilityFactor;
-        this.previousProbabilityFactor = givenPhrase.probabilityFactor;
         this.collectionAddingDateTime = givenPhrase.collectionAddingDateTime;
         this.label = givenPhrase.label;
         this.lastAccessDateTime = givenPhrase.lastAccessDateTime;
         this.indexStart = givenPhrase.indexStart;
         this.indexEnd = givenPhrase.indexEnd;
         this.multiplier = givenPhrase.multiplier;
-        this.previousMultiplier = multiplier <= 1 ? 1 : multiplier;
         this.databaseHelper = givenPhrase.databaseHelper;
     }
 
@@ -141,22 +116,8 @@ public class Phrase implements Serializable {
         }
     }
 
-    public void resetPreviousValues(){
-        this.previousMultiplier = multiplier;
-        this.previousProbabilityFactor = probabilityFactor;
-    }
-
-    public void update(){
-        /*if(databaseHelper != null)
-            databaseHelper.updatePhrase(this);*/
-    }
-
     public boolean isTrained(){
         return probabilityFactor <= TRAINED_PROBABILITY_FACTOR;
-    }
-
-    public boolean wasTrainedBeforeAnswer(){
-        return previousProbabilityFactor <= 3;
     }
 
     @Override
@@ -194,7 +155,7 @@ public class Phrase implements Serializable {
     public void setForeignWord(String foreignWord) {
         System.out.println("CALL setForeignWord("+ foreignWord +") from Phrase");
         this.foreignWord = foreignWord;
-        update();
+//        update();
     }
     public String getNativeWord() {
         return nativeWord;
@@ -202,7 +163,7 @@ public class Phrase implements Serializable {
     public void setNativeWord(String nativeWord) {
         System.out.println("CALL setNativeWord("+ nativeWord +") from Phrase");
         this.nativeWord = nativeWord;
-        update();
+//        update();
     }
     public String getTranscription() {
         return transcription;
@@ -210,14 +171,14 @@ public class Phrase implements Serializable {
     public void setTranscription(String transcription) {
         System.out.println("CALL setTranscription("+ transcription +") from Phrase");
         this.transcription = transcription;
-        update();
+//        update();
     }
     public double getProbabilityFactor() {
         return probabilityFactor;
     }
     public void setProbabilityFactor(double probabilityFactor) {
         this.probabilityFactor = probabilityFactor;
-        update();
+//        update();
     }
     public String getLabel() {
         return label;
@@ -225,7 +186,7 @@ public class Phrase implements Serializable {
     public void setLabel(String label) {
         System.out.println("CALL setLabel("+label+") from Phrase");
         this.label = label;
-        update();
+//        update();
     }
     public ZonedDateTime getCollectionAddingDateTime() {
         return collectionAddingDateTime;

@@ -173,7 +173,7 @@ public class TrainingLog {
         averageAnswersPerDayNumber = new BigDecimal((double) (databaseHelper.getUntilTodayAnswersNumber() + allQuestions.size()) /
                 ((double) (databaseHelper.getUntilTodayTrainingHoursSpent() + LocalTime.now().getHour() - 6) / 24D)).setScale(1, BigDecimal.ROUND_HALF_UP);
         trainingCompletionPercentage = new BigDecimal((double) (totalTrainedPhrasesNumber + todayTrainedPhrasesNumber) / (double) (totalTrainedPhrasesNumber + totalUntrainedPhrasesNumber) * 100D).setScale(2, BigDecimal.ROUND_HALF_UP) + "%";
-        totalAndActivePhrasesNumber = databaseHelper.calculateActivePhrasesNumber() == databaseHelper.calculateTotalPhrasesNumber() ? String.valueOf(databaseHelper.calculateTotalPhrasesNumber()) : databaseHelper.calculateActivePhrasesNumber() + "/" + databaseHelper.calculateTotalPhrasesNumber();
+        totalAndActivePhrasesNumber = databaseHelper.getActivePhrasesNumber() == databaseHelper.calculateTotalPhrasesNumber() ? String.valueOf(databaseHelper.calculateTotalPhrasesNumber()) : databaseHelper.getActivePhrasesNumber() + "/" + databaseHelper.calculateTotalPhrasesNumber();
         activeTrainedPhrasesNumber = databaseHelper.getActiveTrainedPhrasesNumber();
         activeUntrainedPhrasesNumber = databaseHelper.getActiveUntrainedPhrasesNumber();
         totalAndActiveUntrainedPhrasesNumber = totalUntrainedPhrasesNumber == activeUntrainedPhrasesNumber ? String.valueOf(totalUntrainedPhrasesNumber) : activeUntrainedPhrasesNumber + "/" + totalUntrainedPhrasesNumber;
