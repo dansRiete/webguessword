@@ -44,7 +44,7 @@ public class EditBean implements Serializable{
         if(loginBean != null)
             databaseHelper = loginBean.getDatabaseHelper();
         if(databaseHelper != null){
-            myList = databaseHelper.getActivePhrases();
+            myList = databaseHelper.retrieveActivePhrases();
             Collections.sort(myList, ((phrase1, phrase2) -> {
                 if(phrase1.collectionAddingDateTime.isAfter(phrase2.collectionAddingDateTime)){
                     return -1;
@@ -85,7 +85,7 @@ public class EditBean implements Serializable{
 
         System.out.println("EDITBEAN CALL START deleteById(Phrase phr)  mylist.size=" + myList.size() + " deleted phrase is " + phr.foreignWord);
         databaseHelper.deletePhrase(phr);
-        myList = databaseHelper.getActivePhrases();
+        myList = databaseHelper.retrieveActivePhrases();
         labelsList = databaseHelper.retievePossibleLabels();
         databaseHelper.reloadPhrasesAndIndices();
         System.out.println("EDITBEAN CALL END deleteById(Phrase phr)  mylist.size=" + myList.size());

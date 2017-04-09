@@ -27,25 +27,18 @@ import java.util.Random;
  */
 public class DatabaseHelper {
 
-    private static final String TIMEZONE = "Europe/Kiev";
+    public static final String TIMEZONE = "Europe/Kiev";
     private static final double CHANCE_OF_APPEARING_TRAINED_PHRASES = 1D / 35D;
     private int activeTrainedPhrasesNumber;
     private int activeUntrainedPhrasesNumber;
     private int totalTrainedPhrasesNumber;
     private int totalUntrainedPhrasesNumber;
 
-    public int getActivePhrasesNumber() {
-        return activePhrasesNumber;
-    }
-
     private int activePhrasesNumber;
     private int greatestPhrasesIndex;
-//    private int lastSevenStackPosition;
     private HashSet<String> selectedLabels;
     private List<String> availableLabels = new ArrayList<>();
-//    private List<Phrase> activePhrases = new ArrayList<>();
     private List<Phrase> availablePhrases = new ArrayList<>();
-//    private Phrase[] lastSevenPhrasesStack;
     private Random random = new Random();
     private Connection mainDbConn;
     private LoginBean loginBean;
@@ -92,10 +85,11 @@ public class DatabaseHelper {
     public List<Question> loadTodayAnsweredQuestions(){
 
         Session session = sessionFactory.openSession();
-        Timestamp orderTime = new Timestamp(System.currentTimeMillis() - 6 * 60L * 60L * 1000L);
-        String queryString = "FROM Question WHERE date > :orderTime ORDER BY date DESC";
+        ZonedDateTime todays6amDateTime = ZonedDateTime.now(ZoneId.of(TIMEZONE)).withHour(6).withMinute(0).withSecond(0).withNano(0);
+        Timestamp todays6amTimestamp = new Timestamp(todays6amDateTime.toEpochSecond() * 1000);
+        String queryString = "FROM Question WHERE date > :time ORDER BY date DESC";
         Query query = session.createQuery(queryString);
-        query.setParameter("orderTime", orderTime);
+        query.setParameter("time", todays6amTimestamp);
         @SuppressWarnings("unchecked")
         List<Question> list = query.list();
         list.forEach(question -> question.setAnswered(true));
@@ -411,6 +405,16 @@ public class DatabaseHelper {
         throw new RuntimeException("There was no phrase by given index " + index);
     }
 
+    public List<Phrase> retrieveActivePhrases() {
+        List<Phrase> activePhrasesList = new ArrayList<>();
+        availablePhrases.forEach(phrase -> {
+            if (phrase.isInList(selectedLabels)){
+                activePhrasesList.add(phrase);
+            }
+        });
+        return activePhrasesList;
+    }
+
     /**
      * Corrects phrases stack size. Phrases stack size can not be
      * greater than a total active number of phrases curently trained
@@ -498,14 +502,8 @@ public class DatabaseHelper {
         return totalTrainedPhrasesNumber;
     }
 
-    public List<Phrase> getActivePhrases() {
-        List<Phrase> activePhrasesList = new ArrayList<>();
-        availablePhrases.forEach(phrase -> {
-            if (phrase.isInList(selectedLabels)){
-                activePhrasesList.add(phrase);
-            }
-        });
-        return activePhrasesList;
+    public int getActivePhrasesNumber() {
+        return activePhrasesNumber;
     }
 }
 

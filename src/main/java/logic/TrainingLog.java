@@ -5,6 +5,7 @@ import datamodel.Question;
 
 import java.math.BigDecimal;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
@@ -74,7 +75,7 @@ public class TrainingLog {
         }
 
         private String formatTime(ZonedDateTime givenTime){
-            return givenTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+            return givenTime.withZoneSameInstant(ZoneId.of(DatabaseHelper.TIMEZONE)).format(DateTimeFormatter.ofPattern("HH:mm:ss"));
         }
 
         private String makeStrong(String givenString){
