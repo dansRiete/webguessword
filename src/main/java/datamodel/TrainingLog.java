@@ -1,5 +1,6 @@
-package logic;
+package datamodel;
 
+import dao.DatabaseHelper;
 import datamodel.Phrase;
 import datamodel.Question;
 
@@ -104,7 +105,7 @@ public class TrainingLog {
     }
 
     public TrainingLog(DatabaseHelper databaseHelper) {
-        System.out.println("CALL: TrainingLog(DatabaseHelper databaseHelper) from TrainingLog");
+        System.out.println("CALL: datamodel.TrainingLog(DatabaseHelper databaseHelper) from datamodel.TrainingLog");
         this.databaseHelper = databaseHelper;
     }
 
@@ -117,7 +118,7 @@ public class TrainingLog {
     }
 
     public Question retrievePrevious(){
-        System.out.println("CALL: retrievePrevious() from TrainingLog");
+        System.out.println("CALL: retrievePrevious() from datamodel.TrainingLog");
         Question question = null;
         if(position - 1 < allQuestions.size()){
             question = allQuestions.get(position + 1);
@@ -126,20 +127,20 @@ public class TrainingLog {
     }
 
     public void select(int position){
-        System.out.println("CALL: select(int position) from TrainingLog");
+        System.out.println("CALL: select(int position) from datamodel.TrainingLog");
         this.position = position;
         reload();
     }
 
     public void selectPrevious(){
-        System.out.println("CALL: selectPrevious() from TrainingLog");
+        System.out.println("CALL: selectPrevious() from datamodel.TrainingLog");
         if(position + 1 < allQuestions.size()){
             select(++position);
         }
     }
 
     public void nextQuestion(){
-        System.out.println("CALL: nextQuestion() from TrainingLog");
+        System.out.println("CALL: nextQuestion() from datamodel.TrainingLog");
         if(position == 0){
             appendToLog(Question.compose(databaseHelper.retrieveRandomPhrase(), databaseHelper));
         }else {
@@ -152,19 +153,19 @@ public class TrainingLog {
     }
 
     public void deleteSelectedPhrase(){
-        System.out.println("CALL: deleteSelectedPhrase() from TrainingLog");
+        System.out.println("CALL: deleteSelectedPhrase() from datamodel.TrainingLog");
         databaseHelper.deletePhrase(retrieveSelected().getAskedPhrase());
         reload();
     }
 
     public void appendToLog(Question addedQuestion){
-        System.out.println("CALL: appendToLog(Question addedQuestion) from TrainingLog");
+        System.out.println("CALL: appendToLog(Question addedQuestion) from datamodel.TrainingLog");
         allQuestions.add(0, addedQuestion);
         select(0);
     }
 
     public void reload(){
-        System.out.println("CALL: reload() from TrainingLog");
+        System.out.println("CALL: reload() from datamodel.TrainingLog");
         log = new StringBuilder();
         int rightAnswersNumber = 0;
         int wrongAnswersNumber = 0;

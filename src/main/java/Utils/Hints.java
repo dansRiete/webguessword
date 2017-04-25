@@ -1,4 +1,4 @@
-package logic;
+package utils;
 
 /**
  * Created by Aleks on 27.02.2016.

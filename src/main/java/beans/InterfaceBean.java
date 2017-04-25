@@ -1,9 +1,9 @@
 package beans;
 
 import datamodel.Question;
-import logic.DatabaseHelper;
-import logic.RetDiff;
-import logic.TrainingLog;
+import dao.DatabaseHelper;
+import datamodel.TrainingLog;
+import utils.RetDiff;
 
 import javax.el.ELContext;
 import javax.faces.bean.ManagedBean;
@@ -127,7 +127,7 @@ public class InterfaceBean implements Serializable{
             previousRightButtonAction();
         }else if (answerField.equals("--")){
             previousWrongButtonAction();
-        }else if (answerField.equals("*")){
+        }else if (answerField.equals("")){
             nextButtonAction();
         }else {
             trainingLog.retrieveSelected().answerTheQuestion(answerField);
@@ -243,7 +243,7 @@ public class InterfaceBean implements Serializable{
     public TrainingLog getTrainingLog() {
         return trainingLog;
     }
-//    public void setTrainingLog(TrainingLog res) {
+//    public void setTrainingLog(datamodel.TrainingLog res) {
 //        this.trainingLog = res;
 //    }
 

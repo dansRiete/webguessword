@@ -1,4 +1,4 @@
-package logic;
+package dao;
 
 import beans.LoginBean;
 import dao.PhraseDao;
@@ -143,7 +143,7 @@ public class DatabaseHelper {
         session.close();
 
         for(Phrase currentPhrase : availablePhrases){
-            currentPhrase.setDatabaseHelper(this);
+//            currentPhrase.setDatabaseHelper(this);
             if(currentPhrase.probabilityFactor <= Phrase.TRAINED_PROBABILITY_FACTOR){
                 totalTrainedPhrasesNumber++;
             }else {
@@ -414,55 +414,6 @@ public class DatabaseHelper {
         });
         return activePhrasesList;
     }
-
-    /**
-     * Corrects phrases stack size. Phrases stack size can not be
-     * greater than a total active number of phrases curently trained
-     *//*
-    private void adjustLastPhrasesStackSize(){
-
-        System.out.println("CALL: adjustLastPhrasesStackSize() from DatabaseHelper");
-        if (lastSevenPhrasesStack == null || lastSevenPhrasesStack.length > activePhrasesNumber) {
-            if (activePhrasesNumber >= 7) {
-                lastSevenPhrasesStack = new Phrase[7];
-                lastSevenStackPosition = 0;
-            }else {
-                lastSevenPhrasesStack = new Phrase[0];
-            }
-        }
-    }
-
-    private int lastPhrasesStackPosition(){
-
-        System.out.println("CALL: lastPhrasesStackPosition() from DatabaseHelper");
-        lastSevenStackPosition = lastSevenStackPosition > lastSevenPhrasesStack.length - 1 ? lastSevenStackPosition = 0 : lastSevenStackPosition;
-        return lastSevenStackPosition++;
-    }
-
-    private void pushToLastPhrasesStack(Phrase pushedPhrase) {
-
-        System.out.println("CALL: pushToLastPhrasesStack(Phrase pushedPhrase) from DatabaseHelper");
-        adjustLastPhrasesStackSize();
-
-        if (!lastPhrasesStackContains(pushedPhrase) && lastSevenPhrasesStack != null && lastSevenPhrasesStack.length != 0) {
-            lastSevenPhrasesStack[lastPhrasesStackPosition()] = pushedPhrase;
-        }
-    }
-
-    private boolean lastPhrasesStackContains(Phrase checkedPhrase){
-
-        System.out.println("CALL: lastPhrasesStackContains(Phrase checkedPhrase) from DatabaseHelper");
-        if(checkedPhrase == null){
-            throw new IllegalArgumentException("Given phrase was null");
-        }
-        adjustLastPhrasesStackSize();
-        for (Phrase currentPhraseFromStack : lastSevenPhrasesStack) {
-            if (currentPhraseFromStack != null && currentPhraseFromStack.id == checkedPhrase.id) {
-                return true;
-            }
-        }
-        return false;
-    }*/
 
     //Setters and Getters
 

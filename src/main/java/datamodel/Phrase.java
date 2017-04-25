@@ -1,10 +1,9 @@
 package datamodel;
 
-import logic.DatabaseHelper;
+import dao.DatabaseHelper;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
 
@@ -60,12 +59,6 @@ public class Phrase implements Serializable {
     @Transient
     public int indexEnd;
 
-    @Transient
-    public DatabaseHelper databaseHelper;
-
-    @Transient
-    public String timeOfReturningFromList;
-
     public Phrase() {
     }
 
@@ -81,10 +74,10 @@ public class Phrase implements Serializable {
         this.label = (label == null ? "" : label);
         this.lastAccessDateTime = lastAccessDateTime;
         this.multiplier = multiplier <= 1 ? 1 : multiplier;
-        this.databaseHelper = databaseHelper;
     }
 
     public Phrase(Phrase givenPhrase){
+
         this.id = givenPhrase.id;
         this.foreignWord = givenPhrase.foreignWord;
         this.nativeWord = givenPhrase.nativeWord;
@@ -96,7 +89,6 @@ public class Phrase implements Serializable {
         this.indexStart = givenPhrase.indexStart;
         this.indexEnd = givenPhrase.indexEnd;
         this.multiplier = givenPhrase.multiplier;
-        this.databaseHelper = givenPhrase.databaseHelper;
     }
 
     public boolean isInList(HashSet<String> phrasesList){
@@ -155,7 +147,6 @@ public class Phrase implements Serializable {
     public void setForeignWord(String foreignWord) {
         System.out.println("CALL setForeignWord("+ foreignWord +") from Phrase");
         this.foreignWord = foreignWord;
-//        update();
     }
     public String getNativeWord() {
         return nativeWord;
@@ -163,7 +154,6 @@ public class Phrase implements Serializable {
     public void setNativeWord(String nativeWord) {
         System.out.println("CALL setNativeWord("+ nativeWord +") from Phrase");
         this.nativeWord = nativeWord;
-//        update();
     }
     public String getTranscription() {
         return transcription;
@@ -171,22 +161,18 @@ public class Phrase implements Serializable {
     public void setTranscription(String transcription) {
         System.out.println("CALL setTranscription("+ transcription +") from Phrase");
         this.transcription = transcription;
-//        update();
     }
     public double getProbabilityFactor() {
         return probabilityFactor;
     }
     public void setProbabilityFactor(double probabilityFactor) {
         this.probabilityFactor = probabilityFactor;
-//        update();
     }
     public String getLabel() {
         return label;
     }
     public void setLabel(String label) {
-        System.out.println("CALL setLabel("+label+") from Phrase");
         this.label = label;
-//        update();
     }
     public ZonedDateTime getCollectionAddingDateTime() {
         return collectionAddingDateTime;
@@ -194,11 +180,8 @@ public class Phrase implements Serializable {
     public ZonedDateTime getLastAccessDateTime() {
         return lastAccessDateTime;
     }
-    public void setLastAccessDateTime(ZonedDateTime lastAccessDateTime) {
+    public void setLastAccessDateTime(ZonedDateTime lastAccessDateTime){
         this.lastAccessDateTime = lastAccessDateTime;
-    }
-    public void setTimeOfReturningFromList(long time){
-        timeOfReturningFromList = Double.toString((double) time / 1000000d);
     }
     public int getIndexStart() {
         return indexStart;
@@ -212,25 +195,15 @@ public class Phrase implements Serializable {
     public void setIndexEnd(int indexEnd) {
         this.indexEnd = indexEnd;
     }
-    public DatabaseHelper getDatabaseHelper() {
-        return databaseHelper;
-    }
-    public void setDatabaseHelper(DatabaseHelper databaseHelper) {
-        this.databaseHelper = databaseHelper;
-    }
-
     public User getOwner() {
         return owner;
     }
-
     public void setOwner(User owner) {
         this.owner = owner;
     }
-
     public double getMultiplier() {
         return multiplier;
     }
-
     public void setMultiplier(double multiplier) {
         this.multiplier = multiplier;
     }
