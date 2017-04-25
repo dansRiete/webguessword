@@ -87,9 +87,10 @@ public class DatabaseHelper {
         Session session = sessionFactory.openSession();
         ZonedDateTime todays6amDateTime = ZonedDateTime.now(ZoneId.of(TIMEZONE)).withHour(6).withMinute(0).withSecond(0).withNano(0);
         Timestamp todays6amTimestamp = new Timestamp(todays6amDateTime.toEpochSecond() * 1000);
-        String queryString = "FROM Question WHERE date > :time ORDER BY date DESC";
+        String queryString = "FROM Question WHERE date > :time AND user_id = :user ORDER BY date DESC";
         Query query = session.createQuery(queryString);
         query.setParameter("time", todays6amTimestamp);
+        query.setParameter("user", loginBean.getLoggedUser().getId());
         @SuppressWarnings("unchecked")
         List<Question> list = query.list();
         list.forEach(question -> question.setAnswered(true));
