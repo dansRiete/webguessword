@@ -4,7 +4,7 @@ import dao.UserDao;
 import datamodel.Phrase;
 import datamodel.Question;
 import datamodel.User;
-import logic.DatabaseHelper;
+import dao.DatabaseHelper;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
@@ -37,7 +37,7 @@ public class LoginBean implements Serializable {
     private final static String ORIGINAL_REMOTE_HOST = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     private final static String FORWARDED_REMOTE_HOST_PORT3306 = "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     private final static String FORWARDED_REMOTE_HOST_PORT3307 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
-    public final static boolean USE_LOCAL_DB = true;
+    public final static boolean USE_LOCAL_DB = false;
     private SessionFactory sessionFactory;
 
     public LoginBean() {
@@ -67,24 +67,23 @@ public class LoginBean implements Serializable {
             }
 
         }
+
+        this.activeUser = "adminLtuHq9R";
+        this.activePassword = "d-AUIKakd1Br";
+
         try {
             this.activeRemoteHost = ORIGINAL_REMOTE_HOST;
-            this.activeUser = "adminLtuHq9R";
-            this.activePassword = "d-AUIKakd1Br";
+
             this.mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
             conectedDatabaseMessage = "Remote DB was connected";
         } catch (SQLException e) {
             try {
                 this.activeRemoteHost = FORWARDED_REMOTE_HOST_PORT3306;
-                this.activeUser = "adminLtuHq9R";
-                this.activePassword = "d-AUIKakd1Br";
                 this.mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
                 conectedDatabaseMessage = "Remote DB was connected through the local port 3306 forwarding";
             } catch (SQLException e1) {
                 try {
                     this.activeRemoteHost = FORWARDED_REMOTE_HOST_PORT3307;
-                    this.activeUser = "adminLtuHq9R";
-                    this.activePassword = "d-AUIKakd1Br";
                     this.mainDbConn = DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
                     conectedDatabaseMessage = "Remote DB was connected through the local port 3307 forwarding";
                 } catch (SQLException e2) {
@@ -109,7 +108,7 @@ public class LoginBean implements Serializable {
 
         //Check if there is such owner
         for (User user : usersList) {
-            if (this.userTextField.equalsIgnoreCase(user.login)) {
+            if (this.userTextField.equals(user.login)) {
                 userExist = true;
                 loggedUser = user;
                 break;
@@ -138,7 +137,6 @@ public class LoginBean implements Serializable {
         configuration.addAnnotatedClass(Question.class);
         configuration.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
         configuration.setProperty("hibernate.connection.driver_class", "com.mysql.jdbc.Driver");
-        System.out.println(this.activeUser + " - " + this.activePassword + " - " + this.activeRemoteHost);
         configuration.setProperty("hibernate.connection.username", this.activeUser);
         configuration.setProperty("hibernate.connection.password", this.activePassword);
         configuration.setProperty("hibernate.connection.url", this.activeRemoteHost);

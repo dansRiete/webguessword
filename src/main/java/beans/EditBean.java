@@ -1,7 +1,7 @@
 package beans;
 
 import datamodel.Phrase;
-import logic.DatabaseHelper;
+import dao.DatabaseHelper;
 
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;

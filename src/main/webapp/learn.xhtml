@@ -211,17 +211,14 @@
                 <tr>
                     <td>Active/Total trained phrases</td>
                     <td>${interfaceBean.trainingLog.totalAndActiveTrainedPhrasesNumber}</td>
-                    <!--<td>NOT YET IMPLEMENTED</td>-->
                 </tr>
                 <tr>
                     <td>Active/Total untrained phrases</td>
                     <td>${interfaceBean.trainingLog.totalAndActiveUntrainedPhrasesNumber}</td>
-                    <!--<td>NOT YET IMPLEMENTED</td>-->
                 </tr>
                 <tr>
                     <td>Active/Total number of phrases</td>
                     <td>${interfaceBean.trainingLog.totalAndActivePhrasesNumber}</td>
-                    <!--<td>NOT YET IMPLEMENTED</td>-->
                 </tr>
                 <tr>
                     <td>Percent of completion of learning</td>
@@ -230,7 +227,6 @@
                 <tr>
                     <td>Average answers per day</td>
                     <td>${interfaceBean.trainingLog.averageAnswersPerDayNumber}</td>
-                    <!--<td>NOT YET IMPLEMENTED</td>-->
                 </tr>
 
                 </tbody>
@@ -244,11 +240,11 @@
                 <tbody>
                 <tr>
                     <td>Chance of occurrence (points)</td>
-                    <td>${interfaceBean.trainingLog.retrieveSelected().composeProbabilityFactorHistory()}</td>
+                    <td>${interfaceBean.trainingLog.retrieveSelected().probabilityFactorHistory()}</td>
                 </tr>
                 <tr>
                     <td>Chance of occurrence (%)</td>
-                    <td>${interfaceBean.trainingLog.retrieveSelected().composeAppearingPercentage()}</td>
+                    <td>${interfaceBean.trainingLog.retrieveSelected().appearingPercentage()}</td>
                 </tr>
                 <tr>
                     <td>Phrase id</td>
@@ -256,20 +252,20 @@
                 </tr>
                 <tr>
                     <td>Right answer multiplier</td>
-                    <td>${interfaceBean.trainingLog.retrieveSelected().composeMultiplierHistory()}</td>
+                    <td>${interfaceBean.trainingLog.retrieveSelected().multiplierHistory()}</td>
                 </tr>
 
                 <tr>
                     <td>Last access date</td>
-                    <td>${interfaceBean.trainingLog.retrieveSelected().composeLastAccessDate()}</td>
+                    <td>${interfaceBean.trainingLog.retrieveSelected().lastAccessDate()}</td>
                 </tr>
                 <tr>
                     <td>Create date</td>
-                    <td>${interfaceBean.trainingLog.retrieveSelected().composeCreationDate()}</td>
+                    <td>${interfaceBean.trainingLog.retrieveSelected().creationDate()}</td>
                 </tr>
                 <tr>
                     <td>Label</td>
-                    <td>${interfaceBean.trainingLog.retrieveSelected().composeLabel().equals("") ? "NO LABEL" : interfaceBean.trainingLog.retrieveSelected().composeLabel()}</td>
+                    <td>${interfaceBean.trainingLog.retrieveSelected().label().equals("") ? "NO LABEL" : interfaceBean.trainingLog.retrieveSelected().label()}</td>
                 </tr>
                 <tr>
                     <td>Labels filter
