@@ -3,6 +3,7 @@ package beans;
 import datamodel.Question;
 import dao.DatabaseHelper;
 import datamodel.TrainingLog;
+import org.springframework.stereotype.Component;
 import utils.RetDiff;
 
 import javax.el.ELContext;
@@ -24,6 +25,7 @@ import java.util.List;
 
 @ManagedBean
 @SessionScoped
+@Component
 public class InterfaceBean implements Serializable{
 
     @ManagedProperty(value="#{login}")

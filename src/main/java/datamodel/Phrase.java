@@ -1,6 +1,8 @@
 package datamodel;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import dao.DatabaseHelper;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -174,9 +176,11 @@ public class Phrase implements Serializable {
     public void setLabel(String label) {
         this.label = label;
     }
+
     public ZonedDateTime getCollectionAddingDateTime() {
         return collectionAddingDateTime;
     }
+
     public ZonedDateTime getLastAccessDateTime() {
         return lastAccessDateTime;
     }
