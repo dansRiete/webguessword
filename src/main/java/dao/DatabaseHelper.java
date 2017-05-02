@@ -9,6 +9,7 @@ import datamodel.Question;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
+import org.springframework.stereotype.Component;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -25,6 +26,7 @@ import java.util.Random;
 /**
  * Created by Aleks on 11.05.2016.
  */
+@Component
 public class DatabaseHelper {
 
     public static final String TIMEZONE = "Europe/Kiev";
