@@ -8,6 +8,8 @@ import dao.DatabaseHelper;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
@@ -23,6 +25,7 @@ import java.util.List;
 
 @ManagedBean(name = "login")
 @SessionScoped
+@Service
 public class LoginBean implements Serializable {
 
     private String userTextField;

@@ -3,9 +3,12 @@ package beans;
 import datamodel.Question;
 import dao.DatabaseHelper;
 import datamodel.TrainingLog;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import utils.RetDiff;
 
+import javax.annotation.PostConstruct;
 import javax.el.ELContext;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
@@ -25,10 +28,12 @@ import java.util.List;
 
 @ManagedBean
 @SessionScoped
-@Component
+//@Component
+//@Service("interfaceBean")
 public class InterfaceBean implements Serializable{
 
-    @ManagedProperty(value="#{login}")
+//    @ManagedProperty(value="#{login}")
+    @Autowired
     private LoginBean loginBean;
 
     //>>Current session data
@@ -66,8 +71,17 @@ public class InterfaceBean implements Serializable{
     public InterfaceBean(){
 
         System.out.println("CALL: InterfaceBean constructor");
-        ELContext elContext = FacesContext.getCurrentInstance().getELContext();
-        this.loginBean = (LoginBean) elContext.getELResolver().getValue(elContext, null, "login");
+        init();
+    }
+
+    @PostConstruct
+    private void init(){
+        /*try {
+            ELContext elContext = FacesContext.getCurrentInstance().getELContext();
+            this.loginBean = (LoginBean) elContext.getELResolver().getValue(elContext, null, "login");
+        }catch (NullPointerException e){
+            throw new RuntimeException("ELContext was null");
+        }*/
 
         if(loginBean != null){
             this.databaseHelper = loginBean.getDatabaseHelper();
@@ -84,6 +98,7 @@ public class InterfaceBean implements Serializable{
         }else {
             throw new RuntimeException("DatabaseHelper was null");
         }
+
     }
 
     public void reloadLabelsList() {

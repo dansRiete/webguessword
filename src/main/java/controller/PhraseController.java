@@ -5,12 +5,12 @@ import dao.DatabaseHelper;
 import datamodel.Phrase;
 import datamodel.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import javax.jws.soap.SOAPBinding;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,17 +18,23 @@ import java.util.List;
 /**
  * Created by Aleks on 26.04.2017.
  */
+
 @Controller
 public class PhraseController {
     public final static String GET_ALL_PHRASES = "/rest/phrases";
 
-    @Autowired
-    public void setInterfaceBean(InterfaceBean interfaceBean) {
-        this.interfaceBean = interfaceBean;
+//    @Autowired
+    public DatabaseHelper getDatabaseHelper() {
+        return databaseHelper;
+    }
+
+//    @Autowired
+    public void setDatabaseHelper(DatabaseHelper databaseHelper) {
+        this.databaseHelper = databaseHelper;
     }
 
 
-    InterfaceBean interfaceBean;
+    DatabaseHelper databaseHelper;
 
     @RequestMapping(value = PhraseController.GET_ALL_PHRASES, method = RequestMethod.GET)
     public @ResponseBody List<Phrase> getAllPhrases(){
@@ -40,7 +46,8 @@ public class PhraseController {
 
         allPhrases.add(phrase2);
 //        return allPhrases;
-        return interfaceBean.getDatabaseHelper().retrieveActivePhrases();
+//        return interfaceBean.getDatabaseHelper().retrieveActivePhrases();
+        return getDatabaseHelper().retrieveActivePhrases();
     }
 
 }
