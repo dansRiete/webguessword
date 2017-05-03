@@ -1,6 +1,7 @@
 package controller;
 
 import datamodel.Phrase;
+import datamodel.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,7 +23,12 @@ public class RestController {
     RestDatabaseHelper restDatabaseHelper;
 
     @RequestMapping(value = "/phrases", method = RequestMethod.GET)
-    public @ResponseBody List<Phrase> getAllPhrases(@RequestParam("userId") long userId){
+    public @ResponseBody List<Phrase> fetchAllPhrases(@RequestParam("user_id") long userId){
         return restDatabaseHelper.fetchAllPhrases(userId);
+    }
+
+    @RequestMapping(value = "/users", method = RequestMethod.GET)
+    public @ResponseBody List<User> fetchAllUsers(){
+        return restDatabaseHelper.fetchAllUsers();
     }
 }

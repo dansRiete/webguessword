@@ -51,7 +51,6 @@ public class RestDatabaseHelper {
     @SuppressWarnings({"unchecked", "JpaQlInspection"})
     public List<Phrase> fetchAllPhrases(long userId){
         Session session = phraseDao.openCurrentSession();
-        List<User> users = session.createQuery("from User").list();
         CriteriaBuilder builder = session.getCriteriaBuilder();
         CriteriaQuery<Phrase> criteriaQuery = builder.createQuery(Phrase.class);
         Root<Phrase> phraseRoot = criteriaQuery.from(Phrase.class);
@@ -61,6 +60,13 @@ public class RestDatabaseHelper {
         List<Phrase> phrases = allPhrasesQuery.list();
         phraseDao.closeCurrentSession();
         return phrases;
+    }
+
+    public List<User> fetchAllUsers(){
+        userDao.openCurrentSession();
+        List<User> users = userDao.fetchAll();
+        userDao.closeCurrentSession();
+        return users;
     }
 
     @SuppressWarnings("Duplicates")

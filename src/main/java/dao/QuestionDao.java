@@ -78,12 +78,12 @@ public class QuestionDao implements DaoInterface<Question, Long> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<Question> findAll() {
+    public List<Question> fetchAll() {
         return getCurrentSession().createQuery("from Question").list();
     }
 
     @Override
     public void deleteAll() {
-        findAll().forEach(this::delete);
+        fetchAll().forEach(this::delete);
     }
 }

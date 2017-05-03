@@ -74,13 +74,13 @@ public class PhraseDao implements DaoInterface<Phrase, Long> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<Phrase> findAll() {
+    public List<Phrase> fetchAll() {
         List<Phrase> phrases = getCurrentSession().createQuery("from Phrase").list();
         return phrases;
     }
 
     @Override
     public void deleteAll() {
-        findAll().forEach(this::delete);
+        fetchAll().forEach(this::delete);
     }
 }

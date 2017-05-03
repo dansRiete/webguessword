@@ -74,12 +74,12 @@ public class UserDao implements DaoInterface<User, Long> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<User> findAll() {
+    public List<User> fetchAll() {
         return getCurrentSession().createQuery("from User").list();
     }
 
     @Override
     public void deleteAll() {
-        findAll().forEach(this::delete);
+        fetchAll().forEach(this::delete);
     }
 }

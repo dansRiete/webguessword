@@ -8,7 +8,6 @@ import dao.DatabaseHelper;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
-import org.springframework.stereotype.Component;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
@@ -48,7 +47,7 @@ public class LoginBean implements Serializable {
         buildSessionFactory();
         UserDao userDao = new UserDao(sessionFactory);
         userDao.openCurrentSession();
-        this.usersList = userDao.findAll();
+        this.usersList = userDao.fetchAll();
         userDao.closeCurrentSession();
     }
 
