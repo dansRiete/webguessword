@@ -1,9 +1,6 @@
 package dao;
 
 import beans.LoginBean;
-import dao.PhraseDao;
-import dao.QuestionDao;
-import dao.UserDao;
 import datamodel.Phrase;
 import datamodel.Question;
 import org.hibernate.Session;
@@ -26,7 +23,7 @@ import java.util.Random;
 /**
  * Created by Aleks on 11.05.2016.
  */
-@Component
+
 public class DatabaseHelper {
 
     public static final String TIMEZONE = "Europe/Kiev";
@@ -68,8 +65,11 @@ public class DatabaseHelper {
         phraseDao = new PhraseDao(sessionFactory);
         untilTodayAnswersNumber = calculateUntilTodayAnswersNumber();
         untilTodayTrainingHoursSpent = calculateUntilTodayTrainingHoursSpent();
-        availableLabels = retievePossibleLabels();
-        reloadPhrasesAndIndices();
+        if(loginBean.getLoggedUser() != null){
+            availableLabels = retrievePossibleLabels();
+            reloadPhrasesAndIndices();
+        }
+
     }
 
     public void peristQuestion(Question question){
@@ -99,16 +99,17 @@ public class DatabaseHelper {
         return list;
     }
 
-    public List<String> retievePossibleLabels() {
+    public List<String> retrievePossibleLabels() {
 
-        System.out.println("CALL: retievePossibleLabels() from DatabaseHelper");
+        System.out.println("CALL: retrievePossibleLabels() from DatabaseHelper");
         List<String> availableLabels = new ArrayList<>();
         availableLabels.clear();
         String temp;
         availableLabels.add("ALL");
 
         try (Statement st = mainDbConn.createStatement();
-             ResultSet rs = st.executeQuery("SELECT DISTINCT (LABEL) FROM " + "(SELECT * FROM words WHERE user_id=" + loginBean.getLoggedUser().getId() + ") AS THIS_USER" + " ORDER BY LABEL")) {
+             ResultSet rs = st.executeQuery("SELECT DISTINCT (LABEL) FROM " + "(SELECT * FROM words WHERE user_id=" +
+                     loginBean.getLoggedUser().getId() + ") AS THIS_USER" + " ORDER BY LABEL")) {
             while (rs.next()) {
                 temp = rs.getString("LABEL");
                 if(temp != null && !temp.equals(""))
@@ -116,7 +117,7 @@ public class DatabaseHelper {
             }
 
         } catch (SQLException e) {
-            System.out.println("EXCEPTION: in retievePossibleLabels() from DatabaseHelper");
+            System.out.println("EXCEPTION: in retrievePossibleLabels() from DatabaseHelper");
             e.printStackTrace();
             throw new RuntimeException();
         }
@@ -140,7 +141,8 @@ public class DatabaseHelper {
         CriteriaQuery<Phrase> criteriaQuery = builder.createQuery(Phrase.class);
         Root<Phrase> phraseRoot = criteriaQuery.from(Phrase.class);
         criteriaQuery.select(phraseRoot);
-        criteriaQuery.where(builder.equal(phraseRoot.get("owner"), loginBean.getLoggedUser()), builder.equal(phraseRoot.get("isDeleted"), false));
+        criteriaQuery.where(builder.equal(phraseRoot.get("user"), loginBean.getLoggedUser()),
+                builder.equal(phraseRoot.get("isDeleted"), false));
         Query<Phrase> allPhrasesQuery = session.createQuery(criteriaQuery);
         availablePhrases = allPhrasesQuery.list();
         session.close();

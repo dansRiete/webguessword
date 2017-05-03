@@ -58,7 +58,7 @@ public class EditBean implements Serializable{
                     }
                 }
             }));
-            labelsList = databaseHelper.retievePossibleLabels();
+            labelsList = databaseHelper.retrievePossibleLabels();
         }
     }
 
@@ -86,7 +86,7 @@ public class EditBean implements Serializable{
         System.out.println("EDITBEAN CALL START deleteById(Phrase phr)  mylist.size=" + myList.size() + " deleted phrase is " + phr.foreignWord);
         databaseHelper.deletePhrase(phr);
         myList = databaseHelper.retrieveActivePhrases();
-        labelsList = databaseHelper.retievePossibleLabels();
+        labelsList = databaseHelper.retrievePossibleLabels();
         databaseHelper.reloadPhrasesAndIndices();
         System.out.println("EDITBEAN CALL END deleteById(Phrase phr)  mylist.size=" + myList.size());
 

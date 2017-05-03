@@ -8,6 +8,7 @@ import dao.DatabaseHelper;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
+import org.springframework.stereotype.Component;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
@@ -23,6 +24,7 @@ import java.util.List;
 
 @ManagedBean(name = "login")
 @SessionScoped
+//@Component
 public class LoginBean implements Serializable {
 
     private String userTextField;
@@ -37,10 +39,11 @@ public class LoginBean implements Serializable {
     private final static String ORIGINAL_REMOTE_HOST = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     private final static String FORWARDED_REMOTE_HOST_PORT3306 = "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     private final static String FORWARDED_REMOTE_HOST_PORT3307 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
-    public final static boolean USE_LOCAL_DB = false;
+    public final static boolean USE_LOCAL_DB = true;
     private SessionFactory sessionFactory;
 
     public LoginBean() {
+        System.out.println("LoginBean's constructor");
         determineAliveDbAndConnectTo();
         buildSessionFactory();
         UserDao userDao = new UserDao(sessionFactory);
@@ -106,7 +109,7 @@ public class LoginBean implements Serializable {
         HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getResponse();
         User loggedUser = null;
 
-        //Check if there is such owner
+        //Check if there is such user
         for (User user : usersList) {
             if (this.userTextField.equals(user.login)) {
                 userExist = true;
@@ -115,7 +118,7 @@ public class LoginBean implements Serializable {
             }
         }
 
-        //If owner exists and passwordTextField is correct then dispatch to "learn.xhtml" otherwise sendRedirect("error.xhtml")
+        //If user exists and passwordTextField is correct then dispatch to "learn.xhtml" otherwise sendRedirect("error.xhtml")
         try {
             if (userExist && passwordTextField.equals(loggedUser.password)) {
                 this.loggedUser = loggedUser;

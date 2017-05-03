@@ -116,7 +116,7 @@ public class Question implements Serializable {
         this.initLastAccessDate = askedPhrase.getLastAccessDateTime();
         this.questionRepresentation = askedPhrase.nativeWord + " " + shortHint();
         this.askDate = askedPhrase.lastAccessDateTime = ZonedDateTime.now();
-        this.user = askedPhrase.getOwner();
+        this.user = askedPhrase.getUser();
     }
 
 

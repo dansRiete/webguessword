@@ -48,7 +48,7 @@ public class Phrase implements Serializable {
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")
-    public User owner;
+    public User user;
 
     @Column(name = "is_deleted")
     public boolean isDeleted;
@@ -63,9 +63,9 @@ public class Phrase implements Serializable {
     }
 
     public Phrase(long id, String foreignWord, String nativeWord, String transcription, double probabilityFactor,
-                  ZonedDateTime collectionAddingDateTime, String label, ZonedDateTime lastAccessDateTime, double multiplier, DatabaseHelper databaseHelper, User owner){
+                  ZonedDateTime collectionAddingDateTime, String label, ZonedDateTime lastAccessDateTime, double multiplier, DatabaseHelper databaseHelper, User user){
         this.id = id;
-        this.owner = owner;
+        this.user = user;
         this.foreignWord = foreignWord;
         this.nativeWord = nativeWord;
         this.transcription = transcription == null ? "" : transcription;
@@ -195,11 +195,11 @@ public class Phrase implements Serializable {
     public void setIndexEnd(int indexEnd) {
         this.indexEnd = indexEnd;
     }
-    public User getOwner() {
-        return owner;
+    public User getUser() {
+        return user;
     }
-    public void setOwner(User owner) {
-        this.owner = owner;
+    public void setUser(User user) {
+        this.user = user;
     }
     public double getMultiplier() {
         return multiplier;

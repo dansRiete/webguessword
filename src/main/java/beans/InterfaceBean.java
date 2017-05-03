@@ -2,7 +2,7 @@ package beans;
 
 import datamodel.Question;
 import dao.DatabaseHelper;
-import datamodel.TrainingLog;
+import utils.TrainingLog;
 import utils.RetDiff;
 
 import javax.el.ELContext;
@@ -243,7 +243,7 @@ public class InterfaceBean implements Serializable{
     public TrainingLog getTrainingLog() {
         return trainingLog;
     }
-//    public void setTrainingLog(datamodel.TrainingLog res) {
+//    public void setTrainingLog(utils.TrainingLog res) {
 //        this.trainingLog = res;
 //    }
 

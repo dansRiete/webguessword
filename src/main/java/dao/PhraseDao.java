@@ -75,7 +75,8 @@ public class PhraseDao implements DaoInterface<Phrase, Long> {
     @SuppressWarnings("unchecked")
     @Override
     public List<Phrase> findAll() {
-        return getCurrentSession().createQuery("from Question").list();
+        List<Phrase> phrases = getCurrentSession().createQuery("from Phrase").list();
+        return phrases;
     }
 
     @Override
