@@ -19,8 +19,7 @@ import java.util.List;
 @RequestMapping(value = "/rest")
 public class RestController {
 
-    @Autowired
-    RestDatabaseHelper restDatabaseHelper;
+
 
     @RequestMapping(value = "/phrases", method = RequestMethod.GET)
     public @ResponseBody List<Phrase> fetchAllPhrases(@RequestParam("user_id") long userId){

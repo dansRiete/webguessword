@@ -7,7 +7,7 @@ import java.math.BigDecimal;
  * Is used for returning the string representation of the time difference (seconds, minutes, hours ... years)
  */
 
-public class RetDiff {
+public class TimeDifference {
     private static final long oneMinute = 1000 * 60;
     private static final long oneHour = oneMinute * 60;
     private static final long oneDay = oneHour * 24;
@@ -18,7 +18,7 @@ public class RetDiff {
      * @param msTimeDifference Time difference in milliseconds
      * @return Returns the string representation of the time difference (seconds, minutes, hours ... years)
      */
-    public String retDiffInTime(long msTimeDifference) {
+    public static String retDiffInTime(long msTimeDifference) {
 
         if (msTimeDifference < oneMinute) {
             //in seconds

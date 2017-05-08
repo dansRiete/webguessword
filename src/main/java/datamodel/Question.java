@@ -1,14 +1,14 @@
 package datamodel;
 
 import dao.DatabaseHelper;
+import utils.AnswerChecker;
+import utils.Hints;
 
 import javax.persistence.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by Aleks on 11.11.2016.
@@ -41,7 +41,7 @@ public class Question implements Serializable {
     private Long id;
 
     @Column(name = "answer")
-    private String answer;
+    private String answerLiteral;
 
     @Column(name = "date")
     private ZonedDateTime askDate;
@@ -85,18 +85,7 @@ public class Question implements Serializable {
     private DatabaseHelper databaseHelper;
 
     @Transient
-    private String questionRepresentation;
-
-    @Transient
     private ZonedDateTime initLastAccessDate;
-
-    public boolean isAnswered() {
-        return answered;
-    }
-
-    public void setAnswered(boolean answered) {
-        this.answered = answered;
-    }
 
     @Transient
     private boolean answered;
@@ -114,11 +103,9 @@ public class Question implements Serializable {
         this.initStartIndex = askedPhrase.getIndexStart();
         this.initEndIndex = askedPhrase.getIndexEnd();
         this.initLastAccessDate = askedPhrase.getLastAccessDateTime();
-        this.questionRepresentation = askedPhrase.nativeWord + " " + shortHint();
         this.askDate = askedPhrase.lastAccessDateTime = ZonedDateTime.now();
         this.user = askedPhrase.getUser();
     }
-
 
     public static Question compose(Phrase askedPhrase, DatabaseHelper dbHelper) {
         System.out.println("CALL: compose(Phrase askedPhrase, DatabaseHelper dbHelper) from Question");
@@ -128,39 +115,22 @@ public class Question implements Serializable {
         return new Question(askedPhrase, dbHelper);
     }
 
-    public Question answerTheQuestion(String answer) {
-        System.out.println("CALL: answerTheQuestion(String answer) from Question");
+    public void answerTheQuestion(String answer) {
+        System.out.println("CALL: answerTheQuestion(String answerLiteral) from Question");
         if (!answered) {
-            this.answer = answer;
-            if (this.answer.equals("") || askedPhrase.getForeignWord().equals("")) {
-                this.answerCorrect = false;
-            } else if (!this.answer.contains("\\") && !this.answer.contains("/")) {
-                this.answerCorrect = phrasesEquals(this.answer, askedPhrase.getForeignWord());
-            } else {
-                String[] givenLiteralPhrases = this.answer.split("[/\\\\]");
-                String[] referenceLiteralPhrases = askedPhrase.getForeignWord().split("[/\\\\]");
-                int matchesAmount = 0;
-                for (String referenceLiteralPhrase : referenceLiteralPhrases) {
-                    for (String givenLiteralPhrase : givenLiteralPhrases) {
-                        if (phrasesEquals(referenceLiteralPhrase, givenLiteralPhrase)) {
-                            matchesAmount++;
-                        }
-                    }
-                }
-                this.answerCorrect = matchesAmount == referenceLiteralPhrases.length;
-            }
-            if (this.answerCorrect) {
+            this.answerLiteral = answer;
+
+            if (AnswerChecker.checkLiterals(answer, askedPhrase.getForeignWord())) {
                 rightAnswer();
             } else {
                 wrongAnswer();
             }
         }
-        return this;
     }
 
     public void rightAnswer() {
         System.out.println("CALL: rightAnswer() from Question");
-
+        this.answerCorrect = true;
         if (databaseHelper == null || !lastInLog()) {
             return;
         }
@@ -182,10 +152,10 @@ public class Question implements Serializable {
         this.afterAnswerEndIndex = askedPhrase.getIndexEnd();
         this.answerCorrect = true;
         if (answered) {
-            this.answer = askedPhrase.getForeignWord();
+            this.answerLiteral = askedPhrase.getForeignWord();
         } else {
-            if (this.answer == null || this.answer.equals("")) {
-                this.answer = askedPhrase.getForeignWord();
+            if (this.answerLiteral == null || this.answerLiteral.equals("")) {
+                this.answerLiteral = askedPhrase.getForeignWord();
             }
         }
         saveQuestion();
@@ -193,17 +163,9 @@ public class Question implements Serializable {
 
     }
 
-    public void saveQuestion() {
-        if (answered) {
-            databaseHelper.updateQuestion(this);
-        } else {
-            databaseHelper.peristQuestion(this);
-        }
-    }
-
     public void wrongAnswer() {
         System.out.println("CALL: wrongAnswer() from Question");
-
+        this.answerCorrect = false;
         if (databaseHelper == null || !lastInLog()) {
             return;
         }
@@ -226,11 +188,19 @@ public class Question implements Serializable {
         this.answerCorrect = false;
 
         if (answered) {
-            this.answer = null;
+            this.answerLiteral = null;
         }
         saveQuestion();
         this.answered = true;
 
+    }
+
+    public void saveQuestion() {
+        if (answered) {
+//            databaseHelper.updateQuestion(this);
+        } else {
+//            databaseHelper.peristQuestion(this);
+        }
     }
 
     private boolean lastInLog() {
@@ -239,6 +209,10 @@ public class Question implements Serializable {
 
     private boolean isTrained() {
         return initialProbabilityFactor <= TRAINED_PROBABILITY_FACTOR;
+    }
+
+    public String string(){
+        return askedPhrase.nativeWord + " " + Hints.shortHint(askedPhrase.foreignWord);
     }
 
     public String probabilityFactorHistory() {
@@ -296,133 +270,6 @@ public class Question implements Serializable {
         return appearingPercentage;
     }
 
-    /**
-     * Gets the phrase in English as a parameter. If a slash occurs in the phrase (for example: car \ my auto) returns
-     * a hint *** \ ** ****, if the phrase does not contain a slash ("/") returns ""
-     *
-     * @return a hint *** \ ** ****, if the phrase does not contain a slash ("/") returns ""
-     */
-    public String longHint() {
-        if (askedPhrase.foreignWord.contains("/") || askedPhrase.foreignWord.contains("\\") || askedPhrase.foreignWord.contains(" ") || askedPhrase.foreignWord.contains("-") ||
-                askedPhrase.foreignWord.contains("`") || askedPhrase.foreignWord.contains("'") || askedPhrase.foreignWord.contains(",")) {
-            char[] hintAr = askedPhrase.foreignWord.toCharArray();
-            char[] newHintAr = new char[hintAr.length + 2];
-            int i = 1;
-            newHintAr[0] = '(';
-            newHintAr[newHintAr.length - 1] = ')';
-            for (char temp : hintAr) {
-                if (temp == ' ') {
-                    newHintAr[i] = ' ';
-                    i++;
-                } else if (temp == '/') {
-                    newHintAr[i] = '/';
-                    i++;
-                } else if (temp == '-') {
-                    newHintAr[i] = '-';
-                    i++;
-                } else if (temp == '`') {
-                    newHintAr[i] = '`';
-                    i++;
-                } else if (temp == '\'') {
-                    newHintAr[i] = '\'';
-                    i++;
-                } else if (temp == '\\') {
-                    newHintAr[i] = '\\';
-                    i++;
-                } else if (temp == ',') {
-                    newHintAr[i] = ',';
-                    i++;
-                } else if (temp == '’') {
-                    newHintAr[i] = '’';
-                    i++;
-                } else {
-                    newHintAr[i] = '*';
-                    i++;
-                }
-            }
-            return new String(newHintAr);
-        } else
-            return "";
-    }
-
-    public String shortHint() {
-
-        int numberOfVariants = 1;   // There is at least one
-        int serialNumberOfHint = 0;
-        StringBuilder finalHint = new StringBuilder("");
-        boolean wasFirstSlash = false;
-
-        for (char currentChar : askedPhrase.foreignWord.toCharArray()) {     //Count numbers of variants
-            if (currentChar == '/' || currentChar == '\\') {
-                numberOfVariants++;
-            }
-        }
-
-        if (numberOfVariants > 1) {
-            finalHint.append('(');
-            for (int i = 0; i < numberOfVariants; i++) {
-                finalHint.append(wasFirstSlash ? "/" : "").append(++serialNumberOfHint);
-                wasFirstSlash = true;
-            }
-            finalHint.append(')');
-        }
-
-        return finalHint.toString();
-
-    }
-
-    private boolean phrasesEquals(String givenPhrase, String referencePhrase) {
-        List<String> givenPhraseWords = splitToWords(givenPhrase);
-        List<String> referencePhraseWords = splitToWords(referencePhrase);
-
-        for (int i = 0; i < referencePhraseWords.size(); i++) {
-            if (!wordsEquals(referencePhraseWords.get(i), givenPhraseWords.get(i))) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private boolean wordsEquals(String givenWord, String referenceWord) {
-        if (givenWord.length() <= 6) {
-            return givenWord.replaceAll("\\W|_", "").equalsIgnoreCase(referenceWord.replaceAll("\\W|_", ""));
-        } else {
-            return removeDoubleLetters(givenWord.replaceAll("\\W|_", "")).
-                    equalsIgnoreCase(removeDoubleLetters(referenceWord.replaceAll("\\W|_", "")));
-        }
-    }
-
-    private List<String> splitToWords(String givenPhrase) {
-        ArrayList<String> words = new ArrayList<>();
-        for (String currentWord : givenPhrase.split("[ -]")) {
-            if (isWord(currentWord)) {
-                words.add(currentWord);
-            }
-        }
-        return words;
-    }
-
-    private String removeDoubleLetters(String givenWord) {
-        StringBuilder shortAnswer = new StringBuilder().append(givenWord.charAt(0));
-        for (int i1 = 1, i2 = 0; i1 < givenWord.length(); i1++) {
-            if (givenWord.toLowerCase().charAt(i1) != shortAnswer.charAt(i2)) {
-                shortAnswer.append(givenWord.toLowerCase().charAt(i1));
-                i2++;
-            }
-        }
-        return shortAnswer.toString();
-    }
-
-    private boolean isWord(String givenWord) {
-        for (char currentChar : givenWord.toCharArray()) {
-            if (Character.isLetter(currentChar)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public boolean answerIsCorrect() {
         return answered && answerCorrect;
     }
@@ -454,15 +301,19 @@ public class Question implements Serializable {
         return id;
     }
 
-    public String getQuestionRepresentation() {
-        return questionRepresentation;
-    }
-
-    public String getAnswer() {
-        return answer;
+    public String getAnswerLiteral() {
+        return answerLiteral;
     }
 
     public boolean isAnswerCorrect() {
         return answerCorrect;
+    }
+
+    public boolean isAnswered() {
+        return answered;
+    }
+
+    public void setAnswered(boolean answered) {
+        this.answered = answered;
     }
 }

@@ -11,7 +11,7 @@ public class Hints {
      * @param engWord foreign phrase
      * @return a hint *** \ ** ****, if the phrase does not contain a slash ("/") returns ""
      */
-    /*public String longHint(String engWord){
+    public static String longHint(String engWord){
         if(engWord.contains("/")||engWord.contains("\\")||engWord.contains(" ")||engWord.contains("-")||
                 engWord.contains("`")||engWord.contains("'")||engWord.contains(",")){
             char[] hintAr = engWord.toCharArray();
@@ -54,7 +54,7 @@ public class Hints {
         return "";
     }
 
-    public String shortHint(String word){
+    public static String shortHint(String word){
 
         int numberOfVariants = 1;   // There is at least one
         int serialNumberOfHint = 0;
@@ -78,5 +78,5 @@ public class Hints {
 
         return finalHint.toString();
 
-    }*/
+    }
 }
