@@ -7,6 +7,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
 import org.springframework.stereotype.Component;
+import utils.DatabaseUtils;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -32,18 +33,17 @@ public class DatabaseHelper {
     private int activeUntrainedPhrasesNumber;
     private int totalTrainedPhrasesNumber;
     private int totalUntrainedPhrasesNumber;
-
     private int activePhrasesNumber;
     private int greatestPhrasesIndex;
     private HashSet<String> selectedLabels;
     private List<String> availableLabels = new ArrayList<>();
     private List<Phrase> availablePhrases = new ArrayList<>();
     private Random random = new Random();
-    private Connection mainDbConn;
+    //    private Connection mainDbConn;
     private LoginBean loginBean;
     private SessionFactory sessionFactory;
-    private QuestionDao questionDao;
-    private UserDao userDao;
+    //    private QuestionDao questionDao;
+//    private UserDao userDao;
     private PhraseDao phraseDao;
     /**
      * Number of replies to 6 am of the current day
@@ -59,10 +59,10 @@ public class DatabaseHelper {
 
         this.sessionFactory = sessionFactory;
         this.loginBean = loginBean;
-        mainDbConn = loginBean.getConnection();
-        questionDao = new QuestionDao(sessionFactory);
-        userDao = new UserDao(sessionFactory);
-        phraseDao = new PhraseDao(sessionFactory);
+//        mainDbConn = loginBean.getConnection();
+//        questionDao = new QuestionDao(sessionFactory);
+//        userDao = new UserDao(sessionFactory);
+        phraseDao = new PhraseDao();
         untilTodayAnswersNumber = calculateUntilTodayAnswersNumber();
         untilTodayTrainingHoursSpent = calculateUntilTodayTrainingHoursSpent();
         if(loginBean.getLoggedUser() != null){
@@ -72,7 +72,7 @@ public class DatabaseHelper {
 
     }
 
-    public void peristQuestion(Question question){
+    /*public void peristQuestion(Question question){
 
         System.out.println("CALL: peristQuestion(Question question) from DatabaseHelper");
         questionDao.persist(question);
@@ -82,13 +82,14 @@ public class DatabaseHelper {
 
         System.out.println("CALL: updateQuestion(Question question) from DatabaseHelper");
         questionDao.update(question);
-    }
+    }*/
 
     public List<Question> loadTodayAnsweredQuestions(){
 
         Session session = sessionFactory.openSession();
         ZonedDateTime todays6amDateTime = ZonedDateTime.now(ZoneId.of(TIMEZONE)).withHour(6).withMinute(0).withSecond(0).withNano(0);
         Timestamp todays6amTimestamp = new Timestamp(todays6amDateTime.toEpochSecond() * 1000);
+        @SuppressWarnings("JpaQlInspection")
         String queryString = "FROM Question WHERE date > :time AND user_id = :user ORDER BY date DESC";
         Query query = session.createQuery(queryString);
         query.setParameter("time", todays6amTimestamp);
@@ -107,13 +108,13 @@ public class DatabaseHelper {
         String temp;
         availableLabels.add("ALL");
 
-        try (Statement st = mainDbConn.createStatement();
+        try (Statement st = DatabaseUtils.getConnectionPool().getConnection().createStatement();
              ResultSet rs = st.executeQuery("SELECT DISTINCT (LABEL) FROM " + "(SELECT * FROM words WHERE user_id=" +
                      loginBean.getLoggedUser().getId() + ") AS THIS_USER" + " ORDER BY LABEL")) {
             while (rs.next()) {
                 temp = rs.getString("LABEL");
                 if(temp != null && !temp.equals(""))
-                availableLabels.add(temp);
+                    availableLabels.add(temp);
             }
 
         } catch (SQLException e) {
@@ -132,7 +133,7 @@ public class DatabaseHelper {
     public void reloadPhrasesAndIndices() {
 
         System.out.println("CALL: reloadPhrasesAndIndices() from DatabaseHelper");
-//        activePhrases.clear();
+
         availablePhrases.clear();
         totalTrainedPhrasesNumber = totalUntrainedPhrasesNumber = 0;
 
@@ -148,15 +149,11 @@ public class DatabaseHelper {
         session.close();
 
         for(Phrase currentPhrase : availablePhrases){
-//            currentPhrase.setDatabaseHelper(this);
             if(currentPhrase.probabilityFactor <= Phrase.TRAINED_PROBABILITY_FACTOR){
                 totalTrainedPhrasesNumber++;
             }else {
                 totalUntrainedPhrasesNumber++;
             }
-            /*if(currentPhrase.isInList(selectedLabels)){
-                activePhrases.add(currentPhrase);
-            }*/
         }
         System.out.println("availablePhrases size=" + availablePhrases.size());
         reloadIndices();
@@ -248,10 +245,12 @@ public class DatabaseHelper {
         return fetchPhraseByIndex(random.nextInt(greatestPhrasesIndex));
     }
 
+    //    @SuppressWarnings({"unchecked", "JpaQlInspection"})
     public long retrieveMaxPhraseId(){
 
         System.out.println("CALL: retrieveMaxPhraseId() from DatabaseHelper");
         long maxId = 0;
+        @SuppressWarnings({"unchecked", "JpaQlInspection"})
         List<Phrase> list = sessionFactory.openSession().createQuery("from Phrase").list();
         for(Phrase currentPhrase : list){
             if(currentPhrase.getId() > maxId){
@@ -274,7 +273,7 @@ public class DatabaseHelper {
 
         System.out.println("CALL: deleteButtonAction(int id) from DatabaseHelper");
         String deleteSql = "DELETE FROM words WHERE ID=" + phr.id;
-        try (Statement st = mainDbConn.createStatement()) {
+        try (Statement st = DatabaseUtils.getConnectionPool().getConnection().createStatement()) {
             st.execute(deleteSql);
         } catch (SQLException e) {
             System.out.println("EXCEPTION#2: in deleteButtonAction(int id) from DatabaseHelper");
@@ -301,7 +300,7 @@ public class DatabaseHelper {
         phraseInTheCollection.probabilityFactor = givenPhrase.probabilityFactor;
         phraseInTheCollection.multiplier = givenPhrase.multiplier;
 
-        try (PreparedStatement mainDbPrepStat = mainDbConn.prepareStatement(updateSql)) {
+        try (PreparedStatement mainDbPrepStat = DatabaseUtils.getConnectionPool().getConnection().prepareStatement(updateSql)) {
 
             mainDbPrepStat.setString(1, givenPhrase.foreignWord);
             mainDbPrepStat.setString(2, givenPhrase.nativeWord);
@@ -339,14 +338,14 @@ public class DatabaseHelper {
         fetchPhraseById(phrase.id).probabilityFactor = phrase.probabilityFactor;
         fetchPhraseById(phrase.id).multiplier = phrase.multiplier;
 
-        try (Statement st = mainDbConn.createStatement()) {
-            st.execute("UPDATE " + "words" + " SET prob_factor=" + phrase.probabilityFactor + ", last_accs_date='" +
+        try (Statement statement = DatabaseUtils.getConnectionPool().getConnection().createStatement()) {
+            statement.execute("UPDATE " + "words" + " SET prob_factor=" + phrase.probabilityFactor + ", last_accs_date='" +
                     dateTime + "', rate=" + phrase.multiplier +
                     " WHERE id=" + phrase.id);
         } catch (SQLException e) {
-            System.out.println("EXCEPTION#2: in updateProb(Phrase phrase) from DatabaseHelper");
+            System.out.println("SQLException in updateProb(Phrase phrase) from DatabaseHelper");
             e.printStackTrace();
-            throw new RuntimeException();
+            throw new RuntimeException("SQLException in updateProb(Phrase phrase) from DatabaseHelper");
         }
         reloadIndices();
     }
@@ -357,7 +356,7 @@ public class DatabaseHelper {
         System.out.println("CALL: calculateUntilTodayAnswersNumber() from DatabaseHelper");
         int untilTodayAnswersNumber = 0;
         try {
-            Statement statement = mainDbConn.createStatement();
+            Statement statement = DatabaseUtils.getConnectionPool().getConnection().createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT COUNT(*) FROM questions WHERE date < " +
                     "DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)");
             resultSet.next();
@@ -376,7 +375,7 @@ public class DatabaseHelper {
         System.out.println("CALL: calculateUntilTodayTrainingHoursSpent() from DatabaseHelper");
         int untilTodayTrainingHoursSpent = 0;
         try{
-            Statement statement = mainDbConn.createStatement();
+            Statement statement = DatabaseUtils.getConnectionPool().getConnection().createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT TIMESTAMPDIFF(HOUR, (SELECT MIN(date) FROM questions " +
                     "WHERE date < DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)), DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR))");
             resultSet.next();

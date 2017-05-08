@@ -4,20 +4,22 @@ import datamodel.User;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 /**
  * Created by Aleks on 28.03.2017.
  */
+@Component
 public class UserDao implements DaoInterface<User, Long> {
 
-    private SessionFactory currentSessionFactory;
+    private SessionFactory currentSessionFactory= utils.DatabaseUtils.getHibernateSessionFactory();
     private Session currentSession;
     private Transaction currentTransaction;
 
-    public UserDao(SessionFactory sessionFactory){
-        this.currentSessionFactory = sessionFactory;
+    public UserDao(){
+        System.out.println("UserDAO constructor");
     }
 
     public Session openCurrentSession(){
@@ -48,8 +50,6 @@ public class UserDao implements DaoInterface<User, Long> {
         return currentTransaction;
     }
 
-
-
     @Override
     public void persist(User entity) {
         getCurrentSession().save(entity);
@@ -63,16 +63,13 @@ public class UserDao implements DaoInterface<User, Long> {
     @Override
     public User findById(Long aLong) {
         return getCurrentSession().get(User.class, aLong);
-
     }
 
     @Override
     public void delete(User entity) {
         getCurrentSession().delete(entity);
-
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public List<User> fetchAll() {
         return getCurrentSession().createQuery("from User").list();

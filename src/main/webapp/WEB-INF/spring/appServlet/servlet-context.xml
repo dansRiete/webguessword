@@ -35,6 +35,8 @@
     </beans:bean>
 
     <context:component-scan base-package="controller" />
+    <context:component-scan base-package="dao" />
+    <context:component-scan base-package="beans" />
     <!--<context:component-scan base-package="beans" />-->
     <!--<context:component-scan base-package="dao" />-->
 

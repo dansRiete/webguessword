@@ -3,7 +3,7 @@ package beans;
 import datamodel.Question;
 import dao.DatabaseHelper;
 import utils.TrainingLog;
-import utils.RetDiff;
+import utils.TimeDifference;
 
 import javax.el.ELContext;
 import javax.faces.bean.ManagedBean;
@@ -48,8 +48,6 @@ public class InterfaceBean implements Serializable{
     private String currPhrRelCreateDate;
     private long currPhrId;
     private String currentPhraseRate;
-
-    private RetDiff retDiff = new RetDiff();
     private DatabaseHelper databaseHelper;
     private String questionField ="";
     private String answerField = "";
@@ -142,7 +140,7 @@ public class InterfaceBean implements Serializable{
         trainingLog.nextQuestion();
         Question question = trainingLog.retrieveSelected();
         if(question != null){
-            this.questionField = question.getQuestionRepresentation();
+            this.questionField = question.string();
         }else {
             this.questionField = "";
         }
@@ -151,7 +149,7 @@ public class InterfaceBean implements Serializable{
     public void previousButtonAction() {
         System.out.println("CALL: previousButtonAction() from InterfaceBean");
         trainingLog.selectPrevious();
-        this.questionField = trainingLog.retrieveSelected().getQuestionRepresentation();
+        this.questionField = trainingLog.retrieveSelected().string();
     }
 
     public void iKnowItButtonAction(){
