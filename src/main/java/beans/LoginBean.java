@@ -28,9 +28,6 @@ public class LoginBean implements Serializable {
     private List<User> usersList = new ArrayList<>();
     private SessionFactory sessionFactory = DatabaseUtils.getHibernateSessionFactory();
 
-    @Autowired
-    private UserDao userDao;
-
     public LoginBean() {
         System.out.println("LoginBean's constructor");
         UserDao userDao = new UserDao();
@@ -59,7 +56,7 @@ public class LoginBean implements Serializable {
         try {
             if (userExist && passwordTextField.equals(loggedUser.password)) {
                 this.loggedUser = loggedUser;
-                this.databaseHelper = new DatabaseHelper(this, sessionFactory);
+                this.databaseHelper = new DatabaseHelper(loggedUser);
                 response.sendRedirect("learn.xhtml");
             } else {
                 response.sendRedirect("error.xhtml");
