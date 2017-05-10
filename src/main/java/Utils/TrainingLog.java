@@ -1,6 +1,5 @@
 package utils;
 
-import dao.DatabaseHelper;
 import datamodel.Phrase;
 import datamodel.Question;
 
@@ -31,7 +30,7 @@ public class TrainingLog {
     private BigDecimal averageAnswersPerDayNumber;
     private List<Question> allQuestions = new LinkedList<>();
     private StringBuilder log = new StringBuilder();
-    private DatabaseHelper databaseHelper;
+    private PhrasesRepository phrasesRepository;
     private class TrainingLogQuestionLine {
 
         private final static String RIGHT_MESSAGE_COLOR = "green";
@@ -76,7 +75,7 @@ public class TrainingLog {
         }
 
         private String formatTime(ZonedDateTime givenTime){
-            return givenTime.withZoneSameInstant(ZoneId.of(DatabaseHelper.TIMEZONE)).format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+            return givenTime.withZoneSameInstant(ZoneId.of(PhrasesRepository.TIMEZONE)).format(DateTimeFormatter.ofPattern("HH:mm:ss"));
         }
 
         private String makeStrong(String givenString){
@@ -104,9 +103,9 @@ public class TrainingLog {
         }
     }
 
-    public TrainingLog(DatabaseHelper databaseHelper) {
-        System.out.println("CALL: utils.TrainingLog(DatabaseHelper databaseHelper) from utils.TrainingLog");
-        this.databaseHelper = databaseHelper;
+    public TrainingLog(PhrasesRepository phrasesRepository) {
+        System.out.println("CALL: utils.TrainingLog(PhrasesRepository phrasesRepository) from utils.TrainingLog");
+        this.phrasesRepository = phrasesRepository;
     }
 
     public Question retrieveSelected(){
@@ -142,19 +141,25 @@ public class TrainingLog {
     public void nextQuestion(){
         System.out.println("CALL: nextQuestion() from utils.TrainingLog");
         if(position == 0){
-            appendToLog(Question.compose(databaseHelper.retrieveRandomPhrase(), databaseHelper));
+            appendToLog(Question.compose(phrasesRepository.retrieveRandomPhrase(), phrasesRepository));
         }else {
             select(--position);
         }
     }
 
     public void updateSelectedQuestionsPhrase(){
-        databaseHelper.updatePhrase(retrieveSelected().getAskedPhrase());
+        phrasesRepository.updatePhrase(retrieveSelected().getAskedPhrase());
     }
 
     public void deleteSelectedPhrase(){
         System.out.println("CALL: deleteSelectedPhrase() from utils.TrainingLog");
-        databaseHelper.deletePhrase(retrieveSelected().getAskedPhrase());
+        Phrase deletedPhrase = retrieveSelected().getAskedPhrase();
+        phrasesRepository.deletePhrase(deletedPhrase);
+        for(int i = 0; i < allQuestions.size(); i++){
+            if(deletedPhrase.getId() == allQuestions.get(0).getAskedPhrase().getId()){
+                allQuestions.remove(i);
+            }
+        }
         reload();
     }
 
@@ -170,14 +175,14 @@ public class TrainingLog {
         int rightAnswersNumber = 0;
         int wrongAnswersNumber = 0;
         todayTrainedPhrasesNumber = 0;
-        totalTrainedPhrasesNumber = databaseHelper.getTotalTrainedPhrasesNumber();
-        totalUntrainedPhrasesNumber = databaseHelper.getTotalUntrainedPhrasesNumber();
-        averageAnswersPerDayNumber = new BigDecimal((double) (databaseHelper.getUntilTodayAnswersNumber() + allQuestions.size()) /
-                ((double) (databaseHelper.getUntilTodayTrainingHoursSpent() + LocalTime.now().getHour() - 6) / 24D)).setScale(1, BigDecimal.ROUND_HALF_UP);
+        totalTrainedPhrasesNumber = phrasesRepository.getTotalTrainedPhrasesNumber();
+        totalUntrainedPhrasesNumber = phrasesRepository.getTotalUntrainedPhrasesNumber();
+        averageAnswersPerDayNumber = new BigDecimal((double) (phrasesRepository.getUntilTodayAnswersNumber() + allQuestions.size()) /
+                ((double) (phrasesRepository.getUntilTodayTrainingHoursSpent() + LocalTime.now().getHour() - 6) / 24D)).setScale(1, BigDecimal.ROUND_HALF_UP);
         trainingCompletionPercentage = new BigDecimal((double) (totalTrainedPhrasesNumber + todayTrainedPhrasesNumber) / (double) (totalTrainedPhrasesNumber + totalUntrainedPhrasesNumber) * 100D).setScale(2, BigDecimal.ROUND_HALF_UP) + "%";
-        totalAndActivePhrasesNumber = databaseHelper.getActivePhrasesNumber() == databaseHelper.calculateTotalPhrasesNumber() ? String.valueOf(databaseHelper.calculateTotalPhrasesNumber()) : databaseHelper.getActivePhrasesNumber() + "/" + databaseHelper.calculateTotalPhrasesNumber();
-        activeTrainedPhrasesNumber = databaseHelper.getActiveTrainedPhrasesNumber();
-        activeUntrainedPhrasesNumber = databaseHelper.getActiveUntrainedPhrasesNumber();
+        totalAndActivePhrasesNumber = phrasesRepository.getActivePhrasesNumber() == phrasesRepository.calculateTotalPhrasesNumber() ? String.valueOf(phrasesRepository.calculateTotalPhrasesNumber()) : phrasesRepository.getActivePhrasesNumber() + "/" + phrasesRepository.calculateTotalPhrasesNumber();
+        activeTrainedPhrasesNumber = phrasesRepository.getActiveTrainedPhrasesNumber();
+        activeUntrainedPhrasesNumber = phrasesRepository.getActiveUntrainedPhrasesNumber();
         totalAndActiveUntrainedPhrasesNumber = totalUntrainedPhrasesNumber == activeUntrainedPhrasesNumber ? String.valueOf(totalUntrainedPhrasesNumber) : activeUntrainedPhrasesNumber + "/" + totalUntrainedPhrasesNumber;
         totalAndActiveTrainedPhrasesNumber = totalTrainedPhrasesNumber == activeTrainedPhrasesNumber ? String.valueOf(totalTrainedPhrasesNumber) : activeTrainedPhrasesNumber + "/" + totalTrainedPhrasesNumber;
         for(int i = 0; i < allQuestions.size(); i++){

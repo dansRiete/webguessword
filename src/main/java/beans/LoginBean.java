@@ -1,16 +1,14 @@
 package beans;
 
+import utils.PhrasesRepository;
 import dao.UserDao;
 import datamodel.User;
-import dao.DatabaseHelper;
 import org.hibernate.SessionFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import utils.DatabaseUtils;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
-import javax.jws.soap.SOAPBinding;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Serializable;
@@ -24,7 +22,7 @@ public class LoginBean implements Serializable {
     private String userTextField;
     private String passwordTextField;
     private User loggedUser;
-    private DatabaseHelper databaseHelper;
+    private PhrasesRepository phrasesRepository;
     private List<User> usersList = new ArrayList<>();
     private SessionFactory sessionFactory = DatabaseUtils.getHibernateSessionFactory();
 
@@ -56,7 +54,7 @@ public class LoginBean implements Serializable {
         try {
             if (userExist && passwordTextField.equals(loggedUser.password)) {
                 this.loggedUser = loggedUser;
-                this.databaseHelper = new DatabaseHelper(loggedUser);
+                this.phrasesRepository = new PhrasesRepository(loggedUser);
                 response.sendRedirect("learn.xhtml");
             } else {
                 response.sendRedirect("error.xhtml");
@@ -70,8 +68,8 @@ public class LoginBean implements Serializable {
         return sessionFactory;
     }
 
-    public DatabaseHelper getDatabaseHelper() {
-        return this.databaseHelper;
+    public PhrasesRepository getPhrasesRepository() {
+        return this.phrasesRepository;
     }
 
     public String getUserTextField() {

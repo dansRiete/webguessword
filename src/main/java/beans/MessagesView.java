@@ -10,7 +10,7 @@ import javax.faces.context.FacesContext;
 @ManagedBean
 public class MessagesView {
 
-    public void info() {
+    public void changesSent() {
         FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Info", "Changes have been sent."));
     }
 

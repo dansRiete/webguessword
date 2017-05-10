@@ -1,6 +1,8 @@
-package dao;
+package utils;
 
 import beans.LoginBean;
+import dao.PhraseDao;
+import dao.QuestionDao;
 import datamodel.Phrase;
 import datamodel.Question;
 import datamodel.User;
@@ -25,7 +27,7 @@ import java.util.Random;
  * Created by Aleks on 11.05.2016.
  */
 
-public class DatabaseHelper {
+public class PhrasesRepository {
 
     public static final String TIMEZONE = "Europe/Kiev";
     private static final double CHANCE_OF_APPEARING_TRAINED_PHRASES = 1D / 35D;
@@ -39,10 +41,8 @@ public class DatabaseHelper {
     private List<String> availableLabels = new ArrayList<>();
     private List<Phrase> availablePhrases = new ArrayList<>();
     private Random random = new Random();
-//    private LoginBean loginBean;
     private SessionFactory sessionFactory = DatabaseUtils.getHibernateSessionFactory();
-    //    private QuestionDao questionDao;
-//    private UserDao userDao;
+        private QuestionDao questionDao = new QuestionDao();
     private PhraseDao phraseDao = new PhraseDao();
     private User loggedUser;
     /**
@@ -50,12 +50,12 @@ public class DatabaseHelper {
      */
     private final int untilTodayAnswersNumber;
     /**
-     * Number of hours spent from the very begining till 6am of the current day
+     * Number of hours spent from the very beginning till 6am of the current day
      */
     private final int untilTodayTrainingHoursSpent;
 
 
-    public DatabaseHelper(User loggedUser) {
+    public PhrasesRepository(User loggedUser) {
         this.loggedUser = loggedUser;
         untilTodayAnswersNumber = calculateUntilTodayAnswersNumber();
         untilTodayTrainingHoursSpent = calculateUntilTodayTrainingHoursSpent();
@@ -65,19 +65,19 @@ public class DatabaseHelper {
         }
     }
 
-    /*public void peristQuestion(Question question){
+    public void persistQuestion(Question question){
 
-        System.out.println("CALL: peristQuestion(Question question) from DatabaseHelper");
+        System.out.println("CALL: persistQuestion(Question question) from PhrasesRepository");
         questionDao.persist(question);
     }
 
     public void updateQuestion(Question question){
 
-        System.out.println("CALL: updateQuestion(Question question) from DatabaseHelper");
+        System.out.println("CALL: updateQuestion(Question question) from PhrasesRepository");
         questionDao.update(question);
-    }*/
+    }
 
-    public List<Question> loadTodayAnsweredQuestions(){
+    public List<Question> retrieveTodayAnsweredQuestions(){
 
         Session session = sessionFactory.openSession();
         ZonedDateTime todays6amDateTime = ZonedDateTime.now(ZoneId.of(TIMEZONE)).withHour(6).withMinute(0).withSecond(0).withNano(0);
@@ -95,7 +95,7 @@ public class DatabaseHelper {
 
     public List<String> retrievePossibleLabels() {
 
-        System.out.println("CALL: retrievePossibleLabels() from DatabaseHelper");
+        System.out.println("CALL: retrievePossibleLabels() from PhrasesRepository");
         List<String> availableLabels = new ArrayList<>();
         availableLabels.clear();
         String temp;
@@ -111,7 +111,7 @@ public class DatabaseHelper {
             }
 
         } catch (SQLException e) {
-            System.out.println("EXCEPTION: in retrievePossibleLabels() from DatabaseHelper");
+            System.out.println("EXCEPTION: in retrievePossibleLabels() from PhrasesRepository");
             e.printStackTrace();
             throw new RuntimeException();
         }
@@ -125,7 +125,7 @@ public class DatabaseHelper {
 
     public void reloadPhrasesAndIndices() {
 
-        System.out.println("CALL: reloadPhrasesAndIndices() from DatabaseHelper");
+        System.out.println("CALL: reloadPhrasesAndIndices() from PhrasesRepository");
 
         availablePhrases.clear();
         totalTrainedPhrasesNumber = totalUntrainedPhrasesNumber = 0;
@@ -229,19 +229,19 @@ public class DatabaseHelper {
                 }
             }
         }
-        System.out.println("CALL: reloadIndices() from DatabaseHelper," + " Indexes changed=" + modificatePhrasesIndicesNumber + ", Time taken " + (System.currentTimeMillis() - startTime) + "ms");
+        System.out.println("CALL: reloadIndices() from PhrasesRepository," + " Indexes changed=" + modificatePhrasesIndicesNumber + ", Time taken " + (System.currentTimeMillis() - startTime) + "ms");
     }
 
     public Phrase retrieveRandomPhrase() {
 
-        System.out.println("CALL: retrieveRandomPhrase() from DatabaseHelper");
+        System.out.println("CALL: retrieveRandomPhrase() from PhrasesRepository");
         return retrievePhraseByIndex(random.nextInt(greatestPhrasesIndex));
     }
 
     //    @SuppressWarnings({"unchecked", "JpaQlInspection"})
     public long retrieveMaxPhraseId(){
 
-        System.out.println("CALL: retrieveMaxPhraseId() from DatabaseHelper");
+        System.out.println("CALL: retrieveMaxPhraseId() from PhrasesRepository");
         long maxId = 0;
         @SuppressWarnings({"unchecked", "JpaQlInspection"})
         List<Phrase> list = sessionFactory.openSession().createQuery("from Phrase").list();
@@ -255,21 +255,22 @@ public class DatabaseHelper {
 
     public void insertPhrase(Phrase insertedPhrase) {
 
-        System.out.println("CALL: insertPhrase(Phrase insertedPhrase) from DatabaseHelper");
+        System.out.println("CALL: insertPhrase(Phrase insertedPhrase) from PhrasesRepository");
         phraseDao.openCurrentSessionWithTransaction();
         phraseDao.persist(insertedPhrase);
         phraseDao.closeCurrentSessionwithTransaction();
         availablePhrases.add(insertedPhrase);
     }
 
+
     public void deletePhrase(Phrase deletedPhrase) {
 
-        System.out.println("CALL: deleteButtonAction(int id) from DatabaseHelper");
+        System.out.println("CALL: deleteButtonAction(int id) from PhrasesRepository");
         String deleteSql = "DELETE FROM words WHERE ID=" + deletedPhrase.id;
         try (Statement st = DatabaseUtils.getConnectionPool().getConnection().createStatement()) {
             st.execute(deleteSql);
         } catch (SQLException e) {
-            System.out.println("EXCEPTION#2: in deleteButtonAction(int id) from DatabaseHelper");
+            System.out.println("EXCEPTION#2: in deleteButtonAction(int id) from PhrasesRepository, SQL was: " + deleteSql);
             e.printStackTrace();
             throw new RuntimeException();
         }
@@ -279,7 +280,7 @@ public class DatabaseHelper {
 
     public void updatePhrase(Phrase givenPhrase) {
 
-        System.out.println("CALL: updatePhrase(Phrase givenPhrase) from DatabaseHelper with id=" + givenPhrase.id);
+        System.out.println("CALL: updatePhrase(Phrase givenPhrase) from PhrasesRepository with id=" + givenPhrase.id);
         String dateTime = ZonedDateTime.now(ZoneId.of(TIMEZONE)).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
         String updateSql = "UPDATE " + "words" + " SET for_word=?, nat_word=?, transcr=?, last_accs_date=?, " +
                 "label=?, prob_factor=?, rate=?  WHERE id =" + givenPhrase.id;
@@ -314,7 +315,7 @@ public class DatabaseHelper {
             mainDbPrepStat.setDouble(7, givenPhrase.multiplier);
             mainDbPrepStat.execute();
         } catch (SQLException e) {
-            System.out.println("EXCEPTION#2: in updateProb(Phrase givenPhrase) from DatabaseHelper");
+            System.out.println("EXCEPTION#2: in updateProb(Phrase givenPhrase) from PhrasesRepository");
             e.printStackTrace();
             throw new RuntimeException();
         }
@@ -325,7 +326,7 @@ public class DatabaseHelper {
 
     public void updateProb(Phrase phrase) {
 
-        System.out.println("CALL: updateProb(Phrase insertedPhrase) with id=" + phrase.id + " from DatabaseHelper");
+        System.out.println("CALL: updateProb(Phrase insertedPhrase) with id=" + phrase.id + " from PhrasesRepository");
         String dateTime = ZonedDateTime.now(ZoneId.of(TIMEZONE)).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
 
         retrievePhraseById(phrase.id).probabilityFactor = phrase.probabilityFactor;
@@ -336,9 +337,9 @@ public class DatabaseHelper {
                     dateTime + "', rate=" + phrase.multiplier +
                     " WHERE id=" + phrase.id);
         } catch (SQLException e) {
-            System.out.println("SQLException in updateProb(Phrase insertedPhrase) from DatabaseHelper");
+            System.out.println("SQLException in updateProb(Phrase insertedPhrase) from PhrasesRepository");
             e.printStackTrace();
-            throw new RuntimeException("SQLException in updateProb(Phrase insertedPhrase) from DatabaseHelper");
+            throw new RuntimeException("SQLException in updateProb(Phrase insertedPhrase) from PhrasesRepository");
         }
         reloadIndices();
     }
@@ -346,7 +347,7 @@ public class DatabaseHelper {
     @SuppressWarnings("Duplicates")
     private int calculateUntilTodayAnswersNumber(){
 
-        System.out.println("CALL: calculateUntilTodayAnswersNumber() from DatabaseHelper");
+        System.out.println("CALL: calculateUntilTodayAnswersNumber() from PhrasesRepository");
         int untilTodayAnswersNumber = 0;
         try {
             Statement statement = DatabaseUtils.getConnectionPool().getConnection().createStatement();
@@ -365,7 +366,7 @@ public class DatabaseHelper {
     @SuppressWarnings("Duplicates")
     private int calculateUntilTodayTrainingHoursSpent(){
 
-        System.out.println("CALL: calculateUntilTodayTrainingHoursSpent() from DatabaseHelper");
+        System.out.println("CALL: calculateUntilTodayTrainingHoursSpent() from PhrasesRepository");
         int untilTodayTrainingHoursSpent = 0;
         try{
             Statement statement = DatabaseUtils.getConnectionPool().getConnection().createStatement();
@@ -383,7 +384,7 @@ public class DatabaseHelper {
 
     private Phrase retrievePhraseById(long id){
 
-        System.out.println("CALL: retrievePhraseById(long id) from DatabaseHelper");
+        System.out.println("CALL: retrievePhraseById(long id)  from PhrasesRepository");
         for (Phrase phrase : availablePhrases) {
             if (phrase.id == id)
                 return phrase;
@@ -393,7 +394,7 @@ public class DatabaseHelper {
 
     private Phrase retrievePhraseByIndex(int index) {
 
-        System.out.println("CALL: retrievePhraseByIndex(int index) from DatabaseHelper");
+        System.out.println("CALL: retrievePhraseByIndex(int index) from PhrasesRepository");
         for (Phrase phrase : availablePhrases) {
             if (phrase.isInList(selectedLabels) && index >= phrase.indexStart && index <= phrase.indexEnd) {
                 return phrase;

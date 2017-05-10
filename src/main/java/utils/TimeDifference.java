@@ -15,29 +15,29 @@ public class TimeDifference {
     private static final long oneYear = oneMonth * 12;
 
     /**
-     * @param msTimeDifference Time difference in milliseconds
+     * @param milliseconds Time difference in milliseconds
      * @return Returns the string representation of the time difference (seconds, minutes, hours ... years)
      */
-    public static String retDiffInTime(long msTimeDifference) {
+    public static String difference(long milliseconds) {
 
-        if (msTimeDifference < oneMinute) {
+        if (milliseconds < oneMinute) {
             //in seconds
-            return msTimeDifference / 1000 + (msTimeDifference / 1000 > 1 ? " seconds ago" : " second ago");
-        } else if (msTimeDifference < oneHour) {
+            return milliseconds / 1000 + (milliseconds / 1000 > 1 ? " seconds ago" : " second ago");
+        } else if (milliseconds < oneHour) {
             //in minutes
-            return msTimeDifference / oneMinute + (msTimeDifference / oneMinute > 1 ? " minutes ago" : " minute ago");
-        } else if (msTimeDifference < oneDay) {
+            return milliseconds / oneMinute + (milliseconds / oneMinute > 1 ? " minutes ago" : " minute ago");
+        } else if (milliseconds < oneDay) {
             //in hours
-            return msTimeDifference / oneHour + (msTimeDifference / oneHour > 1 ? " hours ago" : " hour ago");
-        } else if (msTimeDifference < oneMonth) {
+            return milliseconds / oneHour + (milliseconds / oneHour > 1 ? " hours ago" : " hour ago");
+        } else if (milliseconds < oneMonth) {
             //in days
-            return msTimeDifference / oneDay + (msTimeDifference / oneDay > 1 ? " days ago" : " day ago");
-        } else if (msTimeDifference < oneYear) {
+            return milliseconds / oneDay + (milliseconds / oneDay > 1 ? " days ago" : " day ago");
+        } else if (milliseconds < oneYear) {
             //in months
-            return msTimeDifference / oneMonth + (msTimeDifference / oneMonth > 1 ? " months ago" : " month ago");
+            return milliseconds / oneMonth + (milliseconds / oneMonth > 1 ? " months ago" : " month ago");
         } else {
             //in years
-            return new BigDecimal((double) msTimeDifference / (double) oneYear).setScale(1, BigDecimal.ROUND_HALF_UP).toString() + " years ago";
+            return new BigDecimal((double) milliseconds / (double) oneYear).setScale(1, BigDecimal.ROUND_HALF_UP).toString() + " years ago";
         }
     }
 

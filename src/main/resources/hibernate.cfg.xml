@@ -5,7 +5,6 @@
 <hibernate-configuration>
     <session-factory>
         <property name="show_sql">true</property>
-        <property name="connection.username">root</property>
         <property name="hibernate.id.new_generator_mappings">false</property>
         <mapping class="datamodel.Phrase"/>
         <mapping class="datamodel.User"/>

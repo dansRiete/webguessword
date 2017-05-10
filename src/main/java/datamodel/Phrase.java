@@ -1,6 +1,6 @@
 package datamodel;
 
-import dao.DatabaseHelper;
+import utils.PhrasesRepository;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -62,8 +62,12 @@ public class Phrase implements Serializable {
     public Phrase() {
     }
 
+    public Phrase(String foreignWord) {
+        this.foreignWord = foreignWord;
+    }
+
     public Phrase(long id, String foreignWord, String nativeWord, String transcription, double probabilityFactor,
-                  ZonedDateTime collectionAddingDateTime, String label, ZonedDateTime lastAccessDateTime, double multiplier, DatabaseHelper databaseHelper, User user){
+                  ZonedDateTime collectionAddingDateTime, String label, ZonedDateTime lastAccessDateTime, double multiplier, PhrasesRepository phrasesRepository, User user){
         this.id = id;
         this.user = user;
         this.foreignWord = foreignWord;

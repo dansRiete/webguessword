@@ -1,9 +1,8 @@
 package beans;
 
+import utils.PhrasesRepository;
 import datamodel.Question;
-import dao.DatabaseHelper;
 import utils.TrainingLog;
-import utils.TimeDifference;
 
 import javax.el.ELContext;
 import javax.faces.bean.ManagedBean;
@@ -24,9 +23,9 @@ import java.util.List;
 
 @ManagedBean
 @SessionScoped
-public class InterfaceBean implements Serializable{
+public class InterfaceBean implements Serializable {
 
-    @ManagedProperty(value="#{login}")
+    @ManagedProperty(value = "#{login}")
     private LoginBean loginBean;
 
     //>>Current session data
@@ -42,106 +41,96 @@ public class InterfaceBean implements Serializable{
 
     private String currPhrPercentOfAppearance;
     private String currPhrasesProbabilityFactor;
-    private String currentPhraseLastAccesssDate;
+    private String currentPhraseLastAccessDate;
     private String currPhrAbsCreateDate;
-    private String currPhrRelLastAccsDate;
-    private String currPhrRelCreateDate;
-    private long currPhrId;
+    private String currentPhraseLastAccessDateTimeDifference;
+    private String currentPhraseCreateDateTimeDifference;
+    private long currentPhraseId;
     private String currentPhraseRate;
-    private DatabaseHelper databaseHelper;
-    private String questionField ="";
+    private PhrasesRepository phrasesRepository;
+    private String questionField = "";
     private String answerField = "";
     private TrainingLog trainingLog;
     private List<String> availableLabels;
-    private String choosedLabel;
+    private String chosenLabel;
     private String resultChosenLabel;
-    private String previousResultChoosedLabel = "";
+    private String previousResultChosenLabel = "";
     private HashSet<String> chosenLabelsForLearningWords = new HashSet<>();
 
 
-    public InterfaceBean(){
+    public InterfaceBean() {
 
         System.out.println("CALL: InterfaceBean constructor");
         ELContext elContext = FacesContext.getCurrentInstance().getELContext();
         this.loginBean = (LoginBean) elContext.getELResolver().getValue(elContext, null, "login");
-
-        if(loginBean != null){
-            this.databaseHelper = loginBean.getDatabaseHelper();
-        }else {
-            throw new RuntimeException("loginBean in InterfaceBean was null");
-        }
-
-        if(databaseHelper != null){
-            this.trainingLog = new TrainingLog(databaseHelper);
-            this.availableLabels = databaseHelper.getAvailableLabels();
-            List<Question> todayQuestions = databaseHelper.loadTodayAnsweredQuestions();
-            trainingLog.setTodayQuestions(todayQuestions);
-            nextButtonAction();
-        }else {
-            throw new RuntimeException("DatabaseHelper was null");
-        }
+        this.phrasesRepository = loginBean.getPhrasesRepository();
+        this.trainingLog = new TrainingLog(phrasesRepository);
+        this.availableLabels = phrasesRepository.getAvailableLabels();
+        List<Question> todayQuestions = phrasesRepository.retrieveTodayAnsweredQuestions();
+        trainingLog.setTodayQuestions(todayQuestions);
+        nextButtonAction();
     }
 
     public void reloadLabelsList() {
         System.out.println("CALL: setChosenLabels() from InterfaceBean");
 
-        if (choosedLabel != null && !choosedLabel.equalsIgnoreCase("")){
-            if(choosedLabel.equalsIgnoreCase("all")){
+        if (chosenLabel != null && !chosenLabel.equalsIgnoreCase("")) {
+            if (chosenLabel.equalsIgnoreCase("all")) {
                 chosenLabelsForLearningWords.clear();
-            }else{
-                chosenLabelsForLearningWords.add(choosedLabel);
+            } else {
+                chosenLabelsForLearningWords.add(chosenLabel);
             }
         }
         this.resultChosenLabel = "";
 
         boolean firstLoop = true;
-        for(String currentLabel : chosenLabelsForLearningWords){   //Makes a "WHERE LABEL IN" clause
-            if(firstLoop){
+        for (String currentLabel : chosenLabelsForLearningWords) {   //Makes a "WHERE LABEL IN" clause
+            if (firstLoop) {
                 this.resultChosenLabel += "'" + currentLabel + "'";
                 firstLoop = false;
-            }else {
+            } else {
                 this.resultChosenLabel += ",'" + currentLabel + "'";
             }
         }
 
-        if(!resultChosenLabel.equals(previousResultChoosedLabel)){ //If clause was changed
-            databaseHelper.setSelectedLabels(chosenLabelsForLearningWords);
-            databaseHelper.reloadPhrasesAndIndices();
-            this.previousResultChoosedLabel = resultChosenLabel;
+        if (!resultChosenLabel.equals(previousResultChosenLabel)) { //If clause was changed
+            phrasesRepository.setSelectedLabels(chosenLabelsForLearningWords);
+            phrasesRepository.reloadPhrasesAndIndices();
+            this.previousResultChosenLabel = resultChosenLabel;
         }
     }
 
-    public void answerButtonAction(){
+    public void answerButtonAction() {
 
         System.out.println("CALL: answerButtonAction() from InterfaceBean");
 
-        if(answerField == null) {
+        if (answerField == null) {
             return;
-        }else if (answerField.equals("+")){
+        } else if (answerField.equals("+")) {
             iKnowItButtonAction();
-        }else if (answerField.equals("-")){
-            iDontKnowItButtonAction();
-        }else if (answerField.equals("++")){
+        } else if (answerField.equals("-")) {
+            iDoNotKnowItButtonAction();
+        } else if (answerField.equals("++")) {
             previousRightButtonAction();
-        }else if (answerField.equals("--")){
+        } else if (answerField.equals("--")) {
             previousWrongButtonAction();
-        }else if (answerField.equals("")){
+        } else if (answerField.equals("")) {
             nextButtonAction();
-        }else {
-            trainingLog.retrieveSelected().answerTheQuestion(answerField);
+        } else {
+            trainingLog.retrieveSelected().answer(answerField);
             nextButtonAction();
         }
         this.answerField = "";
     }
 
-    public void nextButtonAction(){
+    public void nextButtonAction() {
         System.out.println();
         System.out.println("CALL: nextButtonAction() from InterfaceBean");
         trainingLog.nextQuestion();
         Question question = trainingLog.retrieveSelected();
-        if(question != null){
+        if (question != null) {
             this.questionField = question.string();
-        }else {
+        } else {
             this.questionField = "";
         }
     }
@@ -152,49 +141,49 @@ public class InterfaceBean implements Serializable{
         this.questionField = trainingLog.retrieveSelected().string();
     }
 
-    public void iKnowItButtonAction(){
+    public void iKnowItButtonAction() {
         System.out.println("CALL: iKnowItButtonAction() from InterfaceBean");
         Question question = trainingLog.retrieveSelected();
-        if(question != null) {
+        if (question != null) {
             question.rightAnswer();
         }
         nextButtonAction();
     }
 
-    public void iDontKnowItButtonAction(){
-        System.out.println("CALL: iDontKnowItButtonAction() from InterfaceBean");
+    public void iDoNotKnowItButtonAction() {
+        System.out.println("CALL: iDoNotKnowItButtonAction() from InterfaceBean");
         Question question = trainingLog.retrieveSelected();
-        if(question != null){
+        if (question != null) {
             question.wrongAnswer();
         }
         nextButtonAction();
     }
 
-    public void previousRightButtonAction(){
+    public void previousRightButtonAction() {
         System.out.println("CALL: previousRightButtonAction() from InterfaceBean");
         Question question = trainingLog.retrievePrevious();
-        if(question != null){
+        if (question != null) {
             question.rightAnswer();
         }
         this.trainingLog.reload();
     }
 
-    public void previousWrongButtonAction(){
+    public void previousWrongButtonAction() {
 
         System.out.println("CALL: previousWrongButtonAction() from InterfaceBean");
         Question question = trainingLog.retrievePrevious();
-        if(question != null){
+        if (question != null) {
             question.wrongAnswer();
         }
         trainingLog.reload();
     }
 
-    public void deleteButtonAction(){
+    public void deleteButtonAction() {
         System.out.println("CALL: delete() from InterfaceBean");
         trainingLog.deleteSelectedPhrase();
     }
 
-    public void exitButtonAction(){
+    public void exitButtonAction() {
         System.out.println("CALL: exitButtonAction() from InterfaceBean");
         FacesContext context = FacesContext.getCurrentInstance();
         HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
@@ -210,16 +199,18 @@ public class InterfaceBean implements Serializable{
 
     //>>>>>>>>>>>>    Setters and getters     >>>>>>>>>>>>>
 
-    public DatabaseHelper getDatabaseHelper() {
-        return databaseHelper;
+    public PhrasesRepository getPhrasesRepository() {
+        return phrasesRepository;
     }
-    public void setDatabaseHelper(DatabaseHelper databaseHelper) {
-        this.databaseHelper = databaseHelper;
+
+    public void setPhrasesRepository(PhrasesRepository phrasesRepository) {
+        this.phrasesRepository = phrasesRepository;
     }
 
     public LoginBean getLoginBean() {
         return loginBean;
     }
+
     public void setLoginBean(LoginBean loginBean) {
         this.loginBean = loginBean;
     }
@@ -227,6 +218,7 @@ public class InterfaceBean implements Serializable{
     public String getQuestionField() {
         return questionField;
     }
+
     public void setQuestionField(String questionField) {
         this.questionField = questionField;
     }
@@ -234,6 +226,7 @@ public class InterfaceBean implements Serializable{
     public String getAnswerField() {
         return answerField;
     }
+
     public void setAnswerField(String answerField) {
         this.answerField = answerField;
     }
@@ -248,6 +241,7 @@ public class InterfaceBean implements Serializable{
     public String getRightAnswersPercentage() {
         return rightAnswersPercentage;
     }
+
     public void setRightAnswersPercentage(String rightAnswersPercentage) {
         this.rightAnswersPercentage = rightAnswersPercentage;
     }
@@ -255,6 +249,7 @@ public class InterfaceBean implements Serializable{
     public int getAnswersForSessionNumber() {
         return answersForSessionNumber;
     }
+
     public void setAnswersForSessionNumber(int answersForSessionNumber) {
         this.answersForSessionNumber = answersForSessionNumber;
     }
@@ -262,6 +257,7 @@ public class InterfaceBean implements Serializable{
     public String getCurrPhrPercentOfAppearance() {
         return currPhrPercentOfAppearance;
     }
+
     public void setCurrPhrPercentOfAppearance(String pDpercentOfAppearance) {
         this.currPhrPercentOfAppearance = pDpercentOfAppearance;
     }
@@ -269,41 +265,39 @@ public class InterfaceBean implements Serializable{
     public String getCurrPhrasesProbabilityFactor() {
         return currPhrasesProbabilityFactor;
     }
+
     public void setCurrPhrasesProbabilityFactor(String pDprob) {
         this.currPhrasesProbabilityFactor = pDprob;
     }
 
-    public String getCurrentPhraseLastAccesssDate() {
-        return currentPhraseLastAccesssDate;
-    }
-    public void setCurrentPhraseLastAccesssDate(String pdLastAccs) {
-        this.currentPhraseLastAccesssDate = pdLastAccs;
-    }
-
-    /*public BigDecimal getCurrentPhraseLastAccessDate() {
+    public String getCurrentPhraseLastAccessDate() {
         return currentPhraseLastAccessDate;
     }
-    public void setCurrentPhraseLastAccessDate(BigDecimal currentPhraseLastAccessDate) {
-        this.currentPhraseLastAccessDate = currentPhraseLastAccessDate;
-    }*/
+
+    public void setCurrentPhraseLastAccessDate(String pdLastAccs) {
+        this.currentPhraseLastAccessDate = pdLastAccs;
+    }
 
     public String getCurrPhrAbsCreateDate() {
         return currPhrAbsCreateDate;
     }
+
     public void setCurrPhrAbsCreateDate(String strCreateDate) {
         this.currPhrAbsCreateDate = strCreateDate;
     }
 
-    public String getChoosedLabel() {
-        return choosedLabel;
+    public String getChosenLabel() {
+        return chosenLabel;
     }
-    public void setChoosedLabel(String choosedLabel) {
-        this.choosedLabel = choosedLabel;
+
+    public void setChosenLabel(String chosenLabel) {
+        this.chosenLabel = chosenLabel;
     }
 
     public List<String> getAvailableLabels() {
         return availableLabels;
     }
+
     public void setAvailableLabels(ArrayList<String> availableLabels) {
         this.availableLabels = availableLabels;
     }
@@ -311,58 +305,23 @@ public class InterfaceBean implements Serializable{
     public String getResultChosenLabel() {
         return resultChosenLabel;
     }
+
     public void setResultChosenLabel(String resultChosenLabel) {
         this.resultChosenLabel = resultChosenLabel;
     }
 
-    /*public String getCurrPhrNatWord() {
-        return currPhrNatWord;
-    }
-    public void setCurrPhrNatWord(String currPhrNatWord) {
-        this.currPhrNatWord = currPhrNatWord;
-        selectedQuestion.nativeWord = this.currPhrNatWord;
-        selectedQuestion.isModified = true;
-    }
-
-    public String getCurrPhrForWord() {
-        return currPhrForWord;
-    }
-    public void setCurrPhrForWord(String currPhrForWord) {
-
-        this.currPhrForWord = currPhrForWord;
-        selectedQuestion.foreignWord = this.currPhrForWord;
-        selectedQuestion.isModified = true;
-        System.out.println("--- inside setCurrPhrForWord(String currPhrForWord) currPhrForWord is " + this.currPhrForWord);
-    }
-
-    public String getCurrPhrTransc() {
-        return currPhrTransc;
-    }
-    public void setCurrPhrTransc(String currPhrTransc) {
-        this.currPhrTransc = currPhrTransc;
-        selectedQuestion.transcription = this.currPhrTransc;
-        selectedQuestion.isModified = true;
-    }
-
-    public String getCurrPhrLabel() {
-        return currPhrLabel;
-    }
-    public void setCurrPhrLabel(String currPhrLabel) {
-        this.currPhrLabel = currPhrLabel;
-        selectedQuestion.label = this.currPhrLabel;
-        selectedQuestion.isModified = true;
-    }*/
-
     public long getId() {
-        return currPhrId;
+        return currentPhraseId;
     }
+
     public void setId(long id) {
-        this.currPhrId = id;
+        this.currentPhraseId = id;
     }
 
     public int getTrainedPhrasesNumber() {
         return trainedPhrasesNumber;
     }
+
     public void setTrainedPhrasesNumber(int trainedPhrasesNumber) {
         this.trainedPhrasesNumber = trainedPhrasesNumber;
     }
@@ -370,6 +329,7 @@ public class InterfaceBean implements Serializable{
     public int getNonTrainedPhrasesNumber() {
         return nonTrainedPhrasesNumber;
     }
+
     public void setNonTrainedPhrasesNumber(int nonTrainedPhrasesNumber) {
         this.nonTrainedPhrasesNumber = nonTrainedPhrasesNumber;
     }
@@ -377,6 +337,7 @@ public class InterfaceBean implements Serializable{
     public int getTotalPhrasesNumber() {
         return totalPhrasesNumber;
     }
+
     public void setTotalPhrasesNumber(int totalPhrasesNumber) {
         this.totalPhrasesNumber = totalPhrasesNumber;
     }
@@ -384,27 +345,31 @@ public class InterfaceBean implements Serializable{
     public int getTrainedPhrasesPerSessionNumber() {
         return trainedPhrasesPerSessionNumber;
     }
+
     public void setTrainedPhrasesPerSessionNumber(int trainedPhrasesPerSessionNumber) {
         this.trainedPhrasesPerSessionNumber = trainedPhrasesPerSessionNumber;
     }
 
-    public String getCurrPhrRelLastAccsDate() {
-        return currPhrRelLastAccsDate;
-    }
-    public void setCurrPhrRelLastAccsDate(String currPhrRelLastAccsDate) {
-        this.currPhrRelLastAccsDate = currPhrRelLastAccsDate;
+    public String getCurrentPhraseLastAccessDateTimeDifference() {
+        return currentPhraseLastAccessDateTimeDifference;
     }
 
-    public String getCurrPhrRelCreateDate() {
-        return currPhrRelCreateDate;
+    public void setCurrentPhraseLastAccessDateTimeDifference(String currentPhraseLastAccessDateTimeDifference) {
+        this.currentPhraseLastAccessDateTimeDifference = currentPhraseLastAccessDateTimeDifference;
     }
-    public void setCurrPhrRelCreateDate(String currPhrRelCreateDate) {
-        this.currPhrRelCreateDate = currPhrRelCreateDate;
+
+    public String getCurrentPhraseCreateDateTimeDifference() {
+        return currentPhraseCreateDateTimeDifference;
+    }
+
+    public void setCurrentPhraseCreateDateTimeDifference(String currentPhraseCreateDateTimeDifference) {
+        this.currentPhraseCreateDateTimeDifference = currentPhraseCreateDateTimeDifference;
     }
 
     public int getAverageAnswersPerDay() {
         return averageAnswersPerDay;
     }
+
     public void setAverageAnswersPerDay(int averageAnswersPerDay) {
         this.averageAnswersPerDay = averageAnswersPerDay;
     }
@@ -412,6 +377,7 @@ public class InterfaceBean implements Serializable{
     public String getTrainingCompletionPercent() {
         return trainingCompletionPercent;
     }
+
     public void setTrainingCompletionPercent(String trainingCompletionPercent) {
         this.trainingCompletionPercent = trainingCompletionPercent;
     }
@@ -419,6 +385,7 @@ public class InterfaceBean implements Serializable{
     public String getCurrentPhraseRate() {
         return currentPhraseRate;
     }
+
     public void setCurrentPhraseRate(String currentPhraseRate) {
         this.currentPhraseRate = currentPhraseRate;
     }

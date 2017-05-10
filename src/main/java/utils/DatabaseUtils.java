@@ -55,9 +55,10 @@ public class DatabaseUtils {
             configuration.setProperty("hibernate.connection.username", activeUser);
             configuration.setProperty("hibernate.connection.password", activePassword);
             configuration.setProperty("hibernate.connection.url", activeRemoteHost);
-            configuration.setProperty(Environment.SHOW_SQL, "true");
+//            configuration.setProperty(Environment.SHOW_SQL, "true");
             configuration.setProperty("hibernate.id.new_generator_mappings", "false");
             configuration.configure("hibernate.cfg.xml");
+            System.out.println("1 " + activeUser + " " + activePassword + " " + activeRemoteHost);
 
             hibernateSessionFactory = configuration.buildSessionFactory(
                     new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build());
@@ -94,7 +95,7 @@ public class DatabaseUtils {
 
         try {
             activeRemoteHost = ORIGINAL_REMOTE_HOST;
-
+            System.out.println("2 " + activeUser + " " + activePassword + " " + activeRemoteHost);
             DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
             conectedDatabaseMessage = "Remote DB was connected";
         } catch (SQLException e) {
@@ -109,7 +110,6 @@ public class DatabaseUtils {
                     conectedDatabaseMessage = "Remote DB was connected through the local port 3307 forwarding";
                 } catch (SQLException e2) {
                     e2.printStackTrace();
-                    System.out.println();
                     throw new RuntimeException("NoAliveDatabasesException");
                 }
             }
@@ -121,11 +121,11 @@ public class DatabaseUtils {
     }
 
     public static SessionFactory getHibernateSessionFactory() {
-        if(hibernateSessionFactory != null){
+//        if(hibernateSessionFactory != null){
             return hibernateSessionFactory;
-        }else {
-            return hibernateSessionFactory = buildHibernateSessionFactory();
-        }
+//        }else {
+//            return hibernateSessionFactory = buildHibernateSessionFactory();
+//        }
     }
 
     public static ComboPooledDataSource getConnectionPool() {

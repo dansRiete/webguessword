@@ -1,6 +1,6 @@
 package datamodel;
 
-import dao.DatabaseHelper;
+import utils.PhrasesRepository;
 import utils.AnswerChecker;
 import utils.Hints;
 
@@ -82,7 +82,7 @@ public class Question implements Serializable {
     private long afterAnswerEndIndex;
 
     @Transient
-    private DatabaseHelper databaseHelper;
+    private PhrasesRepository phrasesRepository;
 
     @Transient
     private ZonedDateTime initLastAccessDate;
@@ -93,11 +93,11 @@ public class Question implements Serializable {
     public Question() {
     }
 
-    private Question(Phrase askedPhrase, DatabaseHelper databaseHelper) {
-        System.out.println("CALL: Question(Phrase askedPhrase, DatabaseHelper databaseHelper) from Question");
+    private Question(Phrase askedPhrase, PhrasesRepository phrasesRepository) {
+        System.out.println("CALL: Question(Phrase askedPhrase, PhrasesRepository phrasesRepository) from Question");
 
         this.askedPhrase = askedPhrase;
-        this.databaseHelper = databaseHelper;
+        this.phrasesRepository = phrasesRepository;
         this.initialProbabilityFactor = askedPhrase.getProbabilityFactor();
         this.initialProbabilityMultiplier = askedPhrase.getMultiplier();
         this.initStartIndex = askedPhrase.getIndexStart();
@@ -107,16 +107,16 @@ public class Question implements Serializable {
         this.user = askedPhrase.getUser();
     }
 
-    public static Question compose(Phrase askedPhrase, DatabaseHelper dbHelper) {
-        System.out.println("CALL: compose(Phrase askedPhrase, DatabaseHelper dbHelper) from Question");
+    public static Question compose(Phrase askedPhrase, PhrasesRepository dbHelper) {
+        System.out.println("CALL: compose(Phrase askedPhrase, PhrasesRepository dbHelper) from Question");
         if (askedPhrase == null) {
             throw new IllegalArgumentException("Phrases foreign and native literals can not be null");
         }
         return new Question(askedPhrase, dbHelper);
     }
 
-    public void answerTheQuestion(String answer) {
-        System.out.println("CALL: answerTheQuestion(String answerLiteral) from Question");
+    public void answer(String answer) {
+        System.out.println("CALL: answer(String answerLiteral) from Question");
         if (!answered) {
             this.answerLiteral = answer;
 
@@ -130,10 +130,12 @@ public class Question implements Serializable {
 
     public void rightAnswer() {
         System.out.println("CALL: rightAnswer() from Question");
-        this.answerCorrect = true;
-        if (databaseHelper == null || !lastInLog()) {
+
+        if (!lastInLog()) {
             return;
         }
+
+        this.answerCorrect = true;
 
         if (isTrained()) {
             this.afterAnswerProbabilityFactor = initialProbabilityFactor;
@@ -147,17 +149,18 @@ public class Question implements Serializable {
             askedPhrase.setMultiplier(afterAnswerProbabilityMultiplier);
         }
 
-        databaseHelper.updateProb(askedPhrase);
+        phrasesRepository.updateProb(askedPhrase);
         this.afterAnswerStartIndex = askedPhrase.getIndexStart();
         this.afterAnswerEndIndex = askedPhrase.getIndexEnd();
         this.answerCorrect = true;
-        if (answered) {
-            this.answerLiteral = askedPhrase.getForeignWord();
-        } else {
+        /*if (!answered) {
             if (this.answerLiteral == null || this.answerLiteral.equals("")) {
                 this.answerLiteral = askedPhrase.getForeignWord();
             }
-        }
+//            this.answerLiteral = askedPhrase.getForeignWord();
+        }*//* else {
+
+        }*/
         saveQuestion();
         this.answered = true;
 
@@ -165,10 +168,12 @@ public class Question implements Serializable {
 
     public void wrongAnswer() {
         System.out.println("CALL: wrongAnswer() from Question");
-        this.answerCorrect = false;
-        if (databaseHelper == null || !lastInLog()) {
+
+        if (!lastInLog()) {
             return;
         }
+
+        this.answerCorrect = false;
 
         if (!isTrained()) {
             this.afterAnswerProbabilityFactor = initialProbabilityFactor + WRONG_ANSWER_ADDEND * initialProbabilityMultiplier;
@@ -182,7 +187,7 @@ public class Question implements Serializable {
             askedPhrase.setMultiplier(afterAnswerProbabilityMultiplier);
         }
 
-        databaseHelper.updateProb(askedPhrase);
+        phrasesRepository.updateProb(askedPhrase);
         this.afterAnswerStartIndex = askedPhrase.getIndexStart();
         this.afterAnswerEndIndex = askedPhrase.getIndexEnd();
         this.answerCorrect = false;
@@ -197,9 +202,9 @@ public class Question implements Serializable {
 
     public void saveQuestion() {
         if (answered) {
-//            databaseHelper.updateQuestion(this);
+            phrasesRepository.updateQuestion(this);
         } else {
-//            databaseHelper.peristQuestion(this);
+            phrasesRepository.persistQuestion(this);
         }
     }
 
@@ -260,11 +265,11 @@ public class Question implements Serializable {
 
     public String appearingPercentage() {
         String appearingPercentage = "";
-        if (databaseHelper != null) {
-            appearingPercentage = new BigDecimal((double) (initEndIndex - initStartIndex) / (double) databaseHelper.getGreatestPhrasesIndex() * 100).setScale(5, BigDecimal.ROUND_HALF_UP).toString();
+        if (phrasesRepository != null) {
+            appearingPercentage = new BigDecimal((double) (initEndIndex - initStartIndex) / (double) phrasesRepository.getGreatestPhrasesIndex() * 100).setScale(5, BigDecimal.ROUND_HALF_UP).toString();
             if (answered) {
                 appearingPercentage += " ➩ " +
-                        new BigDecimal((double) (afterAnswerEndIndex - afterAnswerStartIndex) / (double) databaseHelper.getGreatestPhrasesIndex() * 100).setScale(5, BigDecimal.ROUND_HALF_UP);
+                        new BigDecimal((double) (afterAnswerEndIndex - afterAnswerStartIndex) / (double) phrasesRepository.getGreatestPhrasesIndex() * 100).setScale(5, BigDecimal.ROUND_HALF_UP);
             }
         }
         return appearingPercentage;

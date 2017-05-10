@@ -1,12 +1,14 @@
 package beans;
 
 import datamodel.Phrase;
-import dao.DatabaseHelper;
+import utils.PhrasesRepository;
 
 import javax.annotation.PostConstruct;
+import javax.el.ELContext;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
+import javax.faces.context.FacesContext;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
@@ -22,10 +24,10 @@ import java.util.List;
 @RequestScoped
 public class EditBean implements Serializable{
 
-    @ManagedProperty(value="#{login}")
+//    @ManagedProperty(value="#{login}")
     private LoginBean loginBean;
 
-    private DatabaseHelper databaseHelper;
+    private PhrasesRepository phrasesRepository;
     private List<Phrase> myList;
     private List<String> labelsList;
     private String foreignWord;
@@ -41,10 +43,12 @@ public class EditBean implements Serializable{
     @PostConstruct
     private void init(){
         System.out.println("EDITBEAN CALL init()");
+        ELContext elContext = FacesContext.getCurrentInstance().getELContext();
+        this.loginBean = (LoginBean) elContext.getELResolver().getValue(elContext, null, "login");
         if(loginBean != null)
-            databaseHelper = loginBean.getDatabaseHelper();
-        if(databaseHelper != null){
-            myList = databaseHelper.retrieveActivePhrases();
+            phrasesRepository = loginBean.getPhrasesRepository();
+        if(phrasesRepository != null){
+            myList = phrasesRepository.retrieveActivePhrases();
             Collections.sort(myList, ((phrase1, phrase2) -> {
                 if(phrase1.collectionAddingDateTime.isAfter(phrase2.collectionAddingDateTime)){
                     return -1;
@@ -58,7 +62,9 @@ public class EditBean implements Serializable{
                     }
                 }
             }));
-            labelsList = databaseHelper.retrievePossibleLabels();
+            labelsList = phrasesRepository.retrievePossibleLabels();
+        }else {
+            throw new RuntimeException("PhrasesRepository was null in init() from EditBean");
         }
     }
 
@@ -67,14 +73,14 @@ public class EditBean implements Serializable{
         System.out.println("EDITBEAN CALL START addAction() from editBean mylist.size=" + myList.size());
 
         if( this.foreignWord != null && this.nativeWord != null && !this.foreignWord.equalsIgnoreCase("") && !this.nativeWord.equalsIgnoreCase("")){
-            long maxId = databaseHelper.retrieveMaxPhraseId();
+            long maxId = phrasesRepository.retrieveMaxPhraseId();
             Phrase phrase = new Phrase(++maxId, this.foreignWord, this.nativeWord, this.transcription, 30,
-                    ZonedDateTime.now(), this.label, null, 1, databaseHelper, loginBean.getLoggedUser());
+                    ZonedDateTime.now(), this.label, null, 1, phrasesRepository, loginBean.getLoggedUser());
             this.foreignWord = this.nativeWord = this.transcription = this.label = "";
             probabilityFactor = null;
             myList.add(0, phrase);
-            databaseHelper.insertPhrase(phrase);
-            databaseHelper.reloadPhrasesAndIndices();
+            phrasesRepository.insertPhrase(phrase);
+            phrasesRepository.reloadPhrasesAndIndices();
 
         }
 
@@ -84,20 +90,20 @@ public class EditBean implements Serializable{
     public void deleteById(Phrase phr){
 
         System.out.println("EDITBEAN CALL START deleteById(Phrase phr)  mylist.size=" + myList.size() + " deleted phrase is " + phr.foreignWord);
-        databaseHelper.deletePhrase(phr);
-        myList = databaseHelper.retrieveActivePhrases();
-        labelsList = databaseHelper.retrievePossibleLabels();
-        databaseHelper.reloadPhrasesAndIndices();
+        phrasesRepository.deletePhrase(phr);
+        myList = phrasesRepository.retrieveActivePhrases();
+        labelsList = phrasesRepository.retrievePossibleLabels();
+        phrasesRepository.reloadPhrasesAndIndices();
         System.out.println("EDITBEAN CALL END deleteById(Phrase phr)  mylist.size=" + myList.size());
 
     }
 
     public void updateAll(){
-//        myList.forEach(databaseHelper::updatePhrase);
+//        myList.forEach(phrasesRepository::updatePhrase);
     }
 
     public void updatePhrase(Phrase phrase){
-        databaseHelper.updatePhrase(phrase);
+        phrasesRepository.updatePhrase(phrase);
     }
 
     public int rowNumbers(){

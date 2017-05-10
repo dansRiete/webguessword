@@ -91,7 +91,7 @@
 
                 <h:commandButton style="margin-right: 3px; margin-top: 3px" type="button" id="donotknow" styleClass="richButton"
                                  value="I don't know it"
-                                 action="#{interfaceBean.iDontKnowItButtonAction()}">
+                                 action="#{interfaceBean.iDoNotKnowItButtonAction()}">
                     <f:ajax render="@all"> </f:ajax>
                 </h:commandButton>
 
@@ -156,7 +156,7 @@
                                          title="Label"
                                          label="Label"> </p:inputText>
                         </h:panelGrid>
-                        <p:commandButton type="submit" value="Submit" action="${interfaceBean.trainingLog.updateSelectedQuestionsPhrase()}" actionListener="#{messagesView.info}"/>
+                        <p:commandButton type="submit" value="Submit" action="${interfaceBean.trainingLog.updateSelectedQuestionsPhrase()}" actionListener="#{messagesView.changesSent}"/>
                         <p:messages id="messages" showDetail="true" autoUpdate="true" closable="true"/>
                     </h:form>
                 </p:dialog>
@@ -270,7 +270,7 @@
                 <tr>
                     <td>Labels filter
                         <h:form>
-                            <h:selectOneMenu id="table" styleClass="richButton" value="#{interfaceBean.choosedLabel}">
+                            <h:selectOneMenu id="table" styleClass="richButton" value="#{interfaceBean.chosenLabel}">
                                 <f:ajax event="change" execute="table; #{interfaceBean.reloadLabelsList()}"
                                         render="@all"/>
                                 <f:selectItems value="#{interfaceBean.availableLabels}" var="group" itemValue="#{group}"
