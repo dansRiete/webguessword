@@ -10,6 +10,4 @@
 
     <context:annotation-config/>
 
-    <bean id = "loginBean" class = "beans.LoginBean"/>
-
 </beans>

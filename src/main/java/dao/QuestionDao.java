@@ -4,20 +4,22 @@ import datamodel.Question;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 /**
  * Created by Aleks on 28.03.2017.
  */
+@Component
 public class QuestionDao implements DaoInterface<Question, Long> {
 
-    private SessionFactory currentSessionFactory;
+    private SessionFactory currentSessionFactory= utils.DatabaseUtils.getHibernateSessionFactory();
     private Session currentSession;
     private Transaction currentTransaction;
 
-    public QuestionDao(SessionFactory sessionFactory){
-        this.currentSessionFactory = sessionFactory;
+    public QuestionDao(){
+        System.out.println("QuestionDao constructor");
     }
 
     public Session openCurrentSession(){
@@ -76,7 +78,6 @@ public class QuestionDao implements DaoInterface<Question, Long> {
 
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public List<Question> fetchAll() {
         return getCurrentSession().createQuery("from Question").list();

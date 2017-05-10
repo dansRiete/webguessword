@@ -199,7 +199,7 @@ public class InterfaceBean implements Serializable{
         FacesContext context = FacesContext.getCurrentInstance();
         HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
         HttpSession session = request.getSession();
-        loginBean.getSessionFactory().close();
+//        loginBean.getSessionFactory().close();
         session.invalidate();
         try {
             context.getExternalContext().redirect("index.xhtml");

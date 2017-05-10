@@ -1,5 +1,7 @@
 package controller;
 
+import dao.PhraseDao;
+import dao.UserDao;
 import datamodel.Phrase;
 import datamodel.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,15 +21,19 @@ import java.util.List;
 @RequestMapping(value = "/rest")
 public class RestController {
 
+    @Autowired
+    PhraseDao phraseDao;
 
+    @Autowired
+    UserDao userDao;
 
     @RequestMapping(value = "/phrases", method = RequestMethod.GET)
     public @ResponseBody List<Phrase> fetchAllPhrases(@RequestParam("user_id") long userId){
-        return restDatabaseHelper.fetchAllPhrases(userId);
+        return phraseDao.fetchAll(userId);
     }
 
     @RequestMapping(value = "/users", method = RequestMethod.GET)
     public @ResponseBody List<User> fetchAllUsers(){
-        return restDatabaseHelper.fetchAllUsers();
+        return userDao.fetchAll();
     }
 }

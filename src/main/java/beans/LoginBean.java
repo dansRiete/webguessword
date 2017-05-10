@@ -4,11 +4,13 @@ import dao.UserDao;
 import datamodel.User;
 import dao.DatabaseHelper;
 import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import utils.DatabaseUtils;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
+import javax.jws.soap.SOAPBinding;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Serializable;
@@ -28,7 +30,7 @@ public class LoginBean implements Serializable {
 
     public LoginBean() {
         System.out.println("LoginBean's constructor");
-        UserDao userDao = new UserDao(sessionFactory);
+        UserDao userDao = new UserDao();
         userDao.openCurrentSession();
         this.usersList = userDao.fetchAll();
         userDao.closeCurrentSession();
@@ -54,7 +56,7 @@ public class LoginBean implements Serializable {
         try {
             if (userExist && passwordTextField.equals(loggedUser.password)) {
                 this.loggedUser = loggedUser;
-                this.databaseHelper = new DatabaseHelper(this, sessionFactory);
+                this.databaseHelper = new DatabaseHelper(loggedUser);
                 response.sendRedirect("learn.xhtml");
             } else {
                 response.sendRedirect("error.xhtml");
