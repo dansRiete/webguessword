@@ -5,7 +5,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.springframework.stereotype.Component;
-import utils.DatabaseUtils;
+import utils.DataSource;
 
 
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.List;
 @Component
 public class UserDao implements DaoInterface<User, Long> {
 
-    private SessionFactory currentSessionFactory= DatabaseUtils.getHibernateSessionFactory();
+    private SessionFactory currentSessionFactory= DataSource.getHibernateSessionFactory();
     private Session currentSession;
     private Transaction currentTransaction;
 

@@ -1,10 +1,10 @@
 package beans;
 
+import utils.DataSource;
 import utils.PhrasesRepository;
 import dao.UserDao;
 import datamodel.User;
 import org.hibernate.SessionFactory;
-import utils.DatabaseUtils;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
@@ -24,7 +24,7 @@ public class LoginBean implements Serializable {
     private User loggedUser;
     private PhrasesRepository phrasesRepository;
     private List<User> usersList = new ArrayList<>();
-    private SessionFactory sessionFactory = DatabaseUtils.getHibernateSessionFactory();
+    private SessionFactory sessionFactory = DataSource.getHibernateSessionFactory();
 
     public LoginBean() {
         System.out.println("LoginBean's constructor");

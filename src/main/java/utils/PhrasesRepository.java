@@ -1,6 +1,5 @@
 package utils;
 
-import beans.LoginBean;
 import dao.PhraseDao;
 import dao.QuestionDao;
 import datamodel.Phrase;
@@ -9,7 +8,6 @@ import datamodel.User;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
-import utils.DatabaseUtils;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -41,7 +39,7 @@ public class PhrasesRepository {
     private List<String> availableLabels = new ArrayList<>();
     private List<Phrase> availablePhrases = new ArrayList<>();
     private Random random = new Random();
-    private SessionFactory sessionFactory = DatabaseUtils.getHibernateSessionFactory();
+    private SessionFactory sessionFactory = DataSource.getHibernateSessionFactory();
         private QuestionDao questionDao = new QuestionDao();
     private PhraseDao phraseDao = new PhraseDao();
     private User loggedUser;
@@ -101,7 +99,7 @@ public class PhrasesRepository {
         String temp;
         availableLabels.add("ALL");
 
-        try (Statement st = DatabaseUtils.getConnectionPool().getConnection().createStatement();
+        try (Statement st = DataSource.getConnectionPool().getConnection().createStatement();
              ResultSet rs = st.executeQuery("SELECT DISTINCT (LABEL) FROM " + "(SELECT * FROM words WHERE user_id=" +
                      loggedUser.getId() + ") AS THIS_USER" + " ORDER BY LABEL")) {
             while (rs.next()) {
@@ -152,7 +150,121 @@ public class PhrasesRepository {
         reloadIndices();
     }
 
+    public Phrase retrieveRandomPhrase() {
+
+        System.out.println("CALL: retrieveRandomPhrase() from PhrasesRepository");
+        return retrievePhraseByIndex(random.nextInt(greatestPhrasesIndex));
+    }
+
+    //    @SuppressWarnings({"unchecked", "JpaQlInspection"})
+    public long retrieveMaxPhraseId(){
+
+        System.out.println("CALL: retrieveMaxPhraseId() from PhrasesRepository");
+        long maxId = 0;
+        @SuppressWarnings({"unchecked", "JpaQlInspection"})
+        List<Phrase> list = sessionFactory.openSession().createQuery("from Phrase").list();
+        for(Phrase currentPhrase : list){
+            if(currentPhrase.getId() > maxId){
+                maxId = currentPhrase.getId();
+            }
+        }
+        return maxId;
+    }
+
+    public List<Phrase> retrieveActivePhrases() {
+        List<Phrase> activePhrasesList = new ArrayList<>();
+        availablePhrases.forEach(phrase -> {
+            if (phrase.isInList(selectedLabels)){
+                activePhrasesList.add(phrase);
+            }
+        });
+        return activePhrasesList;
+    }
+
+    public void insertPhrase(Phrase insertedPhrase) {
+
+        System.out.println("CALL: insertPhrase(Phrase insertedPhrase) from PhrasesRepository");
+        phraseDao.openCurrentSessionWithTransaction();
+        phraseDao.persist(insertedPhrase);
+        phraseDao.closeCurrentSessionwithTransaction();
+        availablePhrases.add(insertedPhrase);
+    }
+
+    public void deletePhrase(Phrase deletedPhrase) {
+
+        System.out.println("CALL: deleteButtonAction(int id) from PhrasesRepository");
+        String deleteSql = "DELETE FROM words WHERE ID=" + deletedPhrase.id;
+        try (Statement st = DataSource.getConnectionPool().getConnection().createStatement()) {
+            st.execute(deleteSql);
+        } catch (SQLException e) {
+            System.out.println("EXCEPTION#2: in deleteButtonAction(int id) from PhrasesRepository, SQL was: " + deleteSql);
+            e.printStackTrace();
+            throw new RuntimeException();
+        }
+        reloadPhrasesAndIndices();
+
+    }
+
+    public void updatePhrase(Phrase givenPhrase) {
+
+        System.out.println("CALL: updatePhrase(Phrase givenPhrase) from PhrasesRepository with id=" + givenPhrase.id);
+        String dateTime = ZonedDateTime.now(ZoneId.of(TIMEZONE)).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+        String updateSql = "UPDATE " + "words" + " SET for_word=?, nat_word=?, transcr=?, last_accs_date=?, " +
+                "label=?, prob_factor=?, rate=?  WHERE id =" + givenPhrase.id;
+
+        try (
+                Connection connection = DataSource.getConnectionPool().getConnection();
+                PreparedStatement mainDbPrepStat = connection.prepareStatement(updateSql)
+        ){
+
+            mainDbPrepStat.setString(1, givenPhrase.foreignWord);
+            mainDbPrepStat.setString(2, givenPhrase.nativeWord);
+
+            if (givenPhrase.transcription == null || givenPhrase.transcription.equalsIgnoreCase(""))
+                mainDbPrepStat.setString(3, null);
+            else
+                mainDbPrepStat.setString(3, givenPhrase.transcription);
+
+            mainDbPrepStat.setString(4, dateTime);
+
+            if (givenPhrase.label == null || givenPhrase.label.equalsIgnoreCase(""))
+                mainDbPrepStat.setString(5, null);
+            else
+                mainDbPrepStat.setString(5, givenPhrase.label);
+
+            mainDbPrepStat.setDouble(6, givenPhrase.probabilityFactor);
+            mainDbPrepStat.setDouble(7, givenPhrase.multiplier);
+            mainDbPrepStat.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("EXCEPTION in updateProb(Phrase givenPhrase) from PhrasesRepository SQL was: " + updateSql);
+        }
+
+        reloadIndices();
+
+    }
+
+    public void updateProb(Phrase updatedPhrase) {
+
+        System.out.println("CALL: updateProb(Phrase insertedPhrase) with id=" + updatedPhrase.id + " from PhrasesRepository");
+        String dateTime = ZonedDateTime.now(ZoneId.of(TIMEZONE)).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+        String updateSQL = "UPDATE " + "words" + " SET prob_factor=" + updatedPhrase.probabilityFactor + ", last_accs_date='" +
+                dateTime + "', rate=" + updatedPhrase.multiplier + " WHERE id=" + updatedPhrase.id;
+        try (
+                Connection connection = DataSource.getConnectionPool().getConnection();
+                Statement statement = connection.createStatement()
+        ){
+            statement.execute(updateSQL);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("SQLException in updateProb(Phrase updatedPhrase) from PhrasesRepository SQL was: " + updateSQL);
+        }
+
+        reloadIndices();
+    }
+
     private void reloadIndices() {
+        System.out.println("reloadIndices() from PhraseRepository");
 
         if(availablePhrases.isEmpty()){
             throw new RuntimeException("Active Phrases list was empty. Reload indices impossible");
@@ -232,125 +344,13 @@ public class PhrasesRepository {
         System.out.println("CALL: reloadIndices() from PhrasesRepository," + " Indexes changed=" + modificatePhrasesIndicesNumber + ", Time taken " + (System.currentTimeMillis() - startTime) + "ms");
     }
 
-    public Phrase retrieveRandomPhrase() {
-
-        System.out.println("CALL: retrieveRandomPhrase() from PhrasesRepository");
-        return retrievePhraseByIndex(random.nextInt(greatestPhrasesIndex));
-    }
-
-    //    @SuppressWarnings({"unchecked", "JpaQlInspection"})
-    public long retrieveMaxPhraseId(){
-
-        System.out.println("CALL: retrieveMaxPhraseId() from PhrasesRepository");
-        long maxId = 0;
-        @SuppressWarnings({"unchecked", "JpaQlInspection"})
-        List<Phrase> list = sessionFactory.openSession().createQuery("from Phrase").list();
-        for(Phrase currentPhrase : list){
-            if(currentPhrase.getId() > maxId){
-                maxId = currentPhrase.getId();
-            }
-        }
-        return maxId;
-    }
-
-    public void insertPhrase(Phrase insertedPhrase) {
-
-        System.out.println("CALL: insertPhrase(Phrase insertedPhrase) from PhrasesRepository");
-        phraseDao.openCurrentSessionWithTransaction();
-        phraseDao.persist(insertedPhrase);
-        phraseDao.closeCurrentSessionwithTransaction();
-        availablePhrases.add(insertedPhrase);
-    }
-
-
-    public void deletePhrase(Phrase deletedPhrase) {
-
-        System.out.println("CALL: deleteButtonAction(int id) from PhrasesRepository");
-        String deleteSql = "DELETE FROM words WHERE ID=" + deletedPhrase.id;
-        try (Statement st = DatabaseUtils.getConnectionPool().getConnection().createStatement()) {
-            st.execute(deleteSql);
-        } catch (SQLException e) {
-            System.out.println("EXCEPTION#2: in deleteButtonAction(int id) from PhrasesRepository, SQL was: " + deleteSql);
-            e.printStackTrace();
-            throw new RuntimeException();
-        }
-        reloadPhrasesAndIndices();
-
-    }
-
-    public void updatePhrase(Phrase givenPhrase) {
-
-        System.out.println("CALL: updatePhrase(Phrase givenPhrase) from PhrasesRepository with id=" + givenPhrase.id);
-        String dateTime = ZonedDateTime.now(ZoneId.of(TIMEZONE)).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
-        String updateSql = "UPDATE " + "words" + " SET for_word=?, nat_word=?, transcr=?, last_accs_date=?, " +
-                "label=?, prob_factor=?, rate=?  WHERE id =" + givenPhrase.id;
-
-        Phrase phraseInTheCollection = retrievePhraseById(givenPhrase.id);
-        phraseInTheCollection.foreignWord = givenPhrase.foreignWord;
-        phraseInTheCollection.nativeWord = givenPhrase.nativeWord;
-        phraseInTheCollection.transcription = givenPhrase.transcription;
-        phraseInTheCollection.lastAccessDateTime = givenPhrase.lastAccessDateTime;
-        phraseInTheCollection.label = givenPhrase.label;
-        phraseInTheCollection.probabilityFactor = givenPhrase.probabilityFactor;
-        phraseInTheCollection.multiplier = givenPhrase.multiplier;
-
-        try (PreparedStatement mainDbPrepStat = DatabaseUtils.getConnectionPool().getConnection().prepareStatement(updateSql)) {
-
-            mainDbPrepStat.setString(1, givenPhrase.foreignWord);
-            mainDbPrepStat.setString(2, givenPhrase.nativeWord);
-
-            if (givenPhrase.transcription == null || givenPhrase.transcription.equalsIgnoreCase(""))
-                mainDbPrepStat.setString(3, null);
-            else
-                mainDbPrepStat.setString(3, givenPhrase.transcription);
-
-            mainDbPrepStat.setString(4, dateTime);
-
-            if (givenPhrase.label == null || givenPhrase.label.equalsIgnoreCase(""))
-                mainDbPrepStat.setString(5, null);
-            else
-                mainDbPrepStat.setString(5, givenPhrase.label);
-
-            mainDbPrepStat.setDouble(6, givenPhrase.probabilityFactor);
-            mainDbPrepStat.setDouble(7, givenPhrase.multiplier);
-            mainDbPrepStat.execute();
-        } catch (SQLException e) {
-            System.out.println("EXCEPTION#2: in updateProb(Phrase givenPhrase) from PhrasesRepository");
-            e.printStackTrace();
-            throw new RuntimeException();
-        }
-
-        reloadIndices();
-
-    }
-
-    public void updateProb(Phrase phrase) {
-
-        System.out.println("CALL: updateProb(Phrase insertedPhrase) with id=" + phrase.id + " from PhrasesRepository");
-        String dateTime = ZonedDateTime.now(ZoneId.of(TIMEZONE)).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
-
-        retrievePhraseById(phrase.id).probabilityFactor = phrase.probabilityFactor;
-        retrievePhraseById(phrase.id).multiplier = phrase.multiplier;
-
-        try (Statement statement = DatabaseUtils.getConnectionPool().getConnection().createStatement()) {
-            statement.execute("UPDATE " + "words" + " SET prob_factor=" + phrase.probabilityFactor + ", last_accs_date='" +
-                    dateTime + "', rate=" + phrase.multiplier +
-                    " WHERE id=" + phrase.id);
-        } catch (SQLException e) {
-            System.out.println("SQLException in updateProb(Phrase insertedPhrase) from PhrasesRepository");
-            e.printStackTrace();
-            throw new RuntimeException("SQLException in updateProb(Phrase insertedPhrase) from PhrasesRepository");
-        }
-        reloadIndices();
-    }
-
     @SuppressWarnings("Duplicates")
     private int calculateUntilTodayAnswersNumber(){
 
         System.out.println("CALL: calculateUntilTodayAnswersNumber() from PhrasesRepository");
         int untilTodayAnswersNumber = 0;
         try {
-            Statement statement = DatabaseUtils.getConnectionPool().getConnection().createStatement();
+            Statement statement = DataSource.getConnectionPool().getConnection().createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT COUNT(*) FROM questions WHERE date < " +
                     "DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)");
             resultSet.next();
@@ -369,7 +369,7 @@ public class PhrasesRepository {
         System.out.println("CALL: calculateUntilTodayTrainingHoursSpent() from PhrasesRepository");
         int untilTodayTrainingHoursSpent = 0;
         try{
-            Statement statement = DatabaseUtils.getConnectionPool().getConnection().createStatement();
+            Statement statement = DataSource.getConnectionPool().getConnection().createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT TIMESTAMPDIFF(HOUR, (SELECT MIN(date) FROM questions " +
                     "WHERE date < DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)), DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR))");
             resultSet.next();
@@ -382,16 +382,6 @@ public class PhrasesRepository {
         return untilTodayTrainingHoursSpent;
     }
 
-    private Phrase retrievePhraseById(long id){
-
-        System.out.println("CALL: retrievePhraseById(long id)  from PhrasesRepository");
-        for (Phrase phrase : availablePhrases) {
-            if (phrase.id == id)
-                return phrase;
-        }
-        throw new RuntimeException("PhraseNotFoundException");
-    }
-
     private Phrase retrievePhraseByIndex(int index) {
 
         System.out.println("CALL: retrievePhraseByIndex(int index) from PhrasesRepository");
@@ -401,16 +391,6 @@ public class PhrasesRepository {
             }
         }
         throw new RuntimeException("There was no insertedPhrase by given index " + index);
-    }
-
-    public List<Phrase> retrieveActivePhrases() {
-        List<Phrase> activePhrasesList = new ArrayList<>();
-        availablePhrases.forEach(phrase -> {
-            if (phrase.isInList(selectedLabels)){
-                activePhrasesList.add(phrase);
-            }
-        });
-        return activePhrasesList;
     }
 
     //Setters and Getters

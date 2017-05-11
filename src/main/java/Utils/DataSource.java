@@ -16,7 +16,7 @@ import java.sql.SQLException;
 /**
  * Created by Aleks on 08.02.2017.
  */
-public class DatabaseUtils {
+public class DataSource {
 
     private final static String ORIGINAL_REMOTE_HOST = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     private final static String FORWARDED_REMOTE_HOST_PORT3306 = "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
@@ -73,7 +73,7 @@ public class DatabaseUtils {
 
     //TO-DO This method should not be used in production, for developing only
     private static void determineAliveDatabase() {
-        System.out.println("CALL: determineAliveDatabase() from DatabaseUtils");
+        System.out.println("CALL: determineAliveDatabase() from DataSource");
         String conectedDatabaseMessage = null;
 
         if (USE_LOCAL_DB) {

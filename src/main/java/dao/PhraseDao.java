@@ -7,6 +7,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 import org.springframework.stereotype.Component;
+import utils.DataSource;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -19,7 +20,7 @@ import java.util.List;
 @Component
 public class PhraseDao implements DaoInterface<Phrase, Long> {
 
-    private SessionFactory currentSessionFactory = utils.DatabaseUtils.getHibernateSessionFactory();
+    private SessionFactory currentSessionFactory = DataSource.getHibernateSessionFactory();
     private Session currentSession;
     private Transaction currentTransaction;
 
