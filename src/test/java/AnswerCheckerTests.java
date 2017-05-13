@@ -1,5 +1,5 @@
 import org.junit.Test;
-import utils.AnswerChecker;
+import aleks.kuzko.utils.AnswerChecker;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
