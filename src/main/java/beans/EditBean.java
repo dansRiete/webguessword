@@ -6,7 +6,6 @@ import utils.PhrasesRepository;
 import javax.annotation.PostConstruct;
 import javax.el.ELContext;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import javax.faces.context.FacesContext;
 import java.io.Serializable;
@@ -80,8 +79,8 @@ public class EditBean implements Serializable{
             probabilityFactor = null;
             myList.add(0, phrase);
             phrasesRepository.insertPhrase(phrase);
-            phrasesRepository.reloadPhrasesAndIndices();
-
+            phrasesRepository.reloadPhrases();
+            phrasesRepository.reloadIndices();
         }
 
         System.out.println("EDITBEAN CALL END addAction() from editBean mylist.size=" + myList.size());
@@ -93,7 +92,8 @@ public class EditBean implements Serializable{
         phrasesRepository.deletePhrase(phr);
         myList = phrasesRepository.retrieveActivePhrases();
         labelsList = phrasesRepository.retrievePossibleLabels();
-        phrasesRepository.reloadPhrasesAndIndices();
+        phrasesRepository.reloadPhrases();
+        phrasesRepository.reloadIndices();
         System.out.println("EDITBEAN CALL END deleteById(Phrase phr)  mylist.size=" + myList.size());
 
     }

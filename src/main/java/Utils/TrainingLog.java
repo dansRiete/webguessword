@@ -18,10 +18,6 @@ public class TrainingLog {
 
     private int position;
     private int todayTrainedPhrasesNumber;
-    private int totalTrainedPhrasesNumber;
-    private int activeTrainedPhrasesNumber;
-    private int totalUntrainedPhrasesNumber;
-    private int activeUntrainedPhrasesNumber;
     private String todayRightAnswersPercentage;
     private String totalAndActivePhrasesNumber;
     private String totalAndActiveUntrainedPhrasesNumber;
@@ -175,16 +171,24 @@ public class TrainingLog {
         int rightAnswersNumber = 0;
         int wrongAnswersNumber = 0;
         todayTrainedPhrasesNumber = 0;
-        totalTrainedPhrasesNumber = phrasesRepository.getTotalTrainedPhrasesNumber();
-        totalUntrainedPhrasesNumber = phrasesRepository.getTotalUntrainedPhrasesNumber();
-        averageAnswersPerDayNumber = new BigDecimal((double) (phrasesRepository.getUntilTodayAnswersNumber() + allQuestions.size()) /
-                ((double) (phrasesRepository.getUntilTodayTrainingHoursSpent() + LocalTime.now().getHour() - 6) / 24D)).setScale(1, BigDecimal.ROUND_HALF_UP);
-        trainingCompletionPercentage = new BigDecimal((double) (totalTrainedPhrasesNumber + todayTrainedPhrasesNumber) / (double) (totalTrainedPhrasesNumber + totalUntrainedPhrasesNumber) * 100D).setScale(2, BigDecimal.ROUND_HALF_UP) + "%";
-        totalAndActivePhrasesNumber = phrasesRepository.getActivePhrasesNumber() == phrasesRepository.calculateTotalPhrasesNumber() ? String.valueOf(phrasesRepository.calculateTotalPhrasesNumber()) : phrasesRepository.getActivePhrasesNumber() + "/" + phrasesRepository.calculateTotalPhrasesNumber();
-        activeTrainedPhrasesNumber = phrasesRepository.getActiveTrainedPhrasesNumber();
-        activeUntrainedPhrasesNumber = phrasesRepository.getActiveUntrainedPhrasesNumber();
-        totalAndActiveUntrainedPhrasesNumber = totalUntrainedPhrasesNumber == activeUntrainedPhrasesNumber ? String.valueOf(totalUntrainedPhrasesNumber) : activeUntrainedPhrasesNumber + "/" + totalUntrainedPhrasesNumber;
-        totalAndActiveTrainedPhrasesNumber = totalTrainedPhrasesNumber == activeTrainedPhrasesNumber ? String.valueOf(totalTrainedPhrasesNumber) : activeTrainedPhrasesNumber + "/" + totalTrainedPhrasesNumber;
+        int totalTrainedPhrasesNumber = phrasesRepository.getTotalTrainedPhrasesNumber();
+        int totalUntrainedPhrasesNumber = phrasesRepository.getTotalUntrainedPhrasesNumber();
+        averageAnswersPerDayNumber = new BigDecimal((double) (phrasesRepository.getUntilTodayAnswersNumber() +
+                allQuestions.size()) / ((double) (phrasesRepository.getUntilTodayTrainingHoursSpent() +
+                LocalTime.now().getHour() - 6) / 24D)).setScale(1, BigDecimal.ROUND_HALF_UP);
+        trainingCompletionPercentage = new BigDecimal((double) (totalTrainedPhrasesNumber + todayTrainedPhrasesNumber) /
+                (double) (totalTrainedPhrasesNumber + totalUntrainedPhrasesNumber) * 100D)
+                .setScale(2, BigDecimal.ROUND_HALF_UP) + "%";
+        totalAndActivePhrasesNumber = phrasesRepository.getActivePhrasesNumber() ==
+                phrasesRepository.calculateTotalPhrasesNumber() ?
+                String.valueOf(phrasesRepository.calculateTotalPhrasesNumber()) :
+                phrasesRepository.getActivePhrasesNumber() + "/" + phrasesRepository.calculateTotalPhrasesNumber();
+        int activeTrainedPhrasesNumber = phrasesRepository.getActiveTrainedPhrasesNumber();
+        int activeUntrainedPhrasesNumber = phrasesRepository.getActiveUntrainedPhrasesNumber();
+        totalAndActiveUntrainedPhrasesNumber = totalUntrainedPhrasesNumber == activeUntrainedPhrasesNumber ?
+                String.valueOf(totalUntrainedPhrasesNumber) : activeUntrainedPhrasesNumber + "/" + totalUntrainedPhrasesNumber;
+        totalAndActiveTrainedPhrasesNumber = totalTrainedPhrasesNumber == activeTrainedPhrasesNumber ?
+                String.valueOf(totalTrainedPhrasesNumber) : activeTrainedPhrasesNumber + "/" + totalTrainedPhrasesNumber;
         for(int i = 0; i < allQuestions.size(); i++){
             Question currentQuestion = allQuestions.get(i);
             if(currentQuestion.isAnswered()){

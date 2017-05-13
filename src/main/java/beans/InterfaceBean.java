@@ -95,7 +95,7 @@ public class InterfaceBean implements Serializable {
 
         if (!resultChosenLabel.equals(previousResultChosenLabel)) { //If clause was changed
             phrasesRepository.setSelectedLabels(chosenLabelsForLearningWords);
-            phrasesRepository.reloadPhrasesAndIndices();
+            phrasesRepository.reloadIndices();
             this.previousResultChosenLabel = resultChosenLabel;
         }
     }
