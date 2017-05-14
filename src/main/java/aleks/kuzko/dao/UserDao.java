@@ -14,7 +14,7 @@ import java.util.List;
  * Created by Aleks on 28.03.2017.
  */
 @Component
-public class UserDao implements DaoInterface<User, Long> {
+public class UserDao {
 
     private SessionFactory currentSessionFactory= DataSource.getHibernateSessionFactory();
     private Session currentSession;
@@ -52,32 +52,26 @@ public class UserDao implements DaoInterface<User, Long> {
         return currentTransaction;
     }
 
-    @Override
     public void persist(User entity) {
         getCurrentSession().save(entity);
     }
 
-    @Override
     public void update(User entity) {
         getCurrentSession().update(entity);
     }
 
-    @Override
-    public User findById(Long aLong) {
-        return getCurrentSession().get(User.class, aLong);
+    public User findById(Long id) {
+        return getCurrentSession().get(User.class, id);
     }
 
-    @Override
     public void delete(User entity) {
         getCurrentSession().delete(entity);
     }
 
-    @Override
     public List<User> fetchAll() {
         return getCurrentSession().createQuery("from User").list();
     }
 
-    @Override
     public void deleteAll() {
         fetchAll().forEach(this::delete);
     }

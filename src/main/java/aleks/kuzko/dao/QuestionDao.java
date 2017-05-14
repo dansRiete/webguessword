@@ -68,8 +68,8 @@ public class QuestionDao implements DaoInterface<Question, Long> {
     }
 
     @Override
-    public Question findById(Long aLong) {
-        return getCurrentSession().get(Question.class, aLong);
+    public Question findById(Long id) {
+        return getCurrentSession().get(Question.class, id);
 
     }
 

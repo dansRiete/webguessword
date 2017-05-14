@@ -21,21 +21,19 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Autowired
     public void configureGlobalSecurity(AuthenticationManagerBuilder auth) throws Exception {
-        System.out.println("Autowired!!!!!!!!!!");
-        auth.inMemoryAuthentication().withUser("bill").password("abc123").roles("ADMIN");
-        auth.inMemoryAuthentication().withUser("tom").password("abc123").roles("USER");
+        auth.inMemoryAuthentication().withUser("aleks").password("vlenaf13").roles("USER");
+        auth.inMemoryAuthentication().withUser("guest").password("guest").roles("USER");
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        System.out.println("CONFIGURE!!!!!!!!!!");
 
         http
                 .csrf()
                 .disable()
                 .authorizeRequests()
                 .antMatchers("/rest/**")
-                .hasRole("ADMIN")
+                .hasRole("USER")
                 .and()
                 .httpBasic()
                 .realmName(REALM)

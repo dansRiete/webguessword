@@ -85,7 +85,7 @@ public class PhrasesRepository {
         String queryString = "FROM Question WHERE date > :time AND user_id = :user ORDER BY date DESC";
         Query query = session.createQuery(queryString);
         query.setParameter("time", todays6amTimestamp);
-        query.setParameter("user", loggedUser.getId());
+        query.setParameter("user", loggedUser.getLogin());
         @SuppressWarnings("unchecked")
         List<Question> list = query.list();
         list.forEach(question -> question.setAnswered(true));
@@ -101,8 +101,8 @@ public class PhrasesRepository {
         availableLabels.add("ALL");
 
         try (Statement st = DataSource.getConnectionPool().getConnection().createStatement();
-             ResultSet rs = st.executeQuery("SELECT DISTINCT (LABEL) FROM " + "(SELECT * FROM words WHERE user_id=" +
-                     loggedUser.getId() + ") AS THIS_USER" + " ORDER BY LABEL")) {
+             ResultSet rs = st.executeQuery("SELECT DISTINCT (LABEL) FROM " + "(SELECT * FROM words WHERE user_id='" +
+                     loggedUser.getLogin() + "') AS THIS_USER" + " ORDER BY LABEL")) {
             while (rs.next()) {
                 temp = rs.getString("LABEL");
                 if(temp != null && !temp.equals(""))

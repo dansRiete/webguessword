@@ -26,7 +26,7 @@ public class DataSource {
     public static String activePassword;
     private static SessionFactory hibernateSessionFactory = buildHibernateSessionFactory();
     private static ComboPooledDataSource connectionPool = initConnectionPool();
-    public final static boolean USE_LOCAL_DB = true;
+    public final static boolean USE_LOCAL_DB = false;
 
     private static ComboPooledDataSource initConnectionPool(){
         ComboPooledDataSource cpds = new ComboPooledDataSource();

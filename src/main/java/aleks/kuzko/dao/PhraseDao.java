@@ -68,9 +68,13 @@ public class PhraseDao implements DaoInterface<Phrase, Long> {
         getCurrentSession().update(entity);
     }
 
+    public void update(Phrase entity, String user) {
+        getCurrentSession().update(entity);
+    }
+
     @Override
-    public Phrase findById(Long aLong) {
-        return getCurrentSession().get(Phrase.class, aLong);
+    public Phrase findById(Long id) {
+        return getCurrentSession().get(Phrase.class, id);
 
     }
 
@@ -80,7 +84,7 @@ public class PhraseDao implements DaoInterface<Phrase, Long> {
     }
 
 
-    public List<Phrase> fetchAll(long userId) {
+    public List<Phrase> fetchAll(String userId) {
         openCurrentSession();
         System.out.println("currentSession = " + currentSession);
         List<User> users = currentSession.createQuery("from User").list();
@@ -88,7 +92,7 @@ public class PhraseDao implements DaoInterface<Phrase, Long> {
         CriteriaQuery<Phrase> criteriaQuery = builder.createQuery(Phrase.class);
         Root<Phrase> phraseRoot = criteriaQuery.from(Phrase.class);
         criteriaQuery.select(phraseRoot);
-        criteriaQuery.where(builder.equal(phraseRoot.get("user").get("id"), userId), builder.equal(phraseRoot.get("isDeleted"), false));
+        criteriaQuery.where(builder.equal(phraseRoot.get("user").get("login"), userId), builder.equal(phraseRoot.get("isDeleted"), false));
         Query<Phrase> allPhrasesQuery = currentSession.createQuery(criteriaQuery);
         List<Phrase> phrases = allPhrasesQuery.list();
         closeCurrentSession();

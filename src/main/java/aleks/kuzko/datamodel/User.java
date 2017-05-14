@@ -11,11 +11,15 @@ import java.io.Serializable;
 @Table(name = "users")
 public class User implements Serializable {
 
-    @javax.persistence.Id
+    /*@javax.persistence.Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
-    public long id;
+    public long id;*/
 
-    @Column
+    public String getLogin() {
+        return login;
+    }
+
+    @javax.persistence.Id
     public String login;
 
     @Column
@@ -36,7 +40,7 @@ public class User implements Serializable {
         this.email = email;
     }
 
-    public long getId() {
+    /*public long getId() {
         return id;
-    }
+    }*/
 }
