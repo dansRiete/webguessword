@@ -42,6 +42,7 @@ public class LoginBean implements Serializable {
         User loggedUser = null;
 
         //Check if there is such user
+        System.out.println("usersList: " + usersList);
         for (User user : usersList) {
             if (this.userTextField.equals(user.login)) {
                 userExist = true;

@@ -26,7 +26,7 @@ public class DataSource {
     public static String activePassword;
     private static SessionFactory hibernateSessionFactory = buildHibernateSessionFactory();
     private static ComboPooledDataSource connectionPool = initConnectionPool();
-    public final static boolean USE_LOCAL_DB = false;
+    public final static boolean USE_LOCAL_DB = true;
 
     private static ComboPooledDataSource initConnectionPool(){
         ComboPooledDataSource cpds = new ComboPooledDataSource();
@@ -74,6 +74,11 @@ public class DataSource {
     private static void determineAliveDatabase() {
         System.out.println("CALL: determineAliveDatabase() from DataSource");
         String conectedDatabaseMessage = null;
+        try {
+            DriverManager.registerDriver(new com.mysql.jdbc.Driver());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
         if (USE_LOCAL_DB) {
             activeRemoteHost = FORWARDED_REMOTE_HOST_PORT3306;

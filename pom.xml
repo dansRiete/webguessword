@@ -90,15 +90,14 @@
         <dependency>
             <groupId>org.primefaces</groupId>
             <artifactId>primefaces</artifactId>
-            <version>6.0</version>
+            <version>6.1</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/javax.faces/jsf-api -->
+        <!-- https://mvnrepository.com/artifact/javax.faces/javax.faces-api -->
         <dependency>
             <groupId>javax.faces</groupId>
-            <artifactId>jsf-api</artifactId>
-            <version>2.1</version>
+            <artifactId>javax.faces-api</artifactId>
+            <version>2.3</version>
         </dependency>
-
 
         <!-- http://mvnrepository.com/artifact/c3p0/c3p0 -->
         <dependency>
@@ -144,7 +143,7 @@
       </build>
     </profile>
     <profile>
-        <id>local</id>
+        <id>local wildfly</id>
         <build>
             <plugins>
                 <plugin>
@@ -152,6 +151,20 @@
                     <artifactId>maven-war-plugin</artifactId>
                     <configuration>
                         <outputDirectory>C:\Program Files\wildfly-10\standalone\deployments\</outputDirectory>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </build>
+    </profile>
+    <profile>
+        <id>local tomcat</id>
+        <build>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-war-plugin</artifactId>
+                    <configuration>
+                        <outputDirectory>C:\Program Files\tomcat-7\webapps\</outputDirectory>
                     </configuration>
                 </plugin>
             </plugins>
