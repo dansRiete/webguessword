@@ -92,11 +92,11 @@
             <artifactId>primefaces</artifactId>
             <version>6.0</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.glassfish/javax.faces -->
+        <!-- https://mvnrepository.com/artifact/javax.faces/javax.faces-api -->
         <dependency>
-            <groupId>org.glassfish</groupId>
-            <artifactId>javax.faces</artifactId>
-            <version>2.3.0</version>
+            <groupId>javax.faces</groupId>
+            <artifactId>javax.faces-api</artifactId>
+            <version>2.3</version>
         </dependency>
         <!-- http://mvnrepository.com/artifact/c3p0/c3p0 -->
         <dependency>
