@@ -30,7 +30,7 @@
         <extension module="org.wildfly.extension.io"/>
         <extension module="org.wildfly.extension.messaging-activemq"/>
         <extension module="org.wildfly.extension.request-controller"/>
-        <extension module="org.wildfly.extension.aleks.kuzko.security.manager"/>
+        <extension module="org.wildfly.extension.security.manager"/>
         <extension module="org.wildfly.extension.undertow"/>
         <extension module="org.wildfly.iiop-openjdk"/>
     </extensions>
@@ -412,7 +412,7 @@
         <subsystem xmlns="urn:jboss:domain:security-manager:1.0">
             <deployment-permissions>
                 <maximum-set>
-                    <permission class="java.aleks.kuzko.security.AllPermission"/>
+                    <permission class="java.security.AllPermission"/>
                 </maximum-set>
             </deployment-permissions>
         </subsystem>
