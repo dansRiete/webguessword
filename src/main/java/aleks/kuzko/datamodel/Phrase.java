@@ -1,6 +1,7 @@
 package aleks.kuzko.datamodel;
 
 import aleks.kuzko.utils.PhrasesRepository;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -46,6 +47,7 @@ public class Phrase implements Serializable {
     @Column(name = "rate")
     public double multiplier;
 
+    @JsonIgnore
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")
     public User user;
@@ -53,9 +55,11 @@ public class Phrase implements Serializable {
     @Column(name = "is_deleted")
     public boolean isDeleted;
 
+    @JsonIgnore
     @Transient
     public int indexStart;
 
+    @JsonIgnore
     @Transient
     public int indexEnd;
 
@@ -112,6 +116,7 @@ public class Phrase implements Serializable {
         }
     }
 
+    @JsonIgnore
     public boolean isTrained(){
         return probabilityFactor <= TRAINED_PROBABILITY_FACTOR;
     }

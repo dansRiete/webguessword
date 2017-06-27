@@ -7,10 +7,10 @@ import javax.servlet.Filter;
 /**
  * Created by Aleks on 14.05.2017.
  */
-public class Configuration2Initializer extends AbstractAnnotationConfigDispatcherServletInitializer {
+public class ConfigurationSpringInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
     @Override
     protected Class<?>[] getRootConfigClasses() {
-        return new Class[] { Configuration2.class };
+        return new Class[] { ConfigurationSpring.class };
     }
 
     @Override
