@@ -99,10 +99,14 @@ public class PhrasesRepository {
         availableLabels.clear();
         String temp;
         availableLabels.add("ALL");
+        String sql = "SELECT DISTINCT (LABEL) FROM " + "(SELECT * FROM words WHERE user_id='" +
+                loggedUser.getLogin() + "') AS THIS_USER" + " ORDER BY LABEL";
 
-        try (Statement st = DataSource.getConnectionPool().getConnection().createStatement();
-             ResultSet rs = st.executeQuery("SELECT DISTINCT (LABEL) FROM " + "(SELECT * FROM words WHERE user_id='" +
-                     loggedUser.getLogin() + "') AS THIS_USER" + " ORDER BY LABEL")) {
+        try (
+                Connection connection = DataSource.getConnectionPool().getConnection();
+                Statement st = connection.createStatement();
+                ResultSet rs = st.executeQuery(sql)
+        ){
             while (rs.next()) {
                 temp = rs.getString("LABEL");
                 if(temp != null && !temp.equals(""))
@@ -114,6 +118,8 @@ public class PhrasesRepository {
             e.printStackTrace();
             throw new RuntimeException();
         }
+
+        System.out.println("CALL: retrievePossibleLabels() ended");
 
         return availableLabels;
     }
@@ -276,7 +282,10 @@ public class PhrasesRepository {
 
         System.out.println("CALL: deleteButtonAction(int id) from PhrasesRepository");
         String deleteSql = "DELETE FROM words WHERE ID=" + deletedPhrase.id;
-        try (Statement st = DataSource.getConnectionPool().getConnection().createStatement()) {
+        try (
+                Connection connection = DataSource.getConnectionPool().getConnection();
+                Statement st = connection.createStatement()
+        ) {
             st.execute(deleteSql);
         } catch (SQLException e) {
             System.out.println("EXCEPTION#2: in deleteButtonAction(int id) from PhrasesRepository, SQL was: " + deleteSql);
@@ -353,10 +362,12 @@ public class PhrasesRepository {
 
         System.out.println("CALL: calculateUntilTodayAnswersNumber() from PhrasesRepository");
         int untilTodayAnswersNumber = 0;
-        try {
-            Statement statement = DataSource.getConnectionPool().getConnection().createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT COUNT(*) FROM questions WHERE date < " +
-                    "DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)");
+        String sql = "SELECT COUNT(*) FROM questions WHERE date < DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)";
+        try (
+                Connection connection = DataSource.getConnectionPool().getConnection();
+                Statement statement = connection.createStatement();
+                ResultSet resultSet = statement.executeQuery(sql)
+        ){
             resultSet.next();
             untilTodayAnswersNumber = resultSet.getInt(1);
             statement.close();
@@ -372,10 +383,13 @@ public class PhrasesRepository {
 
         System.out.println("CALL: calculateUntilTodayTrainingHoursSpent() from PhrasesRepository");
         int untilTodayTrainingHoursSpent = 0;
-        try{
-            Statement statement = DataSource.getConnectionPool().getConnection().createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT TIMESTAMPDIFF(HOUR, (SELECT MIN(date) FROM questions " +
-                    "WHERE date < DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)), DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR))");
+        String sql = "SELECT TIMESTAMPDIFF(HOUR, (SELECT MIN(date) FROM questions " +
+                "WHERE date < DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR)), DATE_ADD(CURRENT_DATE(), INTERVAL 6 HOUR))";
+        try(
+                Connection connection = DataSource.getConnectionPool().getConnection();
+                Statement statement = connection.createStatement();
+                ResultSet resultSet = statement.executeQuery(sql)
+        ){
             resultSet.next();
             untilTodayTrainingHoursSpent = resultSet.getInt(1);
             statement.close();

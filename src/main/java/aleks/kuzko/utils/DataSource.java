@@ -11,6 +11,7 @@ import org.hibernate.cfg.Configuration;
 import java.beans.PropertyVetoException;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Collection;
 
 /**
  * Created by Aleks on 08.02.2017.
@@ -21,12 +22,12 @@ public class DataSource {
     private final static String FORWARDED_REMOTE_HOST_PORT3306 = "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     private final static String FORWARDED_REMOTE_HOST_PORT3307 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     private final static String DRIVER = "com.mysql.jdbc.Driver";
-    public static String activeRemoteHost;
-    public static String activeUser;
-    public static String activePassword;
+    private static String activeRemoteHost;
+    private static String activeUser;
+    private static String activePassword;
     private static SessionFactory hibernateSessionFactory = buildHibernateSessionFactory();
     private static ComboPooledDataSource connectionPool = initConnectionPool();
-    public final static boolean USE_LOCAL_DB = true;
+    private final static boolean USE_LOCAL_DB = false;
 
     private static ComboPooledDataSource initConnectionPool(){
         ComboPooledDataSource cpds = new ComboPooledDataSource();
