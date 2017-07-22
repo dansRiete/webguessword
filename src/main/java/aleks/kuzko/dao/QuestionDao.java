@@ -15,7 +15,7 @@ import java.util.List;
 @Component
 public class QuestionDao implements DaoInterface<Question, Long> {
 
-    private SessionFactory currentSessionFactory= DataSource.getHibernateSessionFactory();
+    private SessionFactory currentSessionFactory = DataSource.getHibernateSessionFactory();
     private Session currentSession;
     private Transaction currentTransaction;
 
@@ -54,7 +54,7 @@ public class QuestionDao implements DaoInterface<Question, Long> {
 
 
     @Override
-    public void persist(Question entity) {
+    public synchronized void persist(Question entity) {
         openCurrentSessionWithTransaction();
         getCurrentSession().save(entity);
         closeCurrentSessionwithTransaction();

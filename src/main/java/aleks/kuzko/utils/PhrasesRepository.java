@@ -67,7 +67,13 @@ public class PhrasesRepository {
     public void persistQuestion(Question question){
 
         System.out.println("CALL: persistQuestion(Question question) from PhrasesRepository");
-        questionDao.persist(question);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                questionDao.persist(question);
+            }
+        }).start();
+
     }
 
     public void updateQuestion(Question question){
