@@ -18,16 +18,14 @@ import java.util.Collection;
  */
 public class DataSource {
 
-    private final static String ORIGINAL_REMOTE_HOST = "jdbc:mysql://127.3.47.130:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
-    private final static String FORWARDED_REMOTE_HOST_PORT3306 = "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
-    private final static String FORWARDED_REMOTE_HOST_PORT3307 = "jdbc:mysql://127.0.0.1:3307/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
-    private final static String DRIVER = "com.mysql.jdbc.Driver";
-    private static String activeRemoteHost;
-    private static String activeUser;
-    private static String activePassword;
-    private static SessionFactory hibernateSessionFactory = buildHibernateSessionFactory();
+    private final static String FORWARDED_REMOTE_HOST_PORT3306 = "jdbc:mysql://localhost:3306/webguessword?autoReconnect=true&useSSL=false";//?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false
+    private final static String DRIVER = "com.mysql.cj.jdbc.Driver";
+    private static String activeRemoteHost = FORWARDED_REMOTE_HOST_PORT3306;
+    private static String activeUser = "root";
+    private static String activePassword = "root";
     private static ComboPooledDataSource connectionPool = initConnectionPool();
-    private final static boolean USE_LOCAL_DB = false;
+    private static SessionFactory hibernateSessionFactory = buildHibernateSessionFactory();
+    private final static boolean USE_LOCAL_DB = true;
 
     private static ComboPooledDataSource initConnectionPool(){
         ComboPooledDataSource cpds = new ComboPooledDataSource();
@@ -43,9 +41,9 @@ public class DataSource {
     }
 
     private static SessionFactory buildHibernateSessionFactory() {
-        determineAliveDatabase();
+//        determineAliveDatabase();
 
-        try {
+//        try {
             Configuration configuration = new Configuration();
             configuration.addAnnotatedClass(Phrase.class);
             configuration.addAnnotatedClass(User.class);
@@ -61,18 +59,20 @@ public class DataSource {
             System.out.println("1 " + activeUser + " " + activePassword + " " + activeRemoteHost);
 
             hibernateSessionFactory = configuration.buildSessionFactory(
-                    new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build());
+                    new StandardServiceRegistryBuilder()
+                            .applySettings(configuration.getProperties())
+                            .build());
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("There was an error during Hibernate buildHibernateSessionFactory()" + e.getLocalizedMessage());
-        }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            throw new RuntimeException("There was an error during Hibernate buildHibernateSessionFactory()" + e.getLocalizedMessage());
+//        }
 
         return hibernateSessionFactory;
     }
 
     //TO-DO This method should not be used in production, for developing only
-    private static void determineAliveDatabase() {
+    /*private static void determineAliveDatabase() {
         System.out.println("CALL: determineAliveDatabase() from DataSource");
         String conectedDatabaseMessage = null;
         try {
@@ -84,7 +84,7 @@ public class DataSource {
         if (USE_LOCAL_DB) {
             activeRemoteHost = FORWARDED_REMOTE_HOST_PORT3306;
             activeUser = "root";
-            activePassword = "root";
+            activePassword = "vlenaf13";
             try {
                 DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
                 conectedDatabaseMessage = "Local virtual DB connected";
@@ -94,36 +94,7 @@ public class DataSource {
                 e.printStackTrace();
             }
         }
-
-        activeUser = "adminLtuHq9R";
-        activePassword = "d-AUIKakd1Br";
-
-        try {
-            activeRemoteHost = ORIGINAL_REMOTE_HOST;
-            System.out.println("2 " + activeUser + " " + activePassword + " " + activeRemoteHost);
-            DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
-            conectedDatabaseMessage = "Remote DB was connected";
-        } catch (SQLException e) {
-            try {
-                activeRemoteHost = FORWARDED_REMOTE_HOST_PORT3306;
-                DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
-                conectedDatabaseMessage = "Remote DB was connected through the local port 3306 forwarding";
-            } catch (SQLException e1) {
-                try {
-                    activeRemoteHost = FORWARDED_REMOTE_HOST_PORT3307;
-                    DriverManager.getConnection(activeRemoteHost, activeUser, activePassword);
-                    conectedDatabaseMessage = "Remote DB was connected through the local port 3307 forwarding";
-                } catch (SQLException e2) {
-                    e2.printStackTrace();
-                    throw new RuntimeException("NoAliveDatabasesException");
-                }
-            }
-        } finally {
-            if (conectedDatabaseMessage != null) {
-                System.out.println(conectedDatabaseMessage);
-            }
-        }
-    }
+    }*/
 
     public static SessionFactory getHibernateSessionFactory() {
 //        if(hibernateSessionFactory != null){
