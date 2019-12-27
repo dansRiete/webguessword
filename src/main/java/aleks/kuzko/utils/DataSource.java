@@ -18,7 +18,7 @@ import java.util.Collection;
  */
 public class DataSource {
 
-    private final static String FORWARDED_REMOTE_HOST_PORT3306 = "jdbc:mysql://localhost:3306/webguessword?autoReconnect=true&useSSL=false";//?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false
+    private static final String FORWARDED_REMOTE_HOST_PORT3306 = "jdbc:mysql://127.0.0.1:3306/guessword?useUnicode=true&characterEncoding=utf8&useLegacyDatetimeCode=true&useTimezone=true&serverTimezone=Europe/Kiev&useSSL=false";
     private final static String DRIVER = "com.mysql.cj.jdbc.Driver";
     private static String activeRemoteHost = FORWARDED_REMOTE_HOST_PORT3306;
     private static String activeUser = "root";
